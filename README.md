@@ -178,5 +178,9 @@ And the last example is using generic name to substitute correct type in sql que
 (resolving plugin interface generics, convert them to strings and compose example report).
 Another aspect is factories registration: for proper jersey integration it needs to know types for registered factories (`Factory<T>` class).
 
+### Supplement
+
+[reflection tutorial](http://www.javacodegeeks.com/2014/11/java-reflection-api-tutorial.html)
+
 -
 [![Slush java lib generator](http://img.shields.io/badge/Powered%20by-Slush%20java%20lib%20generator-orange.svg?style=flat-square)](https://github.com/xvik/slush-lib-java)
