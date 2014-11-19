@@ -60,7 +60,7 @@ compile 'ru.vyarus:generics-resolver:1.0.0'
 
 ### Usage
 
-First class hierarchy needs to be parsed to properly resolve all generics:
+Class hierarchy needs to be parsed to properly resolve all generics:
 
 ```java
 GenericsContext context = GenericsResolver.resolve(Root.class)
@@ -77,8 +77,8 @@ In some rare cases you may need to exclude some interfaces from resolution (e.g.
 GenericsResolver.resolve(Root.class, Callable.class, Runnable.class)
 ```
 
-When ignored classes specified resolved generics information is not cached(!) even if complete type resolution
-was replaced before (descriptor always computed).
+When ignored classes specified, resolved generics information is not cached(!) even if complete type resolution
+was done before (descriptor always computed).
 
 #### Context
 
@@ -92,9 +92,9 @@ To navigate on different class use
 context.type(Base.class)
 ```
 Which returns new instance of context. This method is not tied to actual class hierarchy so you can obtain context
-of any class (available in root class hierarchy) from any context.
+of any class (available in root class hierarchy) from any context instance.
 
-Context operates on types (`Type`) not classes, because only types holds all generics information, including composite
+Context operates on types (`Type`), not classes, because only types holds all generics information, including composite
 generics info (e.g. `List<List<String>>`). Any type, obtained using reflection may be resolved through api to real class.
 
 All classes in root class hierarchy may be obtained like this:
@@ -153,13 +153,13 @@ context.resolveClass(doSomething.getGenericReturnType()) == List.class
 context.resolveGenericOf(doSomething.getGenericReturnType()) == Integer.class
 ```
 
-Here you can see how you can resolve both class and generic class from single type.
+Here you can see how both main class and generic class resolved from single type instance.
 
 See api for all supported methods.
 
 #### To string
 
-Any type could be resolved as string (from example above):
+Any type could be resolved as string:
 
 ```groovy
 context.toStringType(doSomething.getGenericReturnType()) == "List<Integer>"
@@ -170,15 +170,13 @@ context.toStringType(doSomething.getGenericReturnType()) == "List<Integer>"
 Few real life usages.
 
 [guice-persist-orient](https://github.com/xvik/guice-persist-orient) use it to introspect finder types hierarchies.
-For one cases there are very important to know proper return types and without generics resolution everything was flat
-(limited to one class). Another example is delegating method search: without proper generics resolution of method parameters
-searching for compatible method would be much less effective (proper types reduce search scope). And the last example is
-using generic name to substitute correct type in sql query, which allows to write completely generic queries.
+Before generics resolution, finders were flat, because internal logic relies on method return types.
+Another example is searching for target method using arguments: argument generics resolution greatly reduce search scope.
+And the last example is using generic name to substitute correct type in sql query, which allows to write completely generic queries.
 
-[dropwizard-guicey](https://github.com/xvik/dropwizard-guicey) use it for reporting: it's convenient to see usage
-examples of jersey plugins. By knowing plugin interface it's able to resolve generics, to string it and print extension
-usage example. Another aspect is factories registration: having only implementations of Factory<T> class, without solving
-generic it's impossible to know factory type.
+[dropwizard-guicey](https://github.com/xvik/dropwizard-guicey) use it for reporting of usage examples for registered jersey plugins
+(resolving plugin interface generics, convert them to strings and compose example report).
+Another aspect is factories registration: for proper jersey integration it needs to know types for registered factories (`Factory<T>` class).
 
 -
 [![Slush java lib generator](http://img.shields.io/badge/Powered%20by-Slush%20java%20lib%20generator-orange.svg?style=flat-square)](https://github.com/xvik/slush-lib-java)
