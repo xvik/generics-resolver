@@ -1,5 +1,4 @@
 import com.github.benmanes.gradle.versions.updates.DependencyUpdatesTask
-
 import java.awt.*
 
 buildscript {
@@ -12,7 +11,7 @@ description = 'Java generics runtime resolver'
 // convention: project.name == github project name == bintray package page
 project.ext {
     build = {
-        gradle = 2.2
+        gradle = '2.2.1'
         java = 1.6
         // if not empty runs animal sniffer on compile to guarantee binary compatibility; set '' to disable
         signature = 'org.codehaus.mojo.signature:java16-sun:+@signature'
@@ -27,9 +26,13 @@ project.ext {
         tags = ['java', ' generics']
         dryRun = false // whether to run this as dry-run, without deploying (TEST RUN)
         publish = true //If version should be auto published after an upload
+
         signFiles = true // true to gpg sign files on bintray (certificate must be installed on bintray account)
-        gpgPassphrase = project.hasProperty('gpgPassphrase') ? gpgPassphrase : ''
-        // optionally configured in ~/.gradle/gradle.properties if certificate requires it
+        gpgPassphrase = project.hasProperty('gpgPassphrase') ? gpgPassphrase : '' // optionally configured in ~/.gradle/gradle.properties if certificate requires it
+
+        mavenCentralSync = true // true to sync with maven central (files signing required)
+        ossUser = project.hasProperty('sonatypeUser') ? sonatypeUser : 'USER' // configured in ~/.gradle/gradle.properties
+        ossPassword = project.hasProperty('sonatypePassword') ? sonatypePassword : 'PASSWORD' // configured in ~/.gradle/gradle.properties
     }
     license = 'MIT'
     licenseDesc = 'The MIT License'
@@ -77,7 +80,7 @@ repositories {
 }
 
 dependencies {
-    testCompile 'junit:junit:4.11'
+    testCompile 'junit:junit:4.12'
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
 }
 
