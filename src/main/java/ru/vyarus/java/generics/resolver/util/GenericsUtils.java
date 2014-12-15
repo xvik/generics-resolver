@@ -70,7 +70,7 @@ public final class GenericsUtils {
                     res.add((Class) actual);
                 } else {
                     // deep generics resolution required
-                    res.add(resolveClass(generics.get(((TypeVariable) actual).getName()), generics));
+                    res.add(resolveClass(actual, generics));
                 }
             }
         }

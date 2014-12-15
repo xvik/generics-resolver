@@ -8,4 +8,5 @@ interface WCBase<T, K> extends WCBaseLvl2<? extends T>{
     T get(K k);
     K get2(T k);
     List<T> get3();
+    List<? extends T> get4();
 }

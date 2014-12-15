@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.guice.persist.orient.support.finder.generics.*
 import ru.vyarus.java.generics.resolver.context.GenericsInfo
 import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory
 import ru.vyarus.java.generics.resolver.support.*
