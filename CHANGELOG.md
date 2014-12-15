@@ -1,3 +1,5 @@
+### 1.1.0 (2014-12-15)
+
 * Add wildcards support
 * Improve complex generics resolution
 * Add access by generic name methods in GenericsContext

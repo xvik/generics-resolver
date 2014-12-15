@@ -49,14 +49,14 @@ Maven:
 <dependency>
   <groupId>ru.vyarus</groupId>
   <artifactId>generics-resolver</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```groovy
-compile 'ru.vyarus:generics-resolver:1.0.0'
+compile 'ru.vyarus:generics-resolver:1.1.0'
 ```
 
 ### Usage
@@ -164,6 +164,28 @@ Any type could be resolved as string:
 
 ```groovy
 context.toStringType(doSomething.getGenericReturnType()) == "List<Integer>"
+```
+
+### Cache
+
+If you use JRebel or other class reloading tool (maybe some other reason) you will need to disable descriptors caching.
+
+To do it set system property or environment variable:
+
+```
+ru.vyarus.java.generics.resolver.context.GenericsInfoFactory.cache=false
+```
+
+Or from code:
+
+```java
+GenericsInfoFactory.disableCache();
+```
+
+Also you can clear cache manually:
+
+```java
+GenericsInfoFactory.clearCache()
 ```
 
 ### Use cases
