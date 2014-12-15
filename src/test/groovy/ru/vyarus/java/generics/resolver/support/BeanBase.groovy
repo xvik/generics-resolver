@@ -29,4 +29,9 @@ class BeanBase<T> extends Lvl2BeanBase<T> implements Lvl2Base1<T> {
     T[] doSomth5() {
         return null
     }
+
+    @Override
+    Map<T, Model> doSomth6() {
+        return null
+    }
 }

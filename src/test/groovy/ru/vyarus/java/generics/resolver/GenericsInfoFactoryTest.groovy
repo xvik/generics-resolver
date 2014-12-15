@@ -3,21 +3,12 @@ package ru.vyarus.java.generics.resolver
 import ru.vyarus.guice.persist.orient.support.finder.generics.*
 import ru.vyarus.java.generics.resolver.context.GenericsInfo
 import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory
-import ru.vyarus.java.generics.resolver.support.Base1
-import ru.vyarus.java.generics.resolver.support.Base2
-import ru.vyarus.java.generics.resolver.support.BeanBase
-import ru.vyarus.java.generics.resolver.support.BeanRoot
-import ru.vyarus.java.generics.resolver.support.ComplexGenerics
-import ru.vyarus.java.generics.resolver.support.ComplexGenerics2
-import ru.vyarus.java.generics.resolver.support.Lvl2Base1
-import ru.vyarus.java.generics.resolver.support.Lvl2Base2
-import ru.vyarus.java.generics.resolver.support.Lvl2Base3
-import ru.vyarus.java.generics.resolver.support.Lvl2BeanBase
-import ru.vyarus.java.generics.resolver.support.Model
-import ru.vyarus.java.generics.resolver.support.OtherModel
-import ru.vyarus.java.generics.resolver.support.Root
+import ru.vyarus.java.generics.resolver.support.*
+import ru.vyarus.java.generics.resolver.support.array.ArBaseLvl2
+import ru.vyarus.java.generics.resolver.support.array.ArRoot
 import spock.lang.Specification
 
+import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 
 /**
@@ -51,5 +42,14 @@ class GenericsInfoFactoryTest extends Specification {
         info.getTypeGenerics(BeanBase) == ['T': Model]
         info.getTypeGenerics(Lvl2BeanBase) == ['I': Model]
         info.getTypeGenerics(Lvl2Base1) == ['I': Model]
+    }
+
+    def "Check array generic resolution"() {
+
+        when: "resolving bean with generic array"
+        GenericsInfo info = GenericsInfoFactory.create(ArRoot)
+        then: "resolved"
+        info.getTypeGenerics(ArBaseLvl2)['T'] instanceof GenericArrayType
+        (info.getTypeGenerics(ArBaseLvl2)['T'] as GenericArrayType).genericComponentType == Model
     }
 }

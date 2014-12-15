@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.BeanRoot
 import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.support.clash.ClashRoot
@@ -37,5 +38,14 @@ class FailTests extends Specification {
         GenericsContext context = GenericsResolver.resolve(NoClashRoot)
         then: "context is empty, because no generics info available in hierarchy"
         context.genericsInfo.composingTypes == [NoClashSub1, NoClashSub2, Runnable, Callable] as Set
+    }
+
+    def "Check access with wrong name"() {
+
+        when: "trying to access generic with bad name"
+        GenericsResolver.resolve(Root).type(Base1).generic("K")
+        then: "fail"
+        thrown(IllegalArgumentException)
+
     }
 }

@@ -30,6 +30,7 @@ class MethodIntrospectionTest extends Specification {
         Method doSomth3 = bean.getMethod("doSomth3")
         Method doSomth4 = bean.getMethod("doSomth4", Object, int)
         Method doSomth5 = bean.getMethod("doSomth5")
+        Method doSomth6 = bean.getMethod("doSomth6")
 
         then: "check method return resolve"
         context.resolveReturnClass(doSomth) == Integer
@@ -45,12 +46,18 @@ class MethodIntrospectionTest extends Specification {
         then: "check sub generic resolution"
         context.resolveGenericOf(doSomth3.genericReturnType) == Model
         context.resolveGenericsOf(doSomth3.genericReturnType) == [Model]
+        context.resolveGenericsOf(doSomth6.getGenericReturnType()) == [Model, Model]
 
         then: "check type class resolution"
         context.resolveClass(doSomth4.genericParameterTypes[0]) == Model
 
         when: "resolve generic of no generic type"
         context.resolveGenericOf(doSomth.genericReturnType)
+        then:
+        thrown(NoGenericException)
+
+        when: "resolve generic of no generic type 2"
+        context.resolveGenericOf(doSomth2.genericReturnType)
         then:
         thrown(NoGenericException)
 

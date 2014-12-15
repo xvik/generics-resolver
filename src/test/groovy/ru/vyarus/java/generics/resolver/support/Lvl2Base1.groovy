@@ -17,4 +17,6 @@ public interface Lvl2Base1<I> {
     void doSomth4(I a, int b)
 
     I[] doSomth5()
+
+    Map<I, Model> doSomth6()
 }

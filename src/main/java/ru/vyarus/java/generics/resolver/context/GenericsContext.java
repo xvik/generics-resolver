@@ -105,6 +105,20 @@ public class GenericsContext {
     }
 
     /**
+     * {@code class B<T, K>}.
+     * <pre>{@code class A extends B<Object, C<Long>>
+     * type(B.class).genericType("K") == ParametrizedType }</pre>
+     *
+     * @param genericName generic position (from 0)
+     * @return generic type
+     * @throws java.lang.IllegalArgumentException for wrong generic name
+     * @see #genericTypes() for details
+     */
+    public Type genericType(final String genericName) {
+        return typeGenerics.get(checkGenericName(genericName));
+    }
+
+    /**
      * {@code class A extends B<Object, C<Long>>}.
      * <pre>{@code type(B.class).generic(1) == C.class }</pre>
      *
@@ -118,6 +132,20 @@ public class GenericsContext {
     }
 
     /**
+     * {@code class B<T, K>}.
+     * <pre>{@code class A extends B<Object, C<Long>>
+     * type(B.class).generic("K") == C.class }</pre>
+     *
+     * @param genericName generic name
+     * @return resolved generic class
+     * @throws java.lang.IllegalArgumentException for wrong generic name
+     * @see #resolveClass(java.lang.reflect.Type)
+     */
+    public Class<?> generic(final String genericName) {
+        return resolveClass(typeGenerics.get(checkGenericName(genericName)));
+    }
+
+    /**
      * {@code class A extends B<Object, C<Long>>}.
      * <pre>{@code type(B.class).genericAsString(1) == "C<Long>" }</pre>
      *
@@ -128,6 +156,20 @@ public class GenericsContext {
      */
     public String genericAsString(final int position) {
         return toStringType(genericType(position));
+    }
+
+    /**
+     * {@code class B<T, K>}.
+     * <pre>{@code class A extends B<Object, C<Long>>
+     * type(B.class).genericAsString("K") == "C<Long>" }</pre>
+     *
+     * @param genericName generic name
+     * @return resolved generic string representation
+     * @throws java.lang.IllegalArgumentException for wrong generic name
+     * @see #toStringType(java.lang.reflect.Type)
+     */
+    public String genericAsString(final String genericName) {
+        return toStringType(typeGenerics.get(checkGenericName(genericName)));
     }
 
     /**
@@ -253,5 +295,13 @@ public class GenericsContext {
      */
     public GenericsContext type(final Class<?> type) {
         return new GenericsContext(genericsInfo, type);
+    }
+
+    private String checkGenericName(final String genericName) {
+        if (!typeGenerics.containsKey(genericName)) {
+            throw new IllegalArgumentException(String.format("Type %s doesn't contain generic with name '%s'",
+                    currentType.getName(), genericName));
+        }
+        return genericName;
     }
 }

@@ -1,9 +1,6 @@
 package ru.vyarus.java.generics.resolver.util;
 
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -31,20 +28,40 @@ public final class TypeToStringUtils {
         if (type instanceof Class) {
             res = ((Class) type).getSimpleName();
         } else if (type instanceof ParameterizedType) {
-            final ParameterizedType parametrized = (ParameterizedType) type;
-            res = toStringType(parametrized.getRawType(), generics);
-            final List<String> args = new ArrayList<String>();
-            for (Type t : parametrized.getActualTypeArguments()) {
-                args.add(toStringType(t, generics));
-            }
-            if (!args.isEmpty()) {
-                res += "<" + join(args) + ">";
-            }
+            res = processParametrizedType((ParameterizedType) type, generics);
         } else if (type instanceof GenericArrayType) {
             res = toStringType(((GenericArrayType) type).getGenericComponentType(), generics) + "[]";
+        } else if (type instanceof WildcardType) {
+            res = processWildcardType((WildcardType) type, generics);
         } else {
             // deep generics nesting case
             res = toStringType(generics.get(((TypeVariable) type).getName()), generics);
+        }
+        return res;
+    }
+
+    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
+    private static String processParametrizedType(final ParameterizedType parametrized,
+                                                  final Map<String, Type> generics) {
+        String res = toStringType(parametrized.getRawType(), generics);
+        final List<String> args = new ArrayList<String>();
+        for (Type t : parametrized.getActualTypeArguments()) {
+            args.add(toStringType(t, generics));
+        }
+        if (!args.isEmpty()) {
+            res += "<" + join(args) + ">";
+        }
+        return res;
+    }
+
+    private static String processWildcardType(final WildcardType wildcard, final Map<String, Type> generics) {
+        String res;
+        if (wildcard.getLowerBounds().length == 0) {
+            res = "? extends " + toStringType(
+                    GenericsUtils.resolveClass(wildcard.getUpperBounds()[0], generics), generics);
+        } else {
+            res = "? super " + toStringType(
+                    GenericsUtils.resolveClass(wildcard.getLowerBounds()[0], generics), generics);
         }
         return res;
     }

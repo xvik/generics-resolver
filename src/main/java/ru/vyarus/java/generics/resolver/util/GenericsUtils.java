@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver.util;
 
-
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -94,6 +93,9 @@ public final class GenericsUtils {
             res = resolveClass(((ParameterizedType) type).getRawType(), generics);
         } else if (type instanceof TypeVariable) {
             res = resolveClass(generics.get(((TypeVariable) type).getName()), generics);
+        } else if (type instanceof WildcardType) {
+            final Type[] upperBounds = ((WildcardType) type).getUpperBounds();
+            res = resolveClass(upperBounds[0], generics);
         } else {
             final Class arrayType = resolveClass(((GenericArrayType) type).getGenericComponentType(), generics);
             try {

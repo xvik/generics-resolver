@@ -21,14 +21,20 @@ class CurrentIntrospectionTest extends Specification {
         context.currentClass() == ComplexGenerics
         context.generics() == [Model, List]
         context.generic(0) == Model
+        context.generic("T") == Model
         context.generic(1) == List
+        context.generic("K") == List
         context.genericsAsString() == ["Model", "List<Model>"]
         context.genericAsString(0) == "Model"
+        context.genericAsString("T") == "Model"
         context.genericAsString(1) == "List<Model>"
+        context.genericAsString("K") == "List<Model>"
         context.genericTypes()[0] == Model
         context.genericTypes()[1] instanceof ParameterizedType
         context.genericType(0) == Model
+        context.genericType("T") == Model
         context.genericType(1) instanceof ParameterizedType
+        context.genericType("K") instanceof ParameterizedType
         context.genericsMap().keySet() == ["T", "K"] as Set
 
         when: "array generic"

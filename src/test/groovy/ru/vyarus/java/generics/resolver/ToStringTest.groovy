@@ -5,6 +5,9 @@ import ru.vyarus.java.generics.resolver.support.tostring.Base
 import ru.vyarus.java.generics.resolver.support.tostring.GenerifiedInterface
 import ru.vyarus.java.generics.resolver.support.tostring.TSBase
 import ru.vyarus.java.generics.resolver.support.tostring.TSRoot
+import ru.vyarus.java.generics.resolver.support.wildcard.WCBase
+import ru.vyarus.java.generics.resolver.support.wildcard.WCBaseLvl2
+import ru.vyarus.java.generics.resolver.support.wildcard.WCRoot
 import spock.lang.Specification
 
 /**
@@ -29,5 +32,16 @@ class ToStringTest extends Specification {
         GenericsContext context = GenericsResolver.resolve(Base).type(GenerifiedInterface)
         then: "everything is ok"
         context.genericsAsString() == ['Integer', 'String[]', 'List<String>', 'List<Set<String>>']
+    }
+
+    def "Wildcards to string"() {
+
+        when: "to string wildcard"
+        GenericsContext context= GenericsResolver.resolve(WCRoot).type(WCBase)
+        then: "correct"
+        context.genericAsString(0) == "? extends Model"
+        context.genericAsString(1) == "? super Model"
+
+        context.type(WCBaseLvl2).genericAsString(0) == "? extends Model"
     }
 }

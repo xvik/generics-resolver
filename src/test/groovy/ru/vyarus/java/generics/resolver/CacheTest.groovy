@@ -1,10 +1,13 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsInfo
+import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory
 import ru.vyarus.java.generics.resolver.support.Root
 import spock.lang.Shared
 import spock.lang.Specification
+import sun.reflect.generics.factory.GenericsFactory
 
+import java.lang.reflect.Field
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -49,5 +52,30 @@ class CacheTest extends Specification {
         executed.each({ it.get() })
         then: "Nothing fails"
         true
+    }
+
+    def "Check cache methods"() {
+
+        when: "clear current cache state"
+        def field = GenericsInfoFactory.getDeclaredField("CACHE")
+        field.setAccessible(true)
+        Map cache = field.get(null)
+        then:
+        !cache.isEmpty()
+        GenericsInfoFactory.isCacheEnabled()
+        GenericsInfoFactory.clearCache()
+        GenericsInfoFactory.isCacheEnabled()
+        cache.isEmpty()
+
+        when: "disabling cache"
+        GenericsInfoFactory.disableCache()
+        then:
+        cache.isEmpty()
+        !GenericsInfoFactory.isCacheEnabled()
+
+        when: "creating descriptor with cache disabled"
+        GenericsResolver.resolve(Root)
+        then:
+        cache.isEmpty()
     }
 }
