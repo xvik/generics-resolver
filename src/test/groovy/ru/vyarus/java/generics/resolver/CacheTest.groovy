@@ -5,13 +5,10 @@ import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory
 import ru.vyarus.java.generics.resolver.support.Root
 import spock.lang.Shared
 import spock.lang.Specification
-import sun.reflect.generics.factory.GenericsFactory
 
-import java.lang.reflect.Field
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
-
 
 /**
  * @author Vyacheslav Rusakov 

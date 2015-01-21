@@ -206,4 +206,4 @@ Another aspect is factories registration: for proper jersey integration it needs
 [reflection tutorial](http://www.javacodegeeks.com/2014/11/java-reflection-api-tutorial.html)
 
 -
-[![Slush java lib generator](http://img.shields.io/badge/Powered%20by-Slush%20java%20lib%20generator-orange.svg?style=flat-square)](https://github.com/xvik/slush-lib-java)
+[![java lib generator](http://img.shields.io/badge/Powered%20by-%20Java%20lib%20generator-green.svg?style=flat-square)](https://github.com/xvik/generator-lib-java)

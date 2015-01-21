@@ -23,7 +23,7 @@ project.ext {
         user = project.hasProperty('bintrayUser') ? bintrayUser : 'USER' // configured in ~/.gradle/gradle.properties
         key = project.hasProperty('bintrayKey') ? bintrayKey : 'KEY' // configured in ~/.gradle/gradle.properties
         repo = 'xvik'
-        tags = ['java', ' generics']
+        tags = ['java', 'generics']
         dryRun = false // whether to run this as dry-run, without deploying (TEST RUN)
         publish = true //If version should be auto published after an upload
 
@@ -72,17 +72,7 @@ apply from: 'gradle/release.gradle'
 apply from: 'gradle/maven.gradle'
 apply from: 'gradle/quality.gradle'
 
-
-repositories {
-    jcenter()
-    mavenCentral()
-    mavenLocal()
-}
-
-dependencies {
-    testCompile 'junit:junit:4.12'
-    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0'
-}
+apply from: 'build-deps.gradle'
 
 task checkOutOfDate(type: DependencyUpdatesTask, description: 'Checks dependencies updates availability') {
     revision 'release'

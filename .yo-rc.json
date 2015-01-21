@@ -1,0 +1,20 @@
+{
+  "generator-lib-java": {
+    "githubUser": "xvik",
+    "authorName": "Vyacheslav Rusakov",
+    "authorEmail": "vyarus@gmail.com",
+    "libName": "generics-resolver",
+    "libGroup": "ru.vyarus",
+    "libPackage": "ru.vyarus.java.generics.resolver",
+    "libVersion": "0.1.0",
+    "libDesc": "Java generics runtime resolver",
+    "targetJava": "1.6",
+    "libTags": "java, generics",
+    "bintrayUser": "vyarus",
+    "bintrayRepo": "xvik",
+    "bintraySignFiles": true,
+    "mavenCentralSync": true,
+    "enableQualityChecks": true,
+    "usedGeneratorVersion": "1.0.0"
+  }
+}
