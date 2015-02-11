@@ -1,3 +1,6 @@
+* Root class generics now resolved (from generic bounds)
+* Support broken hierarchies parsing (when root class generic passed or when target class did not set generics (as with root generics resolved from signature))
+
 ### 1.1.0 (2014-12-15)
 
 * Add wildcards support

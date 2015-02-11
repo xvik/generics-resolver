@@ -37,7 +37,7 @@ class FailTests extends Specification {
         when: "resolving type with duplicate Runnable interface in hierarchy"
         GenericsContext context = GenericsResolver.resolve(NoClashRoot)
         then: "context is empty, because no generics info available in hierarchy"
-        context.genericsInfo.composingTypes == [NoClashSub1, NoClashSub2, Runnable, Callable] as Set
+        context.genericsInfo.composingTypes == [NoClashRoot, NoClashSub1, NoClashSub2, Runnable, Callable] as Set
     }
 
     def "Check access with wrong name"() {

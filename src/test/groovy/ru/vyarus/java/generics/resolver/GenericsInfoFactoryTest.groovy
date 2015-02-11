@@ -22,7 +22,7 @@ class GenericsInfoFactoryTest extends Specification {
         GenericsInfo info = GenericsInfoFactory.create(Root)
         then: "correct generic values resolved"
         info.rootClass == Root
-        info.composingTypes.size() == 7
+        info.composingTypes.size() == 8
         info.getTypeGenerics(Base1) == ['T': Model]
         info.getTypeGenerics(Base2) == ['K': Model, 'P': OtherModel]
         info.getTypeGenerics(Lvl2Base1) == ['I': Model]
@@ -37,7 +37,7 @@ class GenericsInfoFactoryTest extends Specification {
         info = GenericsInfoFactory.create(BeanRoot)
         then: "correct generic values resolved"
         info.rootClass == BeanRoot
-        info.composingTypes.size() == 3
+        info.composingTypes.size() == 4
         info.getTypeGenerics(BeanBase) == ['T': Model]
         info.getTypeGenerics(Lvl2BeanBase) == ['I': Model]
         info.getTypeGenerics(Lvl2Base1) == ['I': Model]

@@ -67,7 +67,8 @@ Class hierarchy needs to be parsed to properly resolve all generics:
 GenericsContext context = GenericsResolver.resolve(Root.class)
 ```
 
-If root class also contains generics, they will not be resolved (it's impossible).
+If root class also contains generics, they are resolved by generic bound (e.g. `<T extends Model>` will be resolved as T=Model.class, and
+resolved as Object.class when no bounds set)
 
 Resolved class hierarchy is cached internally, so it's cheap to resolve single class few times.
 
@@ -104,7 +105,7 @@ All classes in root class hierarchy may be obtained like this:
 context.getGenericsInfo().getComposingTypes()
 ```
 
-This will be all classes (and interfaces) in hierarchy, even if they not contain generics.
+This will be all classes and interfaces in hierarchy (including root class), even if they not contain generics.
 
 #### Obtaining class generics
 

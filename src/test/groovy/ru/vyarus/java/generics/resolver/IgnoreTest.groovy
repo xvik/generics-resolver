@@ -28,6 +28,6 @@ class IgnoreTest extends Specification {
         when: "using ignore to limit class resolution depth"
         context = GenericsResolver.resolve(BeanRoot, Lvl2BeanBase)
         then: "only root types resolved"
-        context.genericsInfo.composingTypes == [BeanBase, Lvl2Base1] as Set
+        context.genericsInfo.composingTypes == [BeanRoot, BeanBase, Lvl2Base1] as Set
     }
 }

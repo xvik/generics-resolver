@@ -14,8 +14,10 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 15.12.2014
  */
+// LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
+@SuppressWarnings("PMD.LooseCoupling")
 public final class GenericInfoUtils {
-    @SuppressWarnings("PMD.LooseCoupling")
+
     private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
     private static final String GROOVY_OBJECT = "GroovyObject";
 
@@ -25,6 +27,12 @@ public final class GenericInfoUtils {
     public static GenericsInfo create(final Class<?> type, final Class<?>... ignoreClasses) {
         final Map<Class<?>, LinkedHashMap<String, Type>> generics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        if (type.getTypeParameters().length > 0) {
+            // special case: root class also contains generics
+            generics.put(type, resolveRawGenerics(type.getTypeParameters()));
+        } else {
+            generics.put(type, EMPTY_MAP);
+        }
         analyzeType(generics, type, Arrays.asList(ignoreClasses));
         return new GenericsInfo(type, generics);
     }
@@ -63,6 +71,9 @@ public final class GenericInfoUtils {
                                     + "can't properly resolve generics.", interfaceType.getName()));
                 }
                 types.put(interfaceType, generics);
+            } else if (interfaceType.getTypeParameters().length > 0) {
+                // root class didn't declare generics
+                types.put(interfaceType, resolveRawGenerics(interfaceType.getTypeParameters()));
             } else if (!GROOVY_OBJECT.equals(interfaceType.getSimpleName())) {
                 // avoid groovy specific interface (all groovy objects implements it)
                 types.put(interfaceType, EMPTY_MAP);
@@ -71,8 +82,6 @@ public final class GenericInfoUtils {
         }
     }
 
-    // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
-    @SuppressWarnings("PMD.LooseCoupling")
     private static LinkedHashMap<String, Type> analyzeParent(final Class type,
                                                              final Map<String, Type> rootGenerics) {
         LinkedHashMap<String, Type> generics = null;
@@ -80,11 +89,13 @@ public final class GenericInfoUtils {
         if (!type.isInterface() && parent != null && parent != Object.class
                 && type.getGenericSuperclass() instanceof ParameterizedType) {
             generics = resolveGenerics((ParameterizedType) type.getGenericSuperclass(), rootGenerics);
+        } else if (parent != null && parent.getTypeParameters().length > 0) {
+            // root class didn't declare generics
+            generics = resolveRawGenerics(parent.getTypeParameters());
         }
         return generics == null ? EMPTY_MAP : generics;
     }
 
-    @SuppressWarnings("PMD.LooseCoupling")
     private static LinkedHashMap<String, Type> resolveGenerics(final ParameterizedType type,
                                                                final Map<String, Type> rootGenerics) {
         final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
@@ -129,5 +140,14 @@ public final class GenericInfoUtils {
             resolved[i] = resolveActualType(types[i], rootGenerics);
         }
         return resolved;
+    }
+
+    private static LinkedHashMap<String, Type> resolveRawGenerics(
+            final TypeVariable... declaredGenerics) {
+        final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
+        for (TypeVariable type : declaredGenerics) {
+            generics.put(type.getName(), resolveActualType(type.getBounds()[0], Collections.<String, Type>emptyMap()));
+        }
+        return generics;
     }
 }

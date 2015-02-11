@@ -15,8 +15,8 @@ public final class GenericsResolver {
     }
 
     /**
-     * By default returned context set on root class, which can't be introspected (because only parent class hods
-     * generics information for current class). To use it switch context to required type from hierarchy:
+     * By default returned context set on root class (but generic types for root class will be resolved from specified
+     * generics bounds). To use it switch context to required type from hierarchy:
      * {@code returnedContext.type(SomeTypeFromHierarchy.class)}.
      * <p>Note: when ignore classes provided, produced {@code GenericsInfo} instance will not be cached
      * (and full version from cache will not be used also)</p>

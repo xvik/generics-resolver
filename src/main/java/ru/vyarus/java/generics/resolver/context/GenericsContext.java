@@ -38,8 +38,7 @@ public class GenericsContext {
         this.genericsInfo = genericsInfo;
         this.currentType = type;
         // collection resolved for fail fast on wrong type
-        typeGenerics = type == genericsInfo.getRootClass() ? Collections.<String, Type>emptyMap()
-                : genericsInfo.getTypeGenerics(type);
+        typeGenerics = genericsInfo.getTypeGenerics(type);
     }
 
     /**
