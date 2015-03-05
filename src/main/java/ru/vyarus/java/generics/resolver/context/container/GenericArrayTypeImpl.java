@@ -26,18 +26,13 @@ public class GenericArrayTypeImpl implements GenericArrayType {
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:needbraces", "PMD.IfStmtsMustUseBraces", "PMD.OnlyOneReturn"})
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (!(o instanceof GenericArrayTypeImpl)) return false;
-
-        final GenericArrayTypeImpl that = (GenericArrayTypeImpl) o;
-
-        if (componentType != null
-                ? !componentType.equals(that.componentType)
-                : that.componentType != null) return false;
-
-        return true;
+        boolean res = this == o;
+        if (!res && o instanceof GenericArrayType) {
+            final Type thatComponentType = ((GenericArrayType) o).getGenericComponentType();
+            res = componentType != null ? componentType.equals(thatComponentType) : thatComponentType == null;
+        }
+        return res;
     }
 
     @Override

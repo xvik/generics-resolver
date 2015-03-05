@@ -35,23 +35,22 @@ public class WildcardTypeImpl implements WildcardType {
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:needbraces", "PMD.IfStmtsMustUseBraces", "PMD.OnlyOneReturn"})
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (!(o instanceof WildcardTypeImpl)) return false;
+        boolean res = this == o;
+        if (!res && o instanceof WildcardType) {
+            final WildcardType that = (WildcardType) o;
+            final Type[] thatLowerBounds = that.getLowerBounds();
+            final Type[] thatUpperBounds = that.getUpperBounds();
 
-        final WildcardTypeImpl that = (WildcardTypeImpl) o;
-
-        if (!Arrays.equals(lowerBounds, that.lowerBounds)) return false;
-        if (!Arrays.equals(upperBounds, that.upperBounds)) return false;
-
-        return true;
+            res = Arrays.equals(lowerBounds, thatLowerBounds) && Arrays.equals(upperBounds, thatUpperBounds);
+        }
+        return res;
     }
 
     @Override
     public int hashCode() {
-        int result = upperBounds != null ? Arrays.hashCode(upperBounds) : 0;
-        result = 31 * result + (lowerBounds != null ? Arrays.hashCode(lowerBounds) : 0);
+        int result = Arrays.hashCode(upperBounds);
+        result = 31 * result + Arrays.hashCode(lowerBounds);
         return result;
     }
 

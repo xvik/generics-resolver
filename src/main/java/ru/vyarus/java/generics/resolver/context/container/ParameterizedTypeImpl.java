@@ -41,24 +41,25 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     }
 
     @Override
-    @SuppressWarnings({"checkstyle:needbraces", "PMD.IfStmtsMustUseBraces", "PMD.OnlyOneReturn"})
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ParameterizedTypeImpl)) return false;
+        boolean res = this == o;
+        if (!res && o instanceof ParameterizedType) {
+            final ParameterizedType that = (ParameterizedType) o;
+            final Type[] thatActualArguments = that.getActualTypeArguments();
+            final Type thatOwnerType = that.getOwnerType();
+            final Type thatRawType = that.getRawType();
 
-        final ParameterizedTypeImpl that = (ParameterizedTypeImpl) o;
-
-        if (!Arrays.equals(actualArguments, that.actualArguments)) return false;
-        if (ownerType != null ? !ownerType.equals(that.ownerType) : that.ownerType != null) return false;
-        if (rawType != null ? !rawType.equals(that.rawType) : that.rawType != null) return false;
-
-        return true;
+            res = Arrays.equals(actualArguments, thatActualArguments)
+                    && (ownerType != null ? ownerType.equals(thatOwnerType) : thatOwnerType == null)
+                    && (rawType != null ? rawType.equals(thatRawType) : thatRawType == null);
+        }
+        return res;
     }
 
     @Override
     public int hashCode() {
         int result = rawType != null ? rawType.hashCode() : 0;
-        result = 31 * result + (actualArguments != null ? Arrays.hashCode(actualArguments) : 0);
+        result = 31 * result + Arrays.hashCode(actualArguments);
         result = 31 * result + (ownerType != null ? ownerType.hashCode() : 0);
         return result;
     }
