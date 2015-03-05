@@ -35,6 +35,27 @@ public class WildcardTypeImpl implements WildcardType {
     }
 
     @Override
+    @SuppressWarnings({"checkstyle:needbraces", "PMD.IfStmtsMustUseBraces", "PMD.OnlyOneReturn"})
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WildcardTypeImpl)) return false;
+
+        final WildcardTypeImpl that = (WildcardTypeImpl) o;
+
+        if (!Arrays.equals(lowerBounds, that.lowerBounds)) return false;
+        if (!Arrays.equals(upperBounds, that.upperBounds)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = upperBounds != null ? Arrays.hashCode(upperBounds) : 0;
+        result = 31 * result + (lowerBounds != null ? Arrays.hashCode(lowerBounds) : 0);
+        return result;
+    }
+
+    @Override
     public String toString() {
         return TypeToStringUtils.toStringType(this, Collections.<String, Type>emptyMap());
     }
