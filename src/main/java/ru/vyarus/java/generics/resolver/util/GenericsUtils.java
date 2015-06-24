@@ -2,6 +2,7 @@ package ru.vyarus.java.generics.resolver.util;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,7 +26,7 @@ public final class GenericsUtils {
      */
     public static Class<?> getReturnClass(final Method method, final Map<String, Type> generics) {
         final Type returnType = method.getGenericReturnType();
-        return resolveClass(returnType, generics);
+        return resolveClass(returnType, includeMethodGenerics(method, generics));
     }
 
     /**
@@ -37,8 +38,9 @@ public final class GenericsUtils {
      */
     public static List<Class<?>> getMethodParameters(final Method method, final Map<String, Type> generics) {
         final List<Class<?>> params = new ArrayList<Class<?>>();
+        final Map<String, Type> actualGenerics = includeMethodGenerics(method, generics);
         for (Type type : method.getGenericParameterTypes()) {
-            params.add(resolveClass(type, generics));
+            params.add(resolveClass(type, actualGenerics));
         }
         return params;
     }
@@ -110,5 +112,15 @@ public final class GenericsUtils {
             }
         }
         return res;
+    }
+
+    private static Map<String, Type> includeMethodGenerics(final Method method, final Map<String, Type> generics) {
+        final TypeVariable<Method>[] methodGenerics = method.getTypeParameters();
+        final Map<String, Type> actualGenerics = methodGenerics.length > 0
+                ? new HashMap<String, Type>(generics) : generics;
+        for (TypeVariable<Method> generic : methodGenerics) {
+            actualGenerics.put(generic.getName(), resolveClass(generic.getBounds()[0], actualGenerics));
+        }
+        return actualGenerics;
     }
 }
