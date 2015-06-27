@@ -59,6 +59,14 @@ Gradle:
 compile 'ru.vyarus:generics-resolver:1.2.1'
 ```
 
+##### Snapshots
+
+You can use snapshot versions through [JitPack](https://jitpack.io):
+
+* Go to [JitPack project page](https://jitpack.io/#xvik/generics-resolver)
+* Select `Commits` section and click `Get it` on commit you want to use (top one - the most recent)
+* Follow displayed instruction: add repository and change dependency (NOTE: due to JitPack convention artifact group will be different)
+
 ### Usage
 
 Class hierarchy needs to be parsed to properly resolve all generics:
