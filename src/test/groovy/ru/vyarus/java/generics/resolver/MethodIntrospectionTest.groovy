@@ -33,15 +33,15 @@ class MethodIntrospectionTest extends Specification {
         Method doSomth6 = bean.getMethod("doSomth6")
 
         then: "check method return resolve"
-        context.resolveReturnClass(doSomth) == Integer
-        context.resolveReturnClass(doSomth2) == Model
-        context.resolveReturnClass(doSomth3) == List
-        context.resolveReturnClass(doSomth4) == void
-        context.resolveReturnClass(doSomth5) == Model[]
+        context.method(doSomth).resolveReturnClass() == Integer
+        context.method(doSomth2).resolveReturnClass() == Model
+        context.method(doSomth3).resolveReturnClass() == List
+        context.method(doSomth4).resolveReturnClass() == void
+        context.method(doSomth5).resolveReturnClass() == Model[]
 
         then: "check method params resolve"
-        context.resolveParameters(doSomth) == []
-        context.resolveParameters(doSomth4) == [Model, int]
+        context.method(doSomth).resolveParameters() == []
+        context.method(doSomth4).resolveParameters() == [Model, int]
 
         then: "check sub generic resolution"
         context.resolveGenericOf(doSomth3.genericReturnType) == Model
@@ -75,7 +75,7 @@ class MethodIntrospectionTest extends Specification {
         Method doSomth2 = ComplexGenerics2.getMethod("doSomth2")
 
         then:
-        context.resolveReturnClass(doSomth) == Model[]
-        context.resolveReturnClass(doSomth2) == Model[][]
+        context.method(doSomth).resolveReturnClass() == Model[]
+        context.method(doSomth2).resolveReturnClass() == Model[][]
     }
 }

@@ -1,3 +1,9 @@
+### 2.0.0
+* Improve error reporting to show unknown generic name with analyzing type instead of NPE (simplifies usage errors understanding).
+* Support method generics: new method context added (context.method(*)) to properly resolve generics including references to method generics
+* (breaking change) method analysis methods (parameters and return type resolutions) are moved to method context. 
+For example, before it was context.resolveParameters(method), now context.method(method).resolveParameters(). 
+
 ### 1.2.1 (2015-03-05)
 * Improve duplicate interfaces support (thanks to [Adam Biczok](https://github.com/malary))
 

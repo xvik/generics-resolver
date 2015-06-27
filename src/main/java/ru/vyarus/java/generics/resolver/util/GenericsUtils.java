@@ -2,7 +2,6 @@ package ru.vyarus.java.generics.resolver.util;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +25,7 @@ public final class GenericsUtils {
      */
     public static Class<?> getReturnClass(final Method method, final Map<String, Type> generics) {
         final Type returnType = method.getGenericReturnType();
-        return resolveClass(returnType, includeMethodGenerics(method, generics));
+        return resolveClass(returnType, generics);
     }
 
     /**
@@ -38,9 +37,8 @@ public final class GenericsUtils {
      */
     public static List<Class<?>> getMethodParameters(final Method method, final Map<String, Type> generics) {
         final List<Class<?>> params = new ArrayList<Class<?>>();
-        final Map<String, Type> actualGenerics = includeMethodGenerics(method, generics);
         for (Type type : method.getGenericParameterTypes()) {
-            params.add(resolveClass(type, actualGenerics));
+            params.add(resolveClass(type, generics));
         }
         return params;
     }
@@ -52,7 +50,8 @@ public final class GenericsUtils {
      * @param type     type to analyze
      * @param generics root class generics mapping
      * @return resolved generic classes
-     * @throws NoGenericException when generic not found or not generified type provided
+     * @throws NoGenericException      when generic not found or not generified type provided
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
     public static List<Class<?>> resolveGenericsOf(final Type type,
                                                    final Map<String, Type> generics) throws NoGenericException {
@@ -60,7 +59,7 @@ public final class GenericsUtils {
         Type analyzingType = type;
         if (type instanceof TypeVariable) {
             // if type is pure generic recovering parametrization
-            analyzingType = generics.get(((TypeVariable) type).getName());
+            analyzingType = declaredGeneric((TypeVariable) type, generics);
         }
         if (!(analyzingType instanceof ParameterizedType)
                 || ((ParameterizedType) analyzingType).getActualTypeArguments().length == 0) {
@@ -86,6 +85,7 @@ public final class GenericsUtils {
      * @param type     type to resolve
      * @param generics root class generics mapping
      * @return resolved class
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
     public static Class<?> resolveClass(final Type type, final Map<String, Type> generics) {
         Class<?> res;
@@ -94,7 +94,7 @@ public final class GenericsUtils {
         } else if (type instanceof ParameterizedType) {
             res = resolveClass(((ParameterizedType) type).getRawType(), generics);
         } else if (type instanceof TypeVariable) {
-            res = resolveClass(generics.get(((TypeVariable) type).getName()), generics);
+            res = resolveClass(declaredGeneric((TypeVariable) type, generics), generics);
         } else if (type instanceof WildcardType) {
             final Type[] upperBounds = ((WildcardType) type).getUpperBounds();
             res = resolveClass(upperBounds[0], generics);
@@ -114,13 +114,12 @@ public final class GenericsUtils {
         return res;
     }
 
-    private static Map<String, Type> includeMethodGenerics(final Method method, final Map<String, Type> generics) {
-        final TypeVariable<Method>[] methodGenerics = method.getTypeParameters();
-        final Map<String, Type> actualGenerics = methodGenerics.length > 0
-                ? new HashMap<String, Type>(generics) : generics;
-        for (TypeVariable<Method> generic : methodGenerics) {
-            actualGenerics.put(generic.getName(), resolveClass(generic.getBounds()[0], actualGenerics));
+    private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {
+        final String name = generic.getName();
+        final Type result = declarations.get(name);
+        if (result == null) {
+            throw new UnknownGenericException(name);
         }
-        return actualGenerics;
+        return result;
     }
 }

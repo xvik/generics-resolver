@@ -30,15 +30,17 @@ class WildcardsTest extends Specification {
         Method get3 = WCBase.getMethod("get3")
         Method get4 = WCBase.getMethod("get4")
         then: "correct generics resolved"
-        context.resolveReturnClass(get) == Model
-        context.resolveReturnClass(get2) == Object
-        context.resolveReturnClass(get3) == List
+        context.method(get).resolveReturnClass() == Model
+        context.method(get2).resolveReturnClass() == Object
+        context.method(get3).resolveReturnClass() == List
 
-        context.resolveParameters(get) == [Object]
-        context.resolveParameters(get2) == [Model]
+        context.method(get).resolveParameters() == [Object]
+        context.method(get2).resolveParameters() == [Model]
 
         context.resolveGenericOf(get3.getGenericReturnType()) == Model
+        context.method(get3).resolveReturnTypeGeneric() == Model
         context.resolveGenericOf(get4.getGenericReturnType()) == Model
+        context.method(get4).resolveReturnTypeGeneric() == Model
 
 
         when: "analyzing complex wildcards"

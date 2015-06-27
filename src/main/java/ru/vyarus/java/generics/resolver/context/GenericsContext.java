@@ -3,16 +3,21 @@ package ru.vyarus.java.generics.resolver.context;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.NoGenericException;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
+import ru.vyarus.java.generics.resolver.util.UnknownGenericException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Context object wraps root type hierarchy generics information descriptor and provides utility methods for
- * actual types resolution.
+ * actual types resolution. Currently there are two types of contexts: type context (class) and method context.
  * <p>Usage: navigate to required type {@code context.type(MyClass.class)} and use utility methods to
- * get type's own generics or as helper for methods/fields introspection.</p>
+ * get type's own generics or as helper for methods/fields introspection.
+ * To navigate to method context use {@code context.method(method)}.</p>
  * <p>Every context object is immutable. Context doesn't hold actual types hierarchy (use reflection api in parallel
  * if you need hierarchy info). Navigation is allowed to any class (within original root class hierarchy) from any
  * child context. For convenience root class is also allowed (no matter the fact that it doesn't contain resolved
@@ -28,11 +33,11 @@ import java.util.*;
  * @since 17.11.2014
  */
 // huge class size is OK, because it should be the only entry point for api
-@SuppressWarnings("PMD.ExcessiveClassLength")
-public class GenericsContext {
-    private final GenericsInfo genericsInfo;
-    private final Class<?> currentType;
-    private final Map<String, Type> typeGenerics;
+@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace"})
+public abstract class GenericsContext {
+    protected final GenericsInfo genericsInfo;
+    protected final Class<?> currentType;
+    protected final Map<String, Type> typeGenerics;
 
     public GenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
         this.genericsInfo = genericsInfo;
@@ -84,7 +89,7 @@ public class GenericsContext {
      */
     public List<String> genericsAsString() {
         final List<String> res = new ArrayList<String>();
-        for (Type type : typeGenerics.values()) {
+        for (Type type : contextGenerics().values()) {
             res.add(toStringType(type));
         }
         return res;
@@ -114,7 +119,7 @@ public class GenericsContext {
      * @see #genericTypes() for details
      */
     public Type genericType(final String genericName) {
-        return typeGenerics.get(checkGenericName(genericName));
+        return contextGenerics().get(checkGenericName(genericName));
     }
 
     /**
@@ -141,7 +146,7 @@ public class GenericsContext {
      * @see #resolveClass(java.lang.reflect.Type)
      */
     public Class<?> generic(final String genericName) {
-        return resolveClass(typeGenerics.get(checkGenericName(genericName)));
+        return resolveClass(contextGenerics().get(checkGenericName(genericName)));
     }
 
     /**
@@ -168,7 +173,7 @@ public class GenericsContext {
      * @see #toStringType(java.lang.reflect.Type)
      */
     public String genericAsString(final String genericName) {
-        return toStringType(typeGenerics.get(checkGenericName(genericName)));
+        return toStringType(contextGenerics().get(checkGenericName(genericName)));
     }
 
     /**
@@ -178,7 +183,7 @@ public class GenericsContext {
      * @return map of current generics (runtime mapping of generic name to actual type)
      */
     public Map<String, Type> genericsMap() {
-        return new LinkedHashMap<String, Type>(typeGenerics);
+        return new LinkedHashMap<String, Type>(contextGenerics());
     }
 
     /**
@@ -186,40 +191,6 @@ public class GenericsContext {
      */
     public GenericsInfo getGenericsInfo() {
         return genericsInfo;
-    }
-
-    /**
-     * Useful for introspection, to know exact return type of generified method.
-     * <pre>{@code class A extends B<Long>;
-     * class B<T> {
-     *     T doSmth();
-     * }}</pre>
-     * Resolving return type in type of root class:
-     * {@code type(B.class).resolveReturnClass(B.class.getMethod("doSmth")) == Long.class}
-     *
-     * @param method method to analyze
-     * @return resolved return class of method (generic resolved or, in case of simple class, returned as is)
-     * @see #resolveClass(java.lang.reflect.Type)
-     */
-    public Class<?> resolveReturnClass(final Method method) {
-        return GenericsUtils.getReturnClass(method, typeGenerics);
-    }
-
-    /**
-     * Useful for introspection, to know exact parameter types.
-     * <pre>{@code class A extends B<Long>;
-     * class B<T> {
-     *     void doSmth(T a, Integer b);
-     * }}</pre>
-     * Resolving parameters in context of root class:
-     * {@code type(B.class).resolveParameters(B.class.getMethod("doSmth", Object.class)) ==
-     * [Long.class, Integer.class]}
-     *
-     * @param method method to analyze
-     * @return resolved method parameters or empty list if method doesn't contain parameters
-     */
-    public List<Class<?>> resolveParameters(final Method method) {
-        return GenericsUtils.getMethodParameters(method, typeGenerics);
     }
 
     /**
@@ -235,7 +206,11 @@ public class GenericsContext {
      * @return resolved type class
      */
     public Class<?> resolveClass(final Type type) {
-        return GenericsUtils.resolveClass(type, typeGenerics);
+        try {
+            return GenericsUtils.resolveClass(type, contextGenerics());
+        } catch (UnknownGenericException e) {
+            throw e.rethrowWithType(currentType);
+        }
     }
 
     /**
@@ -253,7 +228,11 @@ public class GenericsContext {
      *                            {@code Object.class} generic value from class which doesn't support generic
      */
     public List<Class<?>> resolveGenericsOf(final Type type) throws NoGenericException {
-        return GenericsUtils.resolveGenericsOf(type, typeGenerics);
+        try {
+            return GenericsUtils.resolveGenericsOf(type, contextGenerics());
+        } catch (UnknownGenericException e) {
+            throw e.rethrowWithType(currentType);
+        }
     }
 
     /**
@@ -266,7 +245,11 @@ public class GenericsContext {
      *                            {@code Object.class} generic value from class which doesn't support generic
      */
     public Class<?> resolveGenericOf(final Type type) throws NoGenericException {
-        return resolveGenericsOf(type).get(0);
+        try {
+            return resolveGenericsOf(type).get(0);
+        } catch (UnknownGenericException e) {
+            throw e.rethrowWithType(currentType);
+        }
     }
 
     /**
@@ -282,7 +265,11 @@ public class GenericsContext {
      * @return string representation for resolved type
      */
     public String toStringType(final Type type) {
-        return TypeToStringUtils.toStringType(type, typeGenerics);
+        try {
+            return TypeToStringUtils.toStringType(type, contextGenerics());
+        } catch (UnknownGenericException e) {
+            throw e.rethrowWithType(currentType);
+        }
     }
 
     /**
@@ -292,14 +279,32 @@ public class GenericsContext {
      * @return new context instance specific to requested class
      * @throws IllegalArgumentException if requested class is not present in root class hierarchy
      */
-    public GenericsContext type(final Class<?> type) {
-        return new GenericsContext(genericsInfo, type);
+    public TypeGenericsContext type(final Class<?> type) {
+        return new TypeGenericsContext(genericsInfo, type);
     }
 
+    /**
+     * Navigates current context to specific method (type context is switched(!) to method declaring class).
+     * It is required because method could contain it's own generics.
+     * For example, {@code <T> void myMethod(T arg);}.
+     * <p>Use context to work with method parameters, return type or resolving types inside method.</p>
+     *
+     * @param method method in current class to navigate to
+     * @return new context instance specific to requested method
+     * @throws IllegalArgumentException if requested method is not present in current class hierarchy
+     */
+    public MethodGenericsContext method(final Method method) {
+        return new MethodGenericsContext(genericsInfo, method.getDeclaringClass(), method);
+    }
+
+    /**
+     * @return resolved generics mapping for current context
+     */
+    protected abstract Map<String, Type> contextGenerics();
+
     private String checkGenericName(final String genericName) {
-        if (!typeGenerics.containsKey(genericName)) {
-            throw new IllegalArgumentException(String.format("Type %s doesn't contain generic with name '%s'",
-                    currentType.getName(), genericName));
+        if (!contextGenerics().containsKey(genericName)) {
+            throw new UnknownGenericException(currentType, genericName);
         }
         return genericName;
     }

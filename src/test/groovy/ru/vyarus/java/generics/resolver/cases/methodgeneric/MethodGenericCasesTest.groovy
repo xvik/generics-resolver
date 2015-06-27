@@ -3,7 +3,12 @@ package ru.vyarus.java.generics.resolver.cases.methodgeneric
 import ru.vyarus.java.generics.resolver.GenericsResolver
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.MethodGenericCase
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
+import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.MethodGenericsContext
+import ru.vyarus.java.generics.resolver.util.UnknownGenericException
 import spock.lang.Specification
+
+import java.lang.reflect.Method
 
 /**
  * @author Vyacheslav Rusakov 
@@ -15,13 +20,13 @@ class MethodGenericCasesTest extends Specification {
 
         when: "parameter with method generic"
         List<Class> params = GenericsResolver.resolve(MethodGenericCase)
-                .resolveParameters(MethodGenericCase.getMethod("test", Class, Object))
+                .method(MethodGenericCase.getMethod("test", Class, Object)).resolveParameters()
         then: "resolved"
         params == [Class, Object]
 
         when: "return type with method generic"
         Class res = GenericsResolver.resolve(MethodGenericCase)
-                .resolveReturnClass(MethodGenericCase.getMethod("test", Class, Object))
+                .method(MethodGenericCase.getMethod("test", Class, Object)).resolveReturnClass()
         then: "resolved"
         res == Object
     }
@@ -30,13 +35,13 @@ class MethodGenericCasesTest extends Specification {
 
         when: "parameter with method generic"
         List<Class> params = GenericsResolver.resolve(MethodGenericCase)
-                .resolveParameters(MethodGenericCase.getMethod("testBounded", Class, Serializable))
+                .method(MethodGenericCase.getMethod("testBounded", Class, Serializable)).resolveParameters()
         then: "resolved"
         params == [Class, Serializable]
 
         when: "return type with method generic"
         Class res = GenericsResolver.resolve(MethodGenericCase)
-                .resolveReturnClass(MethodGenericCase.getMethod("testBounded", Class, Serializable))
+                .method(MethodGenericCase.getMethod("testBounded", Class, Serializable)).resolveReturnClass()
         then: "resolved"
         res == Serializable
     }
@@ -45,13 +50,13 @@ class MethodGenericCasesTest extends Specification {
 
         when: "parameter with method generic"
         List<Class> params = GenericsResolver.resolve(MethodGenericCase)
-                .resolveParameters(MethodGenericCase.getMethod("testDoubleBounded", Class, Serializable))
+                .method(MethodGenericCase.getMethod("testDoubleBounded", Class, Serializable)).resolveParameters()
         then: "resolved"
         params == [Class, Serializable]
 
         when: "return type with method generic"
         Class res = GenericsResolver.resolve(MethodGenericCase)
-                .resolveReturnClass(MethodGenericCase.getMethod("testDoubleBounded", Class, Serializable))
+                .method(MethodGenericCase.getMethod("testDoubleBounded", Class, Serializable)).resolveReturnClass()
         then: "resolved"
         res == Serializable
     }
@@ -60,14 +65,52 @@ class MethodGenericCasesTest extends Specification {
 
         when: "parameter with method generic"
         List<Class> params = GenericsResolver.resolve(MethodGenericCase).type(SubMethodGenericCase)
-                .resolveParameters(SubMethodGenericCase.getMethod("testSub", Class, Object))
+                .method(SubMethodGenericCase.getMethod("testSub", Class, Object)).resolveParameters()
         then: "resolved"
         params == [Class, Cloneable]
 
         when: "return type with method generic"
         Class res = GenericsResolver.resolve(MethodGenericCase).type(SubMethodGenericCase)
-                .resolveReturnClass(SubMethodGenericCase.getMethod("testSub", Class, Object))
+                .method(SubMethodGenericCase.getMethod("testSub", Class, Object)).resolveReturnClass()
         then: "resolved"
         res == Cloneable
+    }
+
+    def "Check direct method generic resolution fail"() {
+
+        setup:
+        Method method = MethodGenericCase.getMethod("test", Class, Object)
+        GenericsContext context = GenericsResolver.resolve(MethodGenericCase)
+
+        when: 'resolve generic from type with method generic'
+        context.resolveGenericOf(method.getGenericParameterTypes()[0])
+        then:
+        def th = thrown(UnknownGenericException)
+        th.getGenericName() == "T"
+        th.getContextType() == MethodGenericCase
+
+        when: 'resolving generic from method context'
+        def res = context.method(method).resolveGenericOf(method.getGenericParameterTypes()[0])
+        then: 'resolved'
+        res == Object
+    }
+
+    def "Check method generics map"() {
+
+        when: "looking for method generics"
+        MethodGenericsContext context = GenericsResolver.resolve(MethodGenericCase).type(SubMethodGenericCase)
+                .method(SubMethodGenericCase.getMethod("testSub", Class, Object))
+
+        then:
+        context.methodGenericsMap() == ["T": Cloneable.class]
+        context.methodGenericTypes() == [Cloneable.class]
+
+        when: "looking for complex method generics"
+        context = GenericsResolver.resolve(MethodGenericCase).type(SubMethodGenericCase)
+                .method(SubMethodGenericCase.getMethod("testSub2", Class, Object))
+
+        then:
+        context.methodGenericsMap() == ["T": Cloneable.class, "K": Cloneable.class]
+        context.methodGenericTypes() == [Cloneable.class, Cloneable.class]
     }
 }

@@ -8,6 +8,7 @@ import ru.vyarus.java.generics.resolver.support.clash.ClashRoot
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashRoot
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub1
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub2
+import ru.vyarus.java.generics.resolver.util.UnknownGenericException
 import spock.lang.Specification
 
 import java.util.concurrent.Callable
@@ -45,7 +46,7 @@ class FailTests extends Specification {
         when: "trying to access generic with bad name"
         GenericsResolver.resolve(Root).type(Base1).generic("K")
         then: "fail"
-        thrown(IllegalArgumentException)
+        thrown(UnknownGenericException)
 
     }
 }

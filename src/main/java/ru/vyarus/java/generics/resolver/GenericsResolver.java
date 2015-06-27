@@ -2,6 +2,7 @@ package ru.vyarus.java.generics.resolver;
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext;
 import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory;
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext;
 
 /**
  * Resolves class hierarchy generics and provides api for introspection.
@@ -27,6 +28,6 @@ public final class GenericsResolver {
      * @return resolved generics context object
      */
     public static GenericsContext resolve(final Class<?> type, final Class<?>... ignoreClasses) {
-        return new GenericsContext(GenericsInfoFactory.create(type, ignoreClasses), type);
+        return new TypeGenericsContext(GenericsInfoFactory.create(type, ignoreClasses), type);
     }
 }

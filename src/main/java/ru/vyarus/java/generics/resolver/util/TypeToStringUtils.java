@@ -21,6 +21,7 @@ public final class TypeToStringUtils {
      * @param type     type to convert to string
      * @param generics type class generics type
      * @return string representation of provided type
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String toStringType(final Type type, final Map<String, Type> generics) {
@@ -35,7 +36,7 @@ public final class TypeToStringUtils {
             res = processWildcardType((WildcardType) type, generics);
         } else {
             // deep generics nesting case
-            res = toStringType(generics.get(((TypeVariable) type).getName()), generics);
+            res = toStringType(declaredGeneric((TypeVariable) type, generics), generics);
         }
         return res;
     }
@@ -87,5 +88,14 @@ public final class TypeToStringUtils {
             res = buf.toString();
         }
         return res;
+    }
+
+    private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {
+        final String name = generic.getName();
+        final Type result = declarations.get(name);
+        if (result == null) {
+            throw new UnknownGenericException(name);
+        }
+        return result;
     }
 }
