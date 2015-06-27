@@ -19,21 +19,24 @@ class Root extends Base<Integer, Long> {...}
 If you ever need to know exact type of T and K then this library is for you.
 
 ```groovy
-Method doSomething = Base.class.getMethod("doSomething", Object.class)
 GenericsContext context = GenericsResolver.resolve(Root.class).type(Base.class)
 context.generics() == [Integer.class, Long.class]
-context.resolveReturnClass(doSomething) == Integer.class
-context.resolveParameters(doSomething) == [Long.class]
+
+Method doSomething = Base.class.getMethod("doSomething", Object.class)
+MethodGenericsContext methodContext = context.method(doSomething)
+methodContext.resolveReturnClass() == Integer.class
+methodContext.resolveParameters() == [Long.class]
 ```
 
 Features:
 * Resolves generics for hierarchies of any depth (all subclasses and interfaces on any level)
 * Supports composite generics
+* Supports method generics
 * Context based api to supplement reflection introspection (to see all possible type information in runtime)
 * To string types converter (useful for logging/reporting)
 
 Library was originally written for [guice-persist-orient](https://github.com/xvik/guice-persist-orient) to support
-finders analysis.
+repositories analysis.
 
 ### Setup
 
@@ -49,14 +52,14 @@ Maven:
 <dependency>
   <groupId>ru.vyarus</groupId>
   <artifactId>generics-resolver</artifactId>
-  <version>1.2.1</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```groovy
-compile 'ru.vyarus:generics-resolver:1.2.1'
+compile 'ru.vyarus:generics-resolver:2.0.0'
 ```
 
 ##### Snapshots
@@ -135,9 +138,72 @@ Returns string representation of generic types, which may be used for logging or
 
 See api for all supported methods.
 
+#### Working with methods
+
+When working with methods its required to use method context:
+
+```java
+MethodGenericsContext methodContext = context.method(methodInstance)
+```
+
+Special method context is important because of method generics, for example:
+
+```java
+class A {
+
+  public <T> T method(T arg) {
+  ...
+  }
+}
+```
+
+Initially generics are resolved for type, so if you try to analyze generified method parameter it will fail, because
+of unknown generic.
+
+Method context resolve method generics as lower bound. In the example above it would be: T == Object.
+But in more complex example:
+
+```java
+class A<Q> {
+
+  public <T extends Q, K extends Cloneable> T method(T arg, List<K> arg2) {
+  ...
+  }
+}
+
+class B extends A<Serializable>
+```
+
+Method generics lower bounds could be resolved:
+
+```java
+Method method = A.getMethod("method", Object.class, Cloneable.class)
+GenericsResolver.resolve(B.class).method(method)
+    .methodGenericTypes() == ["T": Serializable.class, "K": Cloneable.class]
+```
+
+Method context additional methods to work with parameters and return type:
+
+```java
+methodContext.resolveParameters() == [Serializable.class, List.class]
+methodContext.resolveReturnClass() == Serializable.class
+```
+
+Types resolution api (the same as int types context) will count method generics too:
+
+```java
+methodContext.resolveGenericOf(method.getGenericParameterTypes()[1]) == Cloneable.class
+```
+
+Important moment: when navigating to method context, context type is set automatically to 
+method declaring class. This is important to properly resolve references to class generics.
+
 #### Types resolution
 
-Other context api methods group targets low level types resolution. All these methods starts from 'resolve..'.
+Both `MethodGenericContext` and `TypeGenericContext` extends from `GenericsContext` and so share type resolution api.
+The only difference is that in method context amount of known generics could be bugger (due to method generics).
+
+Context api methods group targets low level types resolution. All these methods starts from 'resolve..'.
 
 This api most likely will be used together with reflection introspection of classes in hierarchy (e.g.
 when searching for method or need to know exact method return type).
@@ -148,19 +214,19 @@ Suppose we have more complex case:
 
 ```java
 class Base<T, K extends Collection<T> {
-  K doSomething();
+  K foo;
 }
 
 class Root extends Base<Integer, List<Integer>> {...}
 ```
 
-And we need to know method return type and actual type of collection:
+And we need to know type and actual type of collection in field `foo`:
 
 ```groovy
-Method doSomething = Base.class.getMethod("doSomething")
+Field field = Base.class.getField("foo")
 GenericsContext context = GenericsResolver.resolve(Root.class).type(Base.class)
-context.resolveClass(doSomething.getGenericReturnType()) == List.class
-context.resolveGenericOf(doSomething.getGenericReturnType()) == Integer.class
+context.resolveClass(field.getGenericType()) == List.class
+context.resolveGenericOf(field.getGenericType()) == Integer.class
 ```
 
 Here you can see how both main class and generic class resolved from single type instance.
