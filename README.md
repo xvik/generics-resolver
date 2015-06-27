@@ -201,7 +201,7 @@ method declaring class. This is important to properly resolve references to clas
 #### Types resolution
 
 Both `MethodGenericContext` and `TypeGenericContext` extends from `GenericsContext` and so share type resolution api.
-The only difference is that in method context amount of known generics could be bugger (due to method generics).
+The only difference is that in method context amount of known generics could be bigger (due to method generics).
 
 Context api methods group targets low level types resolution. All these methods starts from 'resolve..'.
 
