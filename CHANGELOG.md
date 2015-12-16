@@ -1,3 +1,5 @@
+* Fix dependent root generics resolution
+
 ### 2.0.0 (2015-06-27)
 * Improve error reporting to show unknown generic name with analyzing type instead of NPE (simplifies usage errors understanding).
 * Support method generics: new method context added (context.method(*)) to properly resolve generics including references to method generics

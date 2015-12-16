@@ -146,7 +146,7 @@ public final class GenericInfoUtils {
             final TypeVariable... declaredGenerics) {
         final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
         for (TypeVariable type : declaredGenerics) {
-            generics.put(type.getName(), resolveActualType(type.getBounds()[0], Collections.<String, Type>emptyMap()));
+            generics.put(type.getName(), resolveActualType(type.getBounds()[0], generics));
         }
         return generics;
     }
