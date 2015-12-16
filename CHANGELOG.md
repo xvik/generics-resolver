@@ -1,3 +1,4 @@
+### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution
 
 ### 2.0.0 (2015-06-27)

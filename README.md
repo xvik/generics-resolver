@@ -52,14 +52,14 @@ Maven:
 <dependency>
   <groupId>ru.vyarus</groupId>
   <artifactId>generics-resolver</artifactId>
-  <version>2.0.0</version>
+  <version>2.0.1</version>
 </dependency>
 ```
 
 Gradle:
 
 ```groovy
-compile 'ru.vyarus:generics-resolver:2.0.0'
+compile 'ru.vyarus:generics-resolver:2.0.1'
 ```
 
 ##### Snapshots
