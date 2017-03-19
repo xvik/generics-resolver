@@ -25,7 +25,7 @@ public final class TypeToStringUtils {
      */
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String toStringType(final Type type, final Map<String, Type> generics) {
-        String res;
+        final String res;
         if (type instanceof Class) {
             res = ((Class) type).getSimpleName();
         } else if (type instanceof ParameterizedType) {
@@ -56,7 +56,7 @@ public final class TypeToStringUtils {
     }
 
     private static String processWildcardType(final WildcardType wildcard, final Map<String, Type> generics) {
-        String res;
+        final String res;
         if (wildcard.getLowerBounds().length == 0) {
             res = "? extends " + toStringType(
                     GenericsUtils.resolveClass(wildcard.getUpperBounds()[0], generics), generics);
@@ -71,7 +71,7 @@ public final class TypeToStringUtils {
         final Iterator iterator = args.iterator();
 
         final Object first = iterator.next();
-        String res;
+        final String res;
         if (!iterator.hasNext()) {
             res = String.valueOf(first);
         } else {

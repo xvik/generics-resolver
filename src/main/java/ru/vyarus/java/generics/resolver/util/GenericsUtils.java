@@ -88,7 +88,7 @@ public final class GenericsUtils {
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
     public static Class<?> resolveClass(final Type type, final Map<String, Type> generics) {
-        Class<?> res;
+        final Class<?> res;
         if (type instanceof Class) {
             res = (Class) type;
         } else if (type instanceof ParameterizedType) {
