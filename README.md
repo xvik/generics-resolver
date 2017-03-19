@@ -1,4 +1,4 @@
-#Java generics runtime resolver
+# Java generics runtime resolver
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xvik/generics-resolver)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
 [![Build Status](http://img.shields.io/travis/xvik/generics-resolver.svg?style=flat&branch=master)](https://travis-ci.org/xvik/generics-resolver)
