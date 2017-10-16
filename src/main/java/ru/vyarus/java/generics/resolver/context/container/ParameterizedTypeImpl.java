@@ -45,7 +45,6 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     }
 
     @Override
-    @SuppressWarnings("PMD.UselessParentheses")
     public boolean equals(final Object o) {
         boolean res = this == o;
         if (!res && o instanceof ParameterizedType) {
