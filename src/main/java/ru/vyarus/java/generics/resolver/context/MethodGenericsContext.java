@@ -27,14 +27,8 @@ public class MethodGenericsContext extends GenericsContext {
     private Map<String, Type> methodGenerics;
     private Map<String, Type> allGenerics;
 
-    public MethodGenericsContext(final GenericsInfo genericsInfo, final Class<?> type, final Method method) {
-        super(genericsInfo, type);
-        final Class<?> declaringType = method.getDeclaringClass();
-        if (!declaringType.equals(type)) {
-            throw new IllegalArgumentException(String.format(
-                    "Method '%s' should be resolved on type %s and not %s",
-                    method.getName(), declaringType.getSimpleName(), type.getSimpleName()));
-        }
+    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method) {
+        super(genericsInfo, method.getDeclaringClass());
         this.method = method;
         initGenerics();
     }
@@ -105,6 +99,34 @@ public class MethodGenericsContext extends GenericsContext {
     }
 
     /**
+     * Create generics context for parameter type (with correctly resolved root generics). "Drill down".
+     * <pre>{@code class A<T> {
+     *    void doSmth(B<T>);
+     * }
+     * class C extends A<String> {}}</pre>
+     * Build generics context for parameter type (to continue analyzing parameter type fields):
+     * {@code type(A.class).method(A.class.getMethod("getSmth", B.class)).parameterInlyingType(0)
+     * == generics context of B<String>}
+     * <p>
+     * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
+     * would be counted for hierarchy resolution.
+     *
+     * @param pos parameter position (from 0)
+     * @return generics context of parameter type
+     * @throws IllegalArgumentException if parameter index is incorrect
+     * @see #inlyingType(Type)
+     */
+    public InlyingTypeGenericsContext parameterInlyingType(final int pos) {
+        final Type[] genericParams = method.getGenericParameterTypes();
+        if (pos < 0 || pos >= genericParams.length) {
+            throw new IllegalArgumentException(String.format(
+                    "Can't request parameter %s of method '%s' (%s) becuase it have only %s parameters",
+                    pos, method.getName(), currentClass().getSimpleName(), genericParams.length));
+        }
+        return inlyingType(genericParams[pos]);
+    }
+
+    /**
      * Useful for introspection, to know exact generic value.
      * <pre>{@code class A extends B<Long>;
      * class B<T> {
@@ -131,6 +153,25 @@ public class MethodGenericsContext extends GenericsContext {
      */
     public Class<?> resolveReturnTypeGeneric() throws NoGenericException {
         return resolveReturnTypeGenerics().get(0);
+    }
+
+    /**
+     * Create generics context for return type (with correctly resolved root generics). "Drill down".
+     * <pre>{@code class A<T> {
+     *    B<T> doSmth();
+     * }
+     * class C extends A<String> {}}</pre>
+     * Build generics context for returning type (to continue analyzing return type fields):
+     * {@code type(A.class).method(A.class.getMethod("getSmth")).returnInlyingType() == generics context of B<String>}
+     * <p>
+     * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
+     * would be counted for hierarchy resolution.
+     *
+     * @return generics context of return type
+     * @see #inlyingType(Type)
+     */
+    public InlyingTypeGenericsContext returnInlyingType() {
+        return inlyingType(method.getGenericReturnType());
     }
 
     @Override

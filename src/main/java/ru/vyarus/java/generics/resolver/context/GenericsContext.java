@@ -1,10 +1,8 @@
 package ru.vyarus.java.generics.resolver.context;
 
-import ru.vyarus.java.generics.resolver.util.GenericsUtils;
-import ru.vyarus.java.generics.resolver.util.NoGenericException;
-import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
-import ru.vyarus.java.generics.resolver.util.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.*;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -33,7 +31,7 @@ import java.util.Map;
  * @since 17.11.2014
  */
 // huge class size is OK, because it should be the only entry point for api
-@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace"})
+@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace", "PMD.TooManyMethods"})
 public abstract class GenericsContext {
     protected final GenericsInfo genericsInfo;
     protected final Class<?> currentType;
@@ -289,12 +287,95 @@ public abstract class GenericsContext {
      * For example, {@code <T> void myMethod(T arg);}.
      * <p>Use context to work with method parameters, return type or resolving types inside method.</p>
      *
-     * @param method method in current class to navigate to
+     * @param method method in current class hierarchy to navigate to (may be method from subclass, relative to
+     *               currently selected, in this case context type will be automatically switched)
      * @return new context instance specific to requested method
-     * @throws IllegalArgumentException if requested method is not present in current class hierarchy
+     * @throws IllegalArgumentException if requested method's declaration class is not present in current class
+     *                                  hierarchy
      */
     public MethodGenericsContext method(final Method method) {
-        return new MethodGenericsContext(genericsInfo, method.getDeclaringClass(), method);
+        final Class<?> target = method.getDeclaringClass();
+        try {
+            // switch context, if required to avoid silly errors (will fail if type is not in hierarchy)
+            final GenericsContext context = target != currentClass() ? type(target) : this;
+            return new MethodGenericsContext(context.genericsInfo, method);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(String.format(
+                    "Method '%s' declaration type %s is not present in hierarchy of %s",
+                    method.getName(), target.getSimpleName(), genericsInfo.getRootClass().getSimpleName()), ex);
+        }
+    }
+
+    /**
+     * Create generics context for field type (with correctly resolved root generics)."Drill down".
+     * <pre>{@code class A<T> {
+     *    private B<T> field;
+     * }
+     * class C extends A<String> {}}</pre>
+     * Build generics context for field type (to continue analyzing field class fields):
+     * {@code type(A.class).inlyingFieldType(A.class.getField("field")) == generics context of B<String>}
+     * <p>
+     * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
+     * would be counted for hierarchy resolution.
+     *
+     * @param field field in current class hierarchy to navigate to (may be field from superclass, relative to
+     *              currently selected, in this case context type will be automatically switched)
+     * @return generics context for field type (inlying context)
+     * @see #inlyingType(Type)
+     */
+    public InlyingTypeGenericsContext inlyingFieldType(final Field field) {
+        final Class<?> target = field.getDeclaringClass();
+        try {
+            // switch context to avoid silly mistakes (will fail if declaring type is not in hierarchy)
+            final GenericsContext context = target != currentClass() ? type(target) : this;
+            return context.inlyingType(field.getGenericType());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(String.format(
+                    "Field '%s' declaration type %s is not present in hierarchy of %s",
+                    field.getName(), target.getSimpleName(), genericsInfo.getRootClass().getSimpleName()), ex);
+        }
+    }
+
+    /**
+     * Build generics context for type in context of current class. This may be required to analyze class of
+     * field or method return type ("drill down"): new generics hierarchy must be built, but with correct
+     * resolution of root generics. For example:
+     * <pre>{@code class A<T> {
+     *    private C<T> field;
+     * }
+     * class C extends A<String> {}}</pre>
+     * To continue analysis of field type: {@code type(C.class).inlyingFieldType(A.class.getField("field")
+     * .getGenericType()) == generics context of B<String>}
+     * <p>
+     * It is very important to resolve type in context of class declaring class, because otherwise it would not
+     * be possible to correctly resolve generics (if declared). For example,
+     * {@code type(C.class).inlyingType(A.class.getField("field").getGenericType()) == generics context of B<Object>}
+     * because there is no generic T in class C. To avoid mistakes use shortcut methods, which automatically switch
+     * context type: {@link #inlyingFieldType(Field)}, {@link MethodGenericsContext#returnInlyingType()} and
+     * {@link MethodGenericsContext#parameterInlyingType(int)}.
+     * <p>
+     * If provided type did not contains generic then cached type resolution will be used (the same as
+     * {@code GenericsResolver.resolve(Target.class)} and if generics present then type will be built on each call.
+     * <p>
+     * Returned context holds reference to original (root) context: {@link InlyingTypeGenericsContext#rootContext()}.
+     * <p>
+     * Ignored types, used for context creation, are counted (will also be ignored for inlying context building).
+     *
+     * @param type type to resolve hierarchy from (it must be generified type, resolved in current class)
+     * @return generics context of type (inlying context)
+     */
+    public InlyingTypeGenericsContext inlyingType(final Type type) {
+        final Class target = resolveClass(type);
+        final GenericsInfo generics;
+        if (target.getTypeParameters().length > 0) {
+            // resolve class hierarchy in context (non cachable context)
+            generics = GenericInfoUtils.create(this, type, genericsInfo.getIgnoredTypes());
+        } else {
+            // class without generics - use cachable context
+            generics = GenericsInfoFactory.create(target, genericsInfo.getIgnoredTypes());
+        }
+
+        return new InlyingTypeGenericsContext(generics, target, this);
     }
 
     /**

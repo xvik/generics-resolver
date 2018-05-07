@@ -1,3 +1,11 @@
+* Support inlying contexts: class generics resolution in context of class (to correctly handle root class generics).
+    Required for correct generics context building for field type, method return type or method parameter.      
+    - context.inlyingType(Type) - universal resolver (the same as GenericsResolver.resolve(class) if class does not have generics (resolution cached))
+    - context.inlyingType(Field) - shortcut for fields (guarantee correct base type)
+    - method(Method).returnInlyingType() - shortcut for method return type (guarantee correct base type)
+    - method(Method).parameterInlyingType(pos) - shortcut for method parameter type (guarantee correct base type)
+    - returned inlying context have reference to root context: InlyingTypeGenericsContext.rootContext()
+
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution
 

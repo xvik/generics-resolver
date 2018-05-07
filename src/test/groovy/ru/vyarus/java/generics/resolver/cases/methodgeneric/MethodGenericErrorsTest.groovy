@@ -1,8 +1,10 @@
 package ru.vyarus.java.generics.resolver.cases.methodgeneric
 
 import ru.vyarus.java.generics.resolver.GenericsResolver
+import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.Err
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.MethodGenericCase
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.MethodGenericsContext
 import spock.lang.Specification
 
@@ -17,21 +19,21 @@ class MethodGenericErrorsTest extends Specification {
 
     def "Check error on bad type"() {
 
-        when: "check incorrect method context creation"
-
-        def method = MethodGenericCase.getMethod("testSub", Class, Object)
-        new MethodGenericsContext(GenericsResolver.resolve(MethodGenericCase).getGenericsInfo(),
-        MethodGenericCase, method);
-
-        then: "type incompatible"
-        thrown(IllegalArgumentException)
+        setup:
+        GenericsContext context = GenericsResolver.resolve(MethodGenericCase)
 
         when: "navigating to method from different type"
-        MethodGenericsContext context = GenericsResolver.resolve(MethodGenericCase)
-                .method(method);
+        context.method(Err.getMethod("errMeth"))
+        then: "type incompatible"
+        def ex = thrown(IllegalArgumentException)
+        ex.message == "Method 'errMeth' declaration type Err is not present in hierarchy of MethodGenericCase"
+
+        when: "navigating to method from different type"
+        def method = MethodGenericCase.getMethod("testSub", Class, Object)
+        def res = context.method(method);
 
         then: "ok"
-        context.currentClass() == SubMethodGenericCase
-        context.currentMethod() == method
+        res.currentClass() == SubMethodGenericCase
+        res.currentMethod() == method
     }
 }

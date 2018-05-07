@@ -1,7 +1,5 @@
 package ru.vyarus.java.generics.resolver.cases.methodgeneric.support
 
-import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
-
 /**
  * @author Vyacheslav Rusakov 
  * @since 23.06.2015

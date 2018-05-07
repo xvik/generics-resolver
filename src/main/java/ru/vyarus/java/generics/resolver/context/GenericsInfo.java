@@ -16,10 +16,14 @@ public class GenericsInfo {
     private final Class<?> root;
     // super interface type -> generic name -> generic type (either class or parametrized type or generic array)
     private final Map<Class<?>, LinkedHashMap<String, Type>> types;
+    private final Class[] ignoredTypes;
 
-    public GenericsInfo(final Class<?> root, final Map<Class<?>, LinkedHashMap<String, Type>> types) {
+    public GenericsInfo(final Class<?> root,
+                        final Map<Class<?>, LinkedHashMap<String, Type>> types,
+                        final Class... ignoredTypes) {
         this.root = root;
         this.types = types;
+        this.ignoredTypes = ignoredTypes;
     }
 
     /**
@@ -47,5 +51,12 @@ public class GenericsInfo {
      */
     public Set<Class<?>> getComposingTypes() {
         return new HashSet<Class<?>>(types.keySet());
+    }
+
+    /**
+     * @return types ignored from analysis (all specified types to ignore)
+     */
+    public Class[] getIgnoredTypes() {
+        return Arrays.copyOf(ignoredTypes, ignoredTypes.length);
     }
 }
