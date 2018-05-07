@@ -33,15 +33,19 @@ public final class GenericInfoUtils {
      * @return analyzed type generics info
      */
     public static GenericsInfo create(final Class<?> type, final Class<?>... ignoreClasses) {
-        return create(null, type, ignoreClasses);
+        final LinkedHashMap<String, Type> generics = type.getTypeParameters().length > 0
+                // special case: root class also contains generics
+                ? resolveRawGenerics(type.getTypeParameters())
+                : EMPTY_MAP;
+        return create(type, generics, ignoreClasses);
     }
 
     /**
      * Type analysis in context of analyzed type. For example, resolution of field type class in context of
      * analyzed class (so we can correctly resolve it's generics). The result is not intended to be cached as it's
-     * context-sensitive (when context provided).
+     * context-sensitive.
      *
-     * @param context       generics context of containing class (may be null for raw class analysis)
+     * @param context       generics context of containing class
      * @param type          type to analyze (important: this must be generified type and not raw class in
      *                      order to properly resolve generics)
      * @param ignoreClasses classes to exclude from hierarchy analysis
@@ -49,30 +53,26 @@ public final class GenericInfoUtils {
      */
     public static GenericsInfo create(
             final GenericsContext context, final Type type, final Class<?>... ignoreClasses) {
-        if (context == null && type.getClass() != Class.class) {
-            throw new IllegalStateException("Only direct class could be analyzed outer generics context");
-        }
+        // root generics are required only to properly solve type
+        final Map<String, Type> rootGenerics = context.genericsMap();
+        // first step: solve type to replace transitive generics with direct values
+        final Type actual = resolveActualType(type, rootGenerics);
+        final Class target = context.resolveClass(actual);
+        final LinkedHashMap<String, Type> generics = actual instanceof ParameterizedType
+                ? resolveGenerics((ParameterizedType) actual, rootGenerics) : EMPTY_MAP;
+        return create(target, generics, ignoreClasses);
+    }
+
+
+    private static GenericsInfo create(
+            final Class type, final LinkedHashMap<String, Type> rootGenerics, final Class<?>... ignoreClasses) {
 
         final Map<Class<?>, LinkedHashMap<String, Type>> generics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        generics.put(type, rootGenerics);
 
-        final Class exactType;
-        if (context == null) {
-            // no outer context - provided type must be class and it's generics (possible) can't be completely resolved
-            exactType = (Class) type;
-            generics.put(exactType, exactType.getTypeParameters().length > 0
-                    // special case: root class also contains generics
-                    ? resolveRawGenerics(exactType.getTypeParameters())
-                    : EMPTY_MAP);
-        } else {
-            // provided type in context of outer generics could be completely resolved
-            exactType = context.resolveClass(type);
-            generics.put(exactType, type instanceof ParameterizedType
-                    ? resolveGenerics((ParameterizedType) type, context.genericsMap()) : EMPTY_MAP);
-        }
-
-        analyzeType(generics, exactType, Arrays.asList(ignoreClasses));
-        return new GenericsInfo(exactType, generics, ignoreClasses);
+        analyzeType(generics, type, Arrays.asList(ignoreClasses));
+        return new GenericsInfo(type, generics, ignoreClasses);
     }
 
     private static void analyzeType(final Map<Class<?>, LinkedHashMap<String, Type>> types, final Class<?> type,
