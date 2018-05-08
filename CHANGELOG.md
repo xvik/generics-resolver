@@ -8,7 +8,9 @@
 * Type generics resolution with partial generics knowledge: building inlying context (using declared type information) for sub type.
     This is useful for instance analysis when you need to build generics context for actual object (with not known root generics), 
     but you know generics for declared middle type.
-    - by analogy with direct inlying: inlyingTypeAs(Type, Class), inlyingTypeAs(Field, Class), returnInlyingTypeAs(Class), parameterInlyingTypeAs(pos, Class)    
+    - by analogy with direct inlying: inlyingTypeAs(Type, Class), inlyingTypeAs(Field, Class), returnInlyingTypeAs(Class), parameterInlyingTypeAs(pos, Class)
+* Add type full resolution method (in returned type all variables are replaced with actual known types):
+    context.resolveType(Type).         
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

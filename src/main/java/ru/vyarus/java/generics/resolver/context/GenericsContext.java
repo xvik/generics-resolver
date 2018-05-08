@@ -226,7 +226,7 @@ public abstract class GenericsContext {
      * @param type type to resolve generics
      * @return resolved generic class
      * @throws NoGenericException if provided type does not contain generic (exception required to distinguish
-     *                            {@code Object.class} generic value from class which doesn't support generic
+     *                            {@code Object.class} generic value from class which doesn't support generic)
      */
     public List<Class<?>> resolveGenericsOf(final Type type) throws NoGenericException {
         try {
@@ -243,11 +243,35 @@ public abstract class GenericsContext {
      * @param type type to resolve generic
      * @return first resolved generic
      * @throws NoGenericException if provided type does not contain generic (exception required to distinguish
-     *                            {@code Object.class} generic value from class which doesn't support generic
+     *                            {@code Object.class} generic value from class which doesn't support generic)
      */
     public Class<?> resolveGenericOf(final Type type) throws NoGenericException {
         try {
             return resolveGenericsOf(type).get(0);
+        } catch (UnknownGenericException e) {
+            throw e.rethrowWithType(currentType);
+        }
+    }
+
+    /**
+     * Replace all named variables in type with actual generics. For example, {@code ParameterizedType List<T>}
+     * would become {@code ParameterizedType List<String>} (assuming generic T is defined as String).
+     * More complex cases could arrive like {@code T[]} or {@code ? extends T}, but everything will be correctly
+     * replaced by actual (known) types, so you could be sure that returned type contains all known type information
+     * and does not contain variables.
+     * <p>
+     * Useful when complete type information is required elsewhere (for example, to create typed DI binding).
+     * <p>
+     * WARNING: don't forget to set correct context type before resolution because otherwise wrong generics set
+     * might be used! For fields and methods always rely on declaring type, like this:
+     * {@code .type(field.getDeclaringType()).resolveType(field.getGenericType())}
+     *
+     * @param type type to resolve named generics in
+     * @return type without named generics (replaced by known actual types)
+     */
+    public Type resolveType(final Type type) {
+        try {
+            return GenericsUtils.resolveTypeGenerics(type, contextGenerics());
         } catch (UnknownGenericException e) {
             throw e.rethrowWithType(currentType);
         }

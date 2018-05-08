@@ -1,5 +1,9 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
+import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
+import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
+
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -112,6 +116,47 @@ public final class GenericsUtils {
             }
         }
         return res;
+    }
+
+    /**
+     * Resolve type generics. Returned type will contain actual types instead of generic names. Most likely, returned
+     * type will be different than provided: for example, original type may be {@link TypeVariable} and returned
+     * will be simple {@link Class} (resolved generic value).
+     *
+     * @param type type to resolve
+     * @param generics root class generics mapping
+     * @return resolved type
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     */
+    public static Type resolveTypeGenerics(final Type type, final Map<String, Type> generics) {
+        Type resolvedGenericType = null;
+        if (type instanceof TypeVariable) {
+            // simple named generics resolved to target types
+            resolvedGenericType = declaredGeneric((TypeVariable) type, generics);
+        } else if (type instanceof Class) {
+            resolvedGenericType = type;
+        } else if (type instanceof ParameterizedType) {
+            final ParameterizedType parametrizedType = (ParameterizedType) type;
+            resolvedGenericType = new ParameterizedTypeImpl(parametrizedType.getRawType(),
+                    resolve(parametrizedType.getActualTypeArguments(), generics), parametrizedType.getOwnerType());
+        } else if (type instanceof GenericArrayType) {
+            final GenericArrayType arrayType = (GenericArrayType) type;
+            resolvedGenericType = new GenericArrayTypeImpl(resolveTypeGenerics(
+                    arrayType.getGenericComponentType(), generics));
+        } else if (type instanceof WildcardType) {
+            final WildcardType wildcard = (WildcardType) type;
+            resolvedGenericType = new WildcardTypeImpl(resolve(wildcard.getUpperBounds(), generics),
+                    resolve(wildcard.getLowerBounds(), generics));
+        }
+        return resolvedGenericType;
+    }
+
+    private static Type[] resolve(final Type[] types, final Map<String, Type> generics) {
+        final Type[] resolved = new Type[types.length];
+        for (int i = 0; i < types.length; i++) {
+            resolved[i] = resolveTypeGenerics(types[i], generics);
+        }
+        return resolved;
     }
 
     private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {

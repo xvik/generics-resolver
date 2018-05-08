@@ -2,11 +2,10 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext;
 import ru.vyarus.java.generics.resolver.context.GenericsInfo;
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
-import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 
-import java.lang.reflect.*;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.*;
 
 /**
@@ -56,7 +55,7 @@ public final class GenericInfoUtils {
         // root generics are required only to properly solve type
         final Map<String, Type> rootGenerics = context.genericsMap();
         // first step: solve type to replace transitive generics with direct values
-        final Type actual = resolveActualType(type, rootGenerics);
+        final Type actual = GenericsUtils.resolveTypeGenerics(type, rootGenerics);
         final Class target = context.resolveClass(actual);
         final LinkedHashMap<String, Type> generics = actual instanceof ParameterizedType
                 ? resolveGenerics((ParameterizedType) actual, rootGenerics) : EMPTY_MAP;
@@ -84,7 +83,7 @@ public final class GenericInfoUtils {
         // root generics are required only to properly solve type
         final Map<String, Type> rootGenerics = context.genericsMap();
         // first step: solve type to replace transitive generics with direct values
-        final Type actual = resolveActualType(type, rootGenerics);
+        final Type actual = GenericsUtils.resolveTypeGenerics(type, rootGenerics);
         final Class<?> middleType = context.resolveClass(actual);
         if (!middleType.isAssignableFrom(asType)) {
             throw new IllegalArgumentException(String.format("Requested type %s is not a subtype of %s",
@@ -203,48 +202,17 @@ public final class GenericInfoUtils {
 
         final int cnt = genericNames.length;
         for (int i = 0; i < cnt; i++) {
-            final Type resolvedGenericType = resolveActualType(genericTypes[i], rootGenerics);
+            final Type resolvedGenericType = GenericsUtils.resolveTypeGenerics(genericTypes[i], rootGenerics);
             generics.put(genericNames[i].getName(), resolvedGenericType);
         }
         return generics;
-    }
-
-    private static Type resolveActualType(final Type genericType, final Map<String, Type> rootGenerics) {
-        Type resolvedGenericType = null;
-        if (genericType instanceof TypeVariable) {
-            // simple named generics resolved to target types
-            resolvedGenericType = rootGenerics.get(((TypeVariable) genericType).getName());
-        } else if (genericType instanceof Class) {
-            resolvedGenericType = genericType;
-        } else if (genericType instanceof ParameterizedType) {
-            final ParameterizedType parametrizedType = (ParameterizedType) genericType;
-            resolvedGenericType = new ParameterizedTypeImpl(parametrizedType.getRawType(),
-                    resolve(parametrizedType.getActualTypeArguments(), rootGenerics), parametrizedType.getOwnerType());
-        } else if (genericType instanceof GenericArrayType) {
-            final GenericArrayType arrayType = (GenericArrayType) genericType;
-            resolvedGenericType = new GenericArrayTypeImpl(resolveActualType(
-                    arrayType.getGenericComponentType(), rootGenerics));
-        } else if (genericType instanceof WildcardType) {
-            final WildcardType wildcard = (WildcardType) genericType;
-            resolvedGenericType = new WildcardTypeImpl(resolve(wildcard.getUpperBounds(), rootGenerics),
-                    resolve(wildcard.getLowerBounds(), rootGenerics));
-        }
-        return resolvedGenericType;
-    }
-
-    private static Type[] resolve(final Type[] types, final Map<String, Type> rootGenerics) {
-        final Type[] resolved = new Type[types.length];
-        for (int i = 0; i < types.length; i++) {
-            resolved[i] = resolveActualType(types[i], rootGenerics);
-        }
-        return resolved;
     }
 
     private static LinkedHashMap<String, Type> resolveRawGenerics(
             final TypeVariable... declaredGenerics) {
         final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
         for (TypeVariable type : declaredGenerics) {
-            generics.put(type.getName(), resolveActualType(type.getBounds()[0], generics));
+            generics.put(type.getName(), GenericsUtils.resolveTypeGenerics(type.getBounds()[0], generics));
         }
         return generics;
     }

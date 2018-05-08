@@ -1,18 +1,14 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
-import ru.vyarus.java.generics.resolver.support.BeanBase
-import ru.vyarus.java.generics.resolver.support.BeanRoot
-import ru.vyarus.java.generics.resolver.support.ComplexGenerics2
-import ru.vyarus.java.generics.resolver.support.Lvl2Base1
-import ru.vyarus.java.generics.resolver.support.Model
-import ru.vyarus.java.generics.resolver.support.Root
+import ru.vyarus.java.generics.resolver.support.*
 import ru.vyarus.java.generics.resolver.util.NoGenericException
 import spock.lang.Specification
 import spock.lang.Unroll
 
 import java.lang.reflect.Method
-
+import java.lang.reflect.ParameterizedType
+import java.lang.reflect.TypeVariable
 
 /**
  * @author Vyacheslav Rusakov 
@@ -51,6 +47,14 @@ class MethodIntrospectionTest extends Specification {
         then: "check type class resolution"
         context.resolveClass(doSomth4.genericParameterTypes[0]) == Model
 
+        when: "check entire type resolution"
+        def res = context.type(doSomth3.getDeclaringClass()).resolveType(doSomth3.getGenericReturnType())
+        then: "resolved"
+        doSomth3.getGenericReturnType() instanceof ParameterizedType
+        ((ParameterizedType) doSomth3.getGenericReturnType()).getActualTypeArguments()[0] instanceof TypeVariable
+        res instanceof ParameterizedType
+        ((ParameterizedType) res).getActualTypeArguments()[0] == Model
+
         when: "resolve generic of no generic type"
         context.resolveGenericOf(doSomth.genericReturnType)
         then:
@@ -62,9 +66,9 @@ class MethodIntrospectionTest extends Specification {
         thrown(NoGenericException)
 
         where:
-        type            | root            |bean
-        "interface"    | Root            | Lvl2Base1
-        "bean"          | BeanRoot        | BeanBase
+        type        | root     | bean
+        "interface" | Root     | Lvl2Base1
+        "bean"      | BeanRoot | BeanBase
     }
 
     def "Check array resolution"() {
