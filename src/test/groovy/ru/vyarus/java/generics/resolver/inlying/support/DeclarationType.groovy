@@ -8,6 +8,7 @@ package ru.vyarus.java.generics.resolver.inlying.support
 class DeclarationType<Fld, Ret, Par> {
 
     private SubType<Fld> one
+    private BaseIface<Fld> two
 
     public SubType<Ret> ret() {
         return null;

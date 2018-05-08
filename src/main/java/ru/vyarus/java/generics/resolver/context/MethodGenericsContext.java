@@ -117,13 +117,25 @@ public class MethodGenericsContext extends GenericsContext {
      * @see #inlyingType(Type)
      */
     public InlyingTypeGenericsContext parameterInlyingType(final int pos) {
-        final Type[] genericParams = method.getGenericParameterTypes();
-        if (pos < 0 || pos >= genericParams.length) {
-            throw new IllegalArgumentException(String.format(
-                    "Can't request parameter %s of method '%s' (%s) becuase it have only %s parameters",
-                    pos, method.getName(), currentClass().getSimpleName(), genericParams.length));
-        }
-        return inlyingType(genericParams[pos]);
+        checkParameter(pos);
+        return inlyingType(method.getGenericParameterTypes()[pos]);
+    }
+
+    /**
+     * Create generics context for actual class, passed into parameter type (assuming you have access to that instance
+     * or know exact type). Context will contain correct generics for known declaration type (middle type in
+     * target type hierarchy). This is useful when analyzing object instance (introspecting actual object).
+     * <p>
+     * Other than target type, method is the same as {@link #parameterInlyingType(int)}.
+     *
+     * @param pos    parameter position (from 0)
+     * @param asType required target type to build generics context for (must include declared type as base class)
+     * @return generics context of requested type with known parameter generics
+     * @see #inlyingTypeAs(Type, Class)
+     */
+    public InlyingTypeGenericsContext parameterInlyingTypeAs(final int pos, final Class<?> asType) {
+        checkParameter(pos);
+        return inlyingTypeAs(method.getGenericParameterTypes()[pos], asType);
     }
 
     /**
@@ -174,6 +186,21 @@ public class MethodGenericsContext extends GenericsContext {
         return inlyingType(method.getGenericReturnType());
     }
 
+    /**
+     * Create generics context for actual class, returned form method (assuming you have access to that instance
+     * or know exact type). Context will contain correct generics for known declaration type (middle type in target
+     * type hierarchy). This is useful when analyzing object instance (introspecting actual object).
+     * <p>
+     * Other than target type, method is the same as {@link #returnInlyingType()}.
+     *
+     * @param asType required target type to build generics context for (must include declared type as base class)
+     * @return generics context of requested type with known return type generics
+     * @see #inlyingTypeAs(Type, Class)
+     */
+    public InlyingTypeGenericsContext returnInlyingTypeAs(final Class<?> asType) {
+        return inlyingTypeAs(method.getGenericReturnType(), asType);
+    }
+
     @Override
     protected Map<String, Type> contextGenerics() {
         return allGenerics;
@@ -191,6 +218,15 @@ public class MethodGenericsContext extends GenericsContext {
             final Class<?> value = resolveClass(generic.getBounds()[0]);
             this.methodGenerics.put(generic.getName(), value);
             this.allGenerics.put(generic.getName(), value);
+        }
+    }
+
+    private void checkParameter(final int pos) {
+        final Type[] genericParams = method.getGenericParameterTypes();
+        if (pos < 0 || pos >= genericParams.length) {
+            throw new IllegalArgumentException(String.format(
+                    "Can't request parameter %s of method '%s' (%s) because it have only %s parameters",
+                    pos, method.getName(), currentClass().getSimpleName(), genericParams.length));
         }
     }
 }

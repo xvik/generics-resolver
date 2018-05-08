@@ -5,6 +5,10 @@
     - method(Method).returnInlyingType() - shortcut for method return type (guarantee correct base type)
     - method(Method).parameterInlyingType(pos) - shortcut for method parameter type (guarantee correct base type)
     - returned inlying context have reference to root context: InlyingTypeGenericsContext.rootContext()
+* Type generics resolution with partial generics knowledge: building inlying context (using declared type information) for sub type.
+    This is useful for instance analysis when you need to build generics context for actual object (with not known root generics), 
+    but you know generics for declared middle type.
+    - by analogy with direct inlying: inlyingTypeAs(Type, Class), inlyingTypeAs(Field, Class), returnInlyingTypeAs(Class), parameterInlyingTypeAs(pos, Class)    
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

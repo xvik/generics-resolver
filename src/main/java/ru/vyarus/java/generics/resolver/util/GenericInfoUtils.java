@@ -37,7 +37,7 @@ public final class GenericInfoUtils {
                 // special case: root class also contains generics
                 ? resolveRawGenerics(type.getTypeParameters())
                 : EMPTY_MAP;
-        return create(type, generics, ignoreClasses);
+        return create(type, generics, null, ignoreClasses);
     }
 
     /**
@@ -60,44 +60,104 @@ public final class GenericInfoUtils {
         final Class target = context.resolveClass(actual);
         final LinkedHashMap<String, Type> generics = actual instanceof ParameterizedType
                 ? resolveGenerics((ParameterizedType) actual, rootGenerics) : EMPTY_MAP;
-        return create(target, generics, ignoreClasses);
+        return create(target, generics, null, ignoreClasses);
+    }
+
+    /**
+     * Type analysis in context of analyzed type with child class as target type. Case: we have interface
+     * (or base type) with generic in class (as field or return type), but we need to analyze actual
+     * instance type (from value). This method will analyze type from new root (where generics is unknown), but
+     * will add known middle generics. The result is not intended to be cached as it's
+     * context-sensitive.
+     *
+     * @param context       generics context of containing class
+     * @param type          type to analyze (important: this must be generified type and not raw class in
+     *                      order to properly resolve generics)
+     * @param asType        target child type (this class contain original type in hierarchy)
+     * @param ignoreClasses classes to exclude from hierarchy analysis
+     * @return analyzed type generics info
+     */
+    public static GenericsInfo create(final GenericsContext context,
+                                      final Type type,
+                                      final Class<?> asType,
+                                      final Class<?>... ignoreClasses) {
+        // root generics are required only to properly solve type
+        final Map<String, Type> rootGenerics = context.genericsMap();
+        // first step: solve type to replace transitive generics with direct values
+        final Type actual = resolveActualType(type, rootGenerics);
+        final Class<?> middleType = context.resolveClass(actual);
+        if (!middleType.isAssignableFrom(asType)) {
+            throw new IllegalArgumentException(String.format("Requested type %s is not a subtype of %s",
+                    asType.getSimpleName(), middleType.getSimpleName()));
+        }
+
+        // known middle type
+        LinkedHashMap<String, Type> typeGenerics = actual instanceof ParameterizedType
+                ? resolveGenerics((ParameterizedType) actual, rootGenerics) : EMPTY_MAP;
+        final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics =
+                new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        knownGenerics.put(middleType, typeGenerics);
+
+        // root type
+        typeGenerics = asType.getTypeParameters().length > 0
+                // special case: root class also contains generics
+                ? resolveRawGenerics(asType.getTypeParameters())
+                : EMPTY_MAP;
+        return create(asType, typeGenerics, knownGenerics, ignoreClasses);
     }
 
 
     private static GenericsInfo create(
-            final Class type, final LinkedHashMap<String, Type> rootGenerics, final Class<?>... ignoreClasses) {
+            final Class type,
+            final LinkedHashMap<String, Type> rootGenerics,
+            final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics,
+            final Class<?>... ignoreClasses) {
 
         final Map<Class<?>, LinkedHashMap<String, Type>> generics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
         generics.put(type, rootGenerics);
 
-        analyzeType(generics, type, Arrays.asList(ignoreClasses));
+        analyzeType(generics,
+                knownGenerics == null ? Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap() : knownGenerics,
+                type,
+                Arrays.asList(ignoreClasses));
         return new GenericsInfo(type, generics, ignoreClasses);
     }
 
-    private static void analyzeType(final Map<Class<?>, LinkedHashMap<String, Type>> types, final Class<?> type,
+    private static void analyzeType(final Map<Class<?>, LinkedHashMap<String, Type>> types,
+                                    final Map<Class<?>, LinkedHashMap<String, Type>> knownTypes,
+                                    final Class<?> type,
                                     final List<Class<?>> ignoreClasses) {
         Class<?> supertype = type;
         while (true) {
             for (Type iface : supertype.getGenericInterfaces()) {
-                analyzeInterface(types, iface, supertype, ignoreClasses);
+                analyzeInterface(types, knownTypes, iface, supertype, ignoreClasses);
             }
             final Class next = supertype.getSuperclass();
             if (next == null || Object.class == next || ignoreClasses.contains(next)) {
                 break;
             }
-            types.put(next, analyzeParent(supertype, types.get(supertype)));
+            // possibly provided generics (externally)
+            types.put(next, knownTypes.containsKey(next)
+                    ? knownTypes.get(next)
+                    : analyzeParent(supertype, types.get(supertype)));
             supertype = next;
         }
     }
 
-    private static void analyzeInterface(final Map<Class<?>, LinkedHashMap<String, Type>> types, final Type iface,
-                                         final Class<?> supertype, final List<Class<?>> ignoreClasses) {
+    private static void analyzeInterface(final Map<Class<?>, LinkedHashMap<String, Type>> types,
+                                         final Map<Class<?>, LinkedHashMap<String, Type>> knownTypes,
+                                         final Type iface,
+                                         final Class<?> supertype,
+                                         final List<Class<?>> ignoreClasses) {
         final Class interfaceType = iface instanceof ParameterizedType
                 ? (Class) ((ParameterizedType) iface).getRawType()
                 : (Class) iface;
         if (!ignoreClasses.contains(interfaceType)) {
-            if (iface instanceof ParameterizedType) {
+            if (knownTypes.containsKey(interfaceType)) {
+                // check possibly already resolved generics (if provided externally)
+                types.put(interfaceType, knownTypes.get(interfaceType));
+            } else if (iface instanceof ParameterizedType) {
                 final ParameterizedType parametrization = (ParameterizedType) iface;
                 final LinkedHashMap<String, Type> generics =
                         resolveGenerics(parametrization, types.get(supertype));
@@ -116,7 +176,7 @@ public final class GenericInfoUtils {
                 // avoid groovy specific interface (all groovy objects implements it)
                 types.put(interfaceType, EMPTY_MAP);
             }
-            analyzeType(types, interfaceType, ignoreClasses);
+            analyzeType(types, knownTypes, interfaceType, ignoreClasses);
         }
     }
 
