@@ -31,7 +31,8 @@ import java.util.Map;
  * @since 17.11.2014
  */
 // huge class size is OK, because it should be the only entry point for api
-@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace", "PMD.TooManyMethods"})
+@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace",
+        "PMD.TooManyMethods", "PMD.GodClass"})
 public abstract class GenericsContext {
     private static final String BAD_DECLARATION_TYPE_MSG_PART =
             "' declaration type %s is not present in hierarchy of %s";

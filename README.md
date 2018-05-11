@@ -1,8 +1,9 @@
 # Java generics runtime resolver
-[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/xvik/generics-resolver)
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
 [![Build Status](http://img.shields.io/travis/xvik/generics-resolver.svg?style=flat&branch=master)](https://travis-ci.org/xvik/generics-resolver)
-[![Coverage Status](https://img.shields.io/coveralls/xvik/generics-resolver.svg?style=flat)](https://coveralls.io/r/xvik/generics-resolver?branch=master)
+[![codecov](https://codecov.io/gh/xvik/generics-resolver/branch/master/graph/badge.svg)](https://codecov.io/gh/xvik/generics-resolver)
+
+Support: [gitter chat](https://gitter.im/xvik/generics-resolver) 
 
 ### About
 
@@ -280,5 +281,5 @@ Another aspect is factories registration: for proper jersey integration it needs
 
 [reflection tutorial](http://www.javacodegeeks.com/2014/11/java-reflection-api-tutorial.html)
 
--
+---
 [![java lib generator](http://img.shields.io/badge/Powered%20by-%20Java%20lib%20generator-green.svg?style=flat-square)](https://github.com/xvik/generator-lib-java)
