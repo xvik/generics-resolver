@@ -26,11 +26,6 @@ class FailTests extends Specification {
         GenericsResolver.resolve(Root).type(BeanRoot)
         then: "fail"
         thrown(IllegalArgumentException)
-
-        when: "analyzing hierarchy with duplicate interfaces"
-        GenericsResolver.resolve(ClashRoot)
-        then: "fail"
-        thrown(IllegalStateException)
     }
 
     def "No clash on same not parametrized interface"() {

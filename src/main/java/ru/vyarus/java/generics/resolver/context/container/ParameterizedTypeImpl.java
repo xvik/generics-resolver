@@ -19,6 +19,10 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     private final Type[] actualArguments;
     private final Type ownerType;
 
+    public ParameterizedTypeImpl(final Type rawType, final Type... actualArguments) {
+        this(rawType, actualArguments, null);
+    }
+
     public ParameterizedTypeImpl(final Type rawType, final Type[] actualArguments, final Type ownerType) {
         this.rawType = rawType;
         this.actualArguments = Arrays.copyOf(actualArguments, actualArguments.length);

@@ -234,8 +234,9 @@ public final class GenericsTrackingUtils {
                     "Failed to track generics of %s with known subtype %s because known generic "
                             + "%s (of %s) is %s, but in %s hierarchy it's %s",
                     root.getSimpleName(),
-                    TypeToStringUtils.toStringType(new ParameterizedTypeImpl(known,
-                            knownGenerics.values().toArray(new Type[0]), null), knownGenerics),
+                    TypeToStringUtils.toStringType(
+                            new ParameterizedTypeImpl(known, knownGenerics.values().toArray(new Type[0])),
+                            knownGenerics),
                     genericName,
                     known.getSimpleName(),
                     knownGenericType.getSimpleName(),

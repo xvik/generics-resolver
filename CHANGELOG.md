@@ -12,7 +12,14 @@
     - by analogy with direct inlying: inlyingTypeAs(Type, Class), inlyingTypeAs(Field, Class), returnInlyingTypeAs(Class), parameterInlyingTypeAs(pos, Class)
     - tracks root type generics from known middle generics (e.g. Root<T> extends Base<T> when known Base<String> will resolve to Root<String>).
        Support composite generic declarations (and any hierarchy depth). 
-* Low level analysis logic opened as utilities: GenericsResolutionUtils, GenericsTrackingUtils           
+* Low level analysis logic opened as utilities: GenericsResolutionUtils, GenericsTrackingUtils
+* Types comparison api: TypesWalker.walk(Type, Type, Visitor) could walk two types side by side to check or compare actual classes on each level
+    Usages:
+    - GenericsResolutionUtils.isCompatible(Type, Type) - deep types compatibility check
+    - GenericsResolutionUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose mroe specific like GenericsResolutionUtils.getMoreSpecificType(Type, Type))  
+* Proper support for interface appearance in multiple hierarchy branches (appeared during analysis): 
+    resolved generics from different branches now merged to use the most concrete known types
+    (before it was failing if interface appears multiple times with different generics)              
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

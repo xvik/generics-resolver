@@ -1,13 +1,19 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.support.clash.ClashRoot
+import ru.vyarus.java.generics.resolver.support.nestedtype.NestedGenericType
 import ru.vyarus.java.generics.resolver.support.nestedtype.RootClass
 import ru.vyarus.java.generics.resolver.support.nestedtype.SubClass2
-import ru.vyarus.java.generics.resolver.support.nestedtype.NestedGenericType
 import ru.vyarus.java.generics.resolver.support.nestedtype.direct.BadRoot
 import ru.vyarus.java.generics.resolver.support.nestedtype.direct.Direct
+import ru.vyarus.java.generics.resolver.support.nestedtype.direct.Indirect
 import ru.vyarus.java.generics.resolver.support.nestedtype.direct.Root
+import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils
 import spock.lang.Specification
+
+import java.lang.reflect.Type
+import java.util.concurrent.Callable
 
 /**
  * Generic type resolution should succeed, if a class implement the same interface
@@ -45,7 +51,31 @@ class NestedTypesTest extends Specification {
         when: "resolving type hierarchy with duplicate interface and different generics"
         GenericsResolver.resolve(BadRoot)
         then: "error"
-        thrown(IllegalStateException)
+        def ex = thrown(IllegalStateException)
+        ex.message == "Failed to analyze hierarchy for BadRoot"
+        ex.getCause().message == "Interface Direct appears multiple times in class hierarchy with incompatible parametrization"
+        ex.getCause().getCause().message == "Incompatible values found for generic T: NestedGenericType<GenericType> and NestedGenericType<Root>"
+
+
+        when: "resolving type hierarchy with duplicate interface and different generics"
+
+        GenericsResolutionUtils.resolve(BadRoot,
+                [] as LinkedHashMap<String, Type>,
+                [(Indirect): ["T": Root]] as Map<Class<?>, LinkedHashMap<String, Type>>,
+                [] as List<Class>)
+        then: "error"
+        ex = thrown(IllegalStateException)
+        ex.message == "Failed to analyze hierarchy for BadRoot (with known generics: Indirect<Root>)"
+        ex.getCause().message == "Interface Direct appears multiple times in class hierarchy with incompatible parametrization"
+        ex.getCause().getCause().message == "Incompatible values found for generic T: NestedGenericType<GenericType> and NestedGenericType<Root>"
+    }
+
+    def "Check different interface types merged"() {
+
+        when: "analyzing hierarchy with duplicate interfaces"
+        def res = GenericsResolver.resolve(ClashRoot)
+        then: "resolved with upper generic"
+        res.type(Callable).generic(0) == Integer
 
     }
 }

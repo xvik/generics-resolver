@@ -1,5 +1,7 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
+
 import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,6 +41,19 @@ public final class TypeToStringUtils {
             res = toStringType(declaredGeneric((TypeVariable) type, generics), generics);
         }
         return res;
+    }
+
+    /**
+     * Formats class as {@code Class<generics>}. Class is not checked to actually have generics!
+     * Intended to be used for error reporting.
+     *
+     * @param type     class class to print with generics
+     * @param generics known generics map class generics map
+     * @return generified class string
+     */
+    public static String toStringClassWithGenerics(final Class<?> type, final Map<String, Type> generics) {
+        return toStringType(new ParameterizedTypeImpl(type, generics.values().toArray(new Type[0])),
+                generics);
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")

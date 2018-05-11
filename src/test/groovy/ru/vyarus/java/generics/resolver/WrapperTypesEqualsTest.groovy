@@ -37,12 +37,12 @@ class WrapperTypesEqualsTest extends Specification {
     def "Check ParameterizedType equals"() {
 
         // Callable<Integer>
-        ParameterizedTypeImpl pt1 = new ParameterizedTypeImpl(Callable, [Integer] as Type[], null)
-        ParameterizedTypeImpl pt1_1 = new ParameterizedTypeImpl(Callable, [Integer] as Type[], null)
+        ParameterizedTypeImpl pt1 = new ParameterizedTypeImpl(Callable, [Integer] as Type[])
+        ParameterizedTypeImpl pt1_1 = new ParameterizedTypeImpl(Callable, [Integer] as Type[])
         // Callable<Number>
-        ParameterizedTypeImpl pt2 = new ParameterizedTypeImpl(Callable, [Number] as Type[], null)
+        ParameterizedTypeImpl pt2 = new ParameterizedTypeImpl(Callable, [Number] as Type[])
         // Comparator<Integer>
-        ParameterizedTypeImpl pt3 = new ParameterizedTypeImpl(Comparator, [Integer] as Type[], null)
+        ParameterizedTypeImpl pt3 = new ParameterizedTypeImpl(Comparator, [Integer] as Type[])
 
         ParameterizedTypeImpl pt4 = new ParameterizedTypeImpl(Comparator, [Integer] as Type[], Object.class)
         ParameterizedTypeImpl pt5 = new ParameterizedTypeImpl(Comparator, [Integer] as Type[], Callable.class)

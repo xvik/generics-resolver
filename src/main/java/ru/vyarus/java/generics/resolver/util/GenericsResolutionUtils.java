@@ -1,5 +1,9 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.util.walk.ComparatorTypesVisitor;
+import ru.vyarus.java.generics.resolver.util.walk.CompatibilityTypesVisitor;
+import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -15,7 +19,7 @@ import java.util.Map;
  * @since 11.05.2018
  */
 // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
-@SuppressWarnings("PMD.LooseCoupling")
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass"})
 public final class GenericsResolutionUtils {
 
     private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
@@ -41,7 +45,13 @@ public final class GenericsResolutionUtils {
         final Map<Class<?>, LinkedHashMap<String, Type>> generics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
         generics.put(type, rootGenerics);
-        analyzeType(generics, type, knownGenerics, ignoreClasses);
+        try {
+            analyzeType(generics, type, knownGenerics, ignoreClasses);
+        } catch (Exception ex) {
+            throw new IllegalStateException(String.format("Failed to analyze hierarchy for %s%s",
+                    TypeToStringUtils.toStringClassWithGenerics(type, rootGenerics),
+                    formatKnownGenerics(knownGenerics)), ex);
+        }
         return generics;
     }
 
@@ -86,6 +96,59 @@ public final class GenericsResolutionUtils {
             generics.put(variable.getName(), GenericsUtils.resolveTypeVariables(variable.getBounds()[0], generics));
         }
         return generics;
+    }
+
+    /**
+     * Checks if type is more specific than provided one. E.g. {@code ArrayList} is more specific then
+     * {@code List} or {@code List<Integer>} is more specific then {@code List<Object>}.
+     * <p>
+     * Not resolved type variables are resolved to Object.
+     *
+     * @param what        type to check
+     * @param comparingTo type to compare to
+     * @return true when provided type is more specific than other type. false otherwise
+     * @throws IllegalArgumentException when types are not compatible
+     */
+    public static boolean isMoreSpecific(final Type what, final Type comparingTo) {
+        final ComparatorTypesVisitor visitor = new ComparatorTypesVisitor();
+        TypesWalker.walk(what, comparingTo, visitor);
+
+        final IgnoreGenericsMap ignoreVars = new IgnoreGenericsMap();
+        if (!visitor.isCompatible()) {
+            throw new IllegalArgumentException(String.format(
+                    "Type %s can't be compared to %s because they are not compatible",
+                    TypeToStringUtils.toStringType(what, ignoreVars),
+                    TypeToStringUtils.toStringType(comparingTo, ignoreVars)));
+        }
+        return visitor.isMoreSpecific();
+    }
+
+    /**
+     * Not resolved type variables are resolved to Object.
+     *
+     * @param one first type
+     * @param two second type
+     * @return more specific type or first type is they are equal
+     * @see #isMoreSpecific(Type, Type)
+     */
+    public static Type getMoreSpecificType(final Type one, final Type two) {
+        return isMoreSpecific(one, two) ? one : two;
+    }
+
+
+    /**
+     * Check if types are compatible: types must be equal or one extend another. Object is compatible with any type.
+     * <p>
+     * Not resolved type variables are resolved to Object.
+     *
+     * @param one first type
+     * @param two second type
+     * @return true if types are alignable, false otherwise
+     */
+    public static boolean isCompatible(final Type one, final Type two) {
+        final CompatibilityTypesVisitor visitor = new CompatibilityTypesVisitor();
+        TypesWalker.walk(one, two, visitor);
+        return visitor.isCompatible();
     }
 
     /**
@@ -144,11 +207,18 @@ public final class GenericsResolutionUtils {
                 final LinkedHashMap<String, Type> generics =
                         resolveGenerics(parametrization, types.get(hostType));
 
-                // no generics case and same resolved generics are ok (even if types in different branches of hierarchy)
-                if (types.containsKey(interfaceType) && !generics.equals(types.get(interfaceType))) {
-                    throw new IllegalStateException(String.format(
-                            "Duplicate interface %s declaration in hierarchy: "
-                                    + "can't properly resolve generics.", interfaceType.getName()));
+                if (types.containsKey(interfaceType)) {
+                    // class hierarchy may contain multiple implementations for the same interface
+                    // in this case we can merge known generics, using most specific types
+                    // (root type unifies interfaces, so we just collecting actual maximum known info
+                    // from multiple sources)
+                    try {
+                        merge(generics, types.get(interfaceType));
+                    } catch (Exception ex) {
+                        throw new IllegalStateException(String.format(
+                                "Interface %s appears multiple times in class hierarchy with "
+                                        + "incompatible parametrization", interfaceType.getSimpleName()), ex);
+                    }
                 }
                 types.put(interfaceType, generics);
             } else if (interfaceType.getTypeParameters().length > 0) {
@@ -159,6 +229,25 @@ public final class GenericsResolutionUtils {
                 types.put(interfaceType, EMPTY_MAP);
             }
             analyzeType(types, interfaceType, knownTypes, ignoreClasses);
+        }
+    }
+
+    private static void merge(final LinkedHashMap<String, Type> main,
+                              final LinkedHashMap<String, Type> additional) {
+        for (Map.Entry<String, Type> entry : additional.entrySet()) {
+            final String generic = entry.getKey();
+            final Type value = entry.getValue();
+            final Type currentValue = main.get(generic);
+
+            if (isCompatible(value, currentValue)) {
+                main.put(generic, getMoreSpecificType(value, currentValue));
+            } else {
+                // all variables already replaces, so no actual generics required
+                throw new IllegalStateException(String.format(
+                        "Incompatible values found for generic %s: %s and %s",
+                        generic, TypeToStringUtils.toStringType(currentValue, EMPTY_MAP),
+                        TypeToStringUtils.toStringType(value, EMPTY_MAP)));
+            }
         }
     }
 
@@ -184,5 +273,22 @@ public final class GenericsResolutionUtils {
             res = resolveRawGenerics(parent);
         }
         return res == null ? EMPTY_MAP : res;
+    }
+
+    private static String formatKnownGenerics(final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
+        if (knownGenerics.isEmpty()) {
+            return "";
+        }
+        final StringBuilder known = new StringBuilder(50);
+        known.append(" (with known generics: ");
+        boolean first = true;
+        for (Map.Entry<Class<?>, LinkedHashMap<String, Type>> entry : knownGenerics.entrySet()) {
+            known.append(first ? "" : ", ")
+                    .append(TypeToStringUtils
+                            .toStringClassWithGenerics(entry.getKey(), entry.getValue()));
+            first = false;
+        }
+        known.append(')');
+        return known.toString();
     }
 }
