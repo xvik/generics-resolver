@@ -19,28 +19,28 @@ class InlyingAsTest extends Specification {
         when: "field context"
         def res = context.inlyingFieldTypeAs(DeclarationType.getDeclaredField("one"), SubTypeExt)
         then:
-        res.generic("K") == Object.class
+        res.generic("K") == Integer.class
         res.type(SubType).generic("T") == Integer
         res.rootContext().currentClass() == DeclarationType
 
         when: "field context with interface"
         res = context.inlyingFieldTypeAs(DeclarationType.getDeclaredField("two"), BaseIfaceImpl)
         then:
-        res.generic("K") == Object.class
+        res.generic("K") == Integer.class
         res.type(BaseIface).generic("T") == Integer
         res.rootContext().currentClass() == DeclarationType
 
         when: "method return context"
         res = context.method(DeclarationType.getMethod("ret")).returnInlyingTypeAs(SubTypeExt)
         then:
-        res.generic("K") == Object.class
+        res.generic("K") == String.class
         res.type(SubType).generic("T") == String
         res.rootContext().currentClass() == DeclarationType
 
         when: "method param context"
         res = context.method(DeclarationType.getMethod("param", SubType.class)).parameterInlyingTypeAs(0, SubTypeExt)
         then:
-        res.generic("K") == Object
+        res.generic("K") == Double
         res.type(SubType).generic("T") == Double
         res.rootContext().currentClass() == DeclarationType
 

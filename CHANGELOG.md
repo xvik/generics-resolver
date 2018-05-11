@@ -1,3 +1,4 @@
+* Add type's full resolution method (in returned type all variables are replaced with actual known types): context.resolveType(Type). 
 * Support inlying contexts: class generics resolution in context of class (to correctly handle root class generics).
     Required for correct generics context building for field type, method return type or method parameter.      
     - context.inlyingType(Type) - universal resolver (the same as GenericsResolver.resolve(class) if class does not have generics (resolution cached))
@@ -9,8 +10,9 @@
     This is useful for instance analysis when you need to build generics context for actual object (with not known root generics), 
     but you know generics for declared middle type.
     - by analogy with direct inlying: inlyingTypeAs(Type, Class), inlyingTypeAs(Field, Class), returnInlyingTypeAs(Class), parameterInlyingTypeAs(pos, Class)
-* Add type full resolution method (in returned type all variables are replaced with actual known types):
-    context.resolveType(Type).         
+    - tracks root type generics from known middle generics (e.g. Root<T> extends Base<T> when known Base<String> will resolve to Root<String>).
+       Support composite generic declarations (and any hierarchy depth). 
+* Low level analysis logic opened as utilities: GenericsResolutionUtils, GenericsTrackingUtils           
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

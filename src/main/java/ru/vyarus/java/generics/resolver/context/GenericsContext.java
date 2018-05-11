@@ -271,7 +271,7 @@ public abstract class GenericsContext {
      */
     public Type resolveType(final Type type) {
         try {
-            return GenericsUtils.resolveTypeGenerics(type, contextGenerics());
+            return GenericsUtils.resolveTypeVariables(type, contextGenerics());
         } catch (UnknownGenericException e) {
             throw e.rethrowWithType(currentType);
         }

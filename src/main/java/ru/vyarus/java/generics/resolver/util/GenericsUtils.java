@@ -123,12 +123,12 @@ public final class GenericsUtils {
      * type will be different than provided: for example, original type may be {@link TypeVariable} and returned
      * will be simple {@link Class} (resolved generic value).
      *
-     * @param type type to resolve
+     * @param type     type to resolve
      * @param generics root class generics mapping
      * @return resolved type
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
-    public static Type resolveTypeGenerics(final Type type, final Map<String, Type> generics) {
+    public static Type resolveTypeVariables(final Type type, final Map<String, Type> generics) {
         Type resolvedGenericType = null;
         if (type instanceof TypeVariable) {
             // simple named generics resolved to target types
@@ -141,7 +141,7 @@ public final class GenericsUtils {
                     resolve(parametrizedType.getActualTypeArguments(), generics), parametrizedType.getOwnerType());
         } else if (type instanceof GenericArrayType) {
             final GenericArrayType arrayType = (GenericArrayType) type;
-            resolvedGenericType = new GenericArrayTypeImpl(resolveTypeGenerics(
+            resolvedGenericType = new GenericArrayTypeImpl(resolveTypeVariables(
                     arrayType.getGenericComponentType(), generics));
         } else if (type instanceof WildcardType) {
             final WildcardType wildcard = (WildcardType) type;
@@ -154,7 +154,7 @@ public final class GenericsUtils {
     private static Type[] resolve(final Type[] types, final Map<String, Type> generics) {
         final Type[] resolved = new Type[types.length];
         for (int i = 0; i < types.length; i++) {
-            resolved[i] = resolveTypeGenerics(types[i], generics);
+            resolved[i] = resolveTypeVariables(types[i], generics);
         }
         return resolved;
     }
