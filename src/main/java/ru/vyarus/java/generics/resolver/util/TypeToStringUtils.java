@@ -1,6 +1,8 @@
 package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
@@ -24,6 +26,8 @@ public final class TypeToStringUtils {
      * @param generics type class generics type
      * @return string representation of provided type
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
+     * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
      */
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String toStringType(final Type type, final Map<String, Type> generics) {
@@ -36,11 +40,25 @@ public final class TypeToStringUtils {
             res = toStringType(((GenericArrayType) type).getGenericComponentType(), generics) + "[]";
         } else if (type instanceof WildcardType) {
             res = processWildcardType((WildcardType) type, generics);
+        } else if (type instanceof PrintableTypeVariable) {
+            // print generic name (only when PrintableGenericsMap used)
+            res = type.toString();
         } else {
             // deep generics nesting case
+            // when PrintableGenericsMap used and generics is not known, will print generic name (see above)
             res = toStringType(declaredGeneric((TypeVariable) type, generics), generics);
         }
         return res;
+    }
+
+    /**
+     * Print class with generic variables. For example, {@code List<T>}.
+     *
+     * @param type class to print
+     * @return string containing class and it's declared generics
+     */
+    public static String toStringWithNamedGenerics(final Class<?> type) {
+        return toStringType(new ParameterizedTypeImpl(type, type.getTypeParameters()), new PrintableGenericsMap());
     }
 
     /**
@@ -50,8 +68,10 @@ public final class TypeToStringUtils {
      * @param type     class class to print with generics
      * @param generics known generics map class generics map
      * @return generified class string
+     * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
+     * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
      */
-    public static String toStringClassWithGenerics(final Class<?> type, final Map<String, Type> generics) {
+    public static String toStringWithGenerics(final Class<?> type, final Map<String, Type> generics) {
         return toStringType(new ParameterizedTypeImpl(type, generics.values().toArray(new Type[0])),
                 generics);
     }
@@ -112,5 +132,22 @@ public final class TypeToStringUtils {
             throw new UnknownGenericException(name);
         }
         return result;
+    }
+
+    /**
+     * Special type, used only for Type to string conversion in order to preserve generic name.
+     * Use by wrapping generics in {@link ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap}.
+     */
+    public static class PrintableTypeVariable implements Type {
+        private final String name;
+
+        public PrintableTypeVariable(final String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }

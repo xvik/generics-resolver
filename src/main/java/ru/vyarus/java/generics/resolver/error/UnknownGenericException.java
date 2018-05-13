@@ -1,4 +1,4 @@
-package ru.vyarus.java.generics.resolver.util;
+package ru.vyarus.java.generics.resolver.error;
 
 /**
  * Thrown during type resolution when found generic name is not declared.
@@ -14,7 +14,7 @@ package ru.vyarus.java.generics.resolver.util;
  * @author Vyacheslav Rusakov
  * @since 25.06.2015
  */
-public class UnknownGenericException extends RuntimeException {
+public class UnknownGenericException extends GenericsException {
 
     private final String genericName;
     private final Class contextType;
@@ -34,7 +34,7 @@ public class UnknownGenericException extends RuntimeException {
         this(contextType, genericName, null);
     }
 
-    UnknownGenericException(final Class contextType, final String genericName, final Throwable cause) {
+    public UnknownGenericException(final Class contextType, final String genericName, final Throwable cause) {
         super(String.format("Generic '%s' is not declared %s",
                 genericName, contextType == null ? "" : "on type " + contextType.getName()), cause);
         this.contextType = contextType;
@@ -63,6 +63,10 @@ public class UnknownGenericException extends RuntimeException {
      */
     public UnknownGenericException rethrowWithType(final Class type) {
         final boolean sameType = contextType != null && contextType.equals(type);
+        if (!sameType && contextType != null) {
+            // not allow changing type if it's already set
+            throw new IllegalStateException("Context type can't be changed");
+        }
         return sameType ? this : new UnknownGenericException(type, genericName, this);
     }
 }

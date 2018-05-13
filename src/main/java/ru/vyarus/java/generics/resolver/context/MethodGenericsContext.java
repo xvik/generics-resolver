@@ -1,7 +1,6 @@
 package ru.vyarus.java.generics.resolver.context;
 
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
-import ru.vyarus.java.generics.resolver.util.NoGenericException;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -147,11 +146,9 @@ public class MethodGenericsContext extends GenericsContext {
      * Resolving parameters in context of root class:
      * {@code type(B.class).method(B.class.getMethod("doSmth")).resolveReturnTypeGenerics() == [Long.class]}
      *
-     * @return resolved generic class
-     * @throws NoGenericException if provided type does not contain generic (exception required to distinguish
-     *                            {@code Object.class} generic value from class which doesn't support generic
+     * @return resolved generic classes or empty list if type does not use generics
      */
-    public List<Class<?>> resolveReturnTypeGenerics() throws NoGenericException {
+    public List<Class<?>> resolveReturnTypeGenerics() {
         return GenericsUtils.resolveGenericsOf(method.getGenericReturnType(), contextGenerics());
     }
 
@@ -159,12 +156,11 @@ public class MethodGenericsContext extends GenericsContext {
      * Shortcut for {@link #resolveReturnTypeGenerics()} useful for single generic types or
      * when just first generic required.
      *
-     * @return first resolved generic
-     * @throws NoGenericException if provided type does not contain generic (exception required to distinguish
-     *                            {@code Object.class} generic value from class which doesn't support generic
+     * @return first resolved generic or null if type doesn't use generics
      */
-    public Class<?> resolveReturnTypeGeneric() throws NoGenericException {
-        return resolveReturnTypeGenerics().get(0);
+    public Class<?> resolveReturnTypeGeneric() {
+        final List<Class<?>> res = resolveReturnTypeGenerics();
+        return res.isEmpty() ? null : res.get(0);
     }
 
     /**

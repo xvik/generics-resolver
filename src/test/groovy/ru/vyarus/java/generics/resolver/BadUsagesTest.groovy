@@ -2,7 +2,7 @@ package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.support.Root
-import ru.vyarus.java.generics.resolver.util.UnknownGenericException
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import spock.lang.Specification
 
 

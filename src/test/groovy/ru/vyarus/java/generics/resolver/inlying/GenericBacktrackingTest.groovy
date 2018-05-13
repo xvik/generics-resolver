@@ -17,6 +17,7 @@ import ru.vyarus.java.generics.resolver.inlying.support.track.Target
 import ru.vyarus.java.generics.resolver.inlying.support.track.Wildcard
 import ru.vyarus.java.generics.resolver.inlying.support.track.WildcardDeclaration
 import ru.vyarus.java.generics.resolver.inlying.support.track.WildcardDeclaration2
+import ru.vyarus.java.generics.resolver.error.GenericsTrackingException
 import spock.lang.Specification
 
 /**
@@ -46,8 +47,9 @@ class GenericBacktrackingTest extends Specification {
         when: "known generic contradict actual generic value in class hierarchy"
         context.inlyingFieldTypeAs(Source.getDeclaredField("target"), ContradictionTrack)
         then: "contradiction detected"
-        def ex = thrown(IllegalStateException)
-        ex.message == "Failed to track generics of ContradictionTrack with known subtype Target<String> because known generic T (of Target) is String, but in ContradictionTrack hierarchy it's Integer"
+        def ex = thrown(GenericsTrackingException)
+        ex.message == "Failed to track generics of ContradictionTrack<P> from sub type Target<String>"
+        ex.getCause().message == "Known generic T of Target<T> is not compatible with ContradictionTrack hierarchy: String when required Integer"
 
         when: "multiple tiers before known type"
         res = context.inlyingFieldTypeAs(Source.getDeclaredField("target"), MultiTier)
@@ -108,14 +110,16 @@ class GenericBacktrackingTest extends Specification {
         context = GenericsResolver.resolve(RootScopeContradiction)
         context.inlyingFieldTypeAs(RootScopeContradiction.getDeclaredField("target"), RootScopeContradiction)
         then: "error"
-        def ex = thrown(IllegalStateException)
-        ex.message == "Failed to track generics of RootScopeContradiction with known subtype Target<String> because known generic T (of Target) is String, but in RootScopeContradiction hierarchy it's Integer"
+        def ex = thrown(GenericsTrackingException)
+        ex.message == "Failed to track generics of RootScopeContradiction<T> from sub type Target<String>"
+        ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction hierarchy: String when required Integer"
 
         when: "root scope contradicts with known generic"
         context = GenericsResolver.resolve(RootScopeContradiction2)
         context.inlyingFieldTypeAs(RootScopeContradiction2.getDeclaredField("target"), RootScopeContradiction2)
         then: "error"
-        ex = thrown(IllegalStateException)
-        ex.message == "Failed to track generics of RootScopeContradiction2 with known subtype Target<String> because known generic T (of Target) is String, but in RootScopeContradiction2 hierarchy it's Integer"
+        ex = thrown(GenericsTrackingException)
+        ex.message == "Failed to track generics of RootScopeContradiction2<T, K> from sub type Target<String>"
+        ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction2 hierarchy: String when required Integer"
     }
 }

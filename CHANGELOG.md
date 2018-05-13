@@ -19,7 +19,13 @@
     - GenericsResolutionUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose mroe specific like GenericsResolutionUtils.getMoreSpecificType(Type, Type))  
 * Proper support for interface appearance in multiple hierarchy branches (appeared during analysis): 
     resolved generics from different branches now merged to use the most concrete known types
-    (before it was failing if interface appears multiple times with different generics)              
+    (before it was failing if interface appears multiple times with different generics)
+* (breaking) When type does not contain generics return empty list or null (NoGenericException checked exception removed) from
+    context's .resolveGenericsOf() and .resolveGenericOf()
+* (breaking) UnknownGenericsException moved to different package
+* Add base type for all used exceptions: GenericsException (runtime exception) to simplify generic analysis errors interception
+    - GenericsTrackingException - thrown on generics tracking problems
+    - GenericsResolutionException - thrown on type hierarchy generics analysis problems                   
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

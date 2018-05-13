@@ -4,11 +4,10 @@ import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.BeanRoot
 import ru.vyarus.java.generics.resolver.support.Root
-import ru.vyarus.java.generics.resolver.support.clash.ClashRoot
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashRoot
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub1
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub2
-import ru.vyarus.java.generics.resolver.util.UnknownGenericException
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import spock.lang.Specification
 
 import java.util.concurrent.Callable

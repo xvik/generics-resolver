@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver.util;
 import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 
 import java.lang.reflect.*;
 import java.util.ArrayList;
@@ -53,22 +54,18 @@ public final class GenericsUtils {
      *
      * @param type     type to analyze
      * @param generics root class generics mapping
-     * @return resolved generic classes
-     * @throws NoGenericException      when generic not found or not generified type provided
+     * @return resolved generic classes or empty list if type does not support generics
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
-    public static List<Class<?>> resolveGenericsOf(final Type type,
-                                                   final Map<String, Type> generics) throws NoGenericException {
+    public static List<Class<?>> resolveGenericsOf(final Type type, final Map<String, Type> generics) {
         final List<Class<?>> res = new ArrayList<Class<?>>();
         Type analyzingType = type;
         if (type instanceof TypeVariable) {
             // if type is pure generic recovering parametrization
             analyzingType = declaredGeneric((TypeVariable) type, generics);
         }
-        if (!(analyzingType instanceof ParameterizedType)
-                || ((ParameterizedType) analyzingType).getActualTypeArguments().length == 0) {
-            throw new NoGenericException();
-        } else {
+        if ((analyzingType instanceof ParameterizedType)
+                && ((ParameterizedType) analyzingType).getActualTypeArguments().length > 0) {
             final Type[] actualTypeArguments = ((ParameterizedType) analyzingType).getActualTypeArguments();
             for (final Type actual : actualTypeArguments) {
                 if (actual instanceof Class) {
@@ -112,7 +109,7 @@ public final class GenericsUtils {
                     res = Class.forName("[L" + arrayType.getName() + ";");
                 }
             } catch (ClassNotFoundException e) {
-                throw new IllegalStateException("Failed to create array class", e);
+                throw new IllegalStateException("Failed to create array class for " + arrayType.getSimpleName(), e);
             }
         }
         return res;

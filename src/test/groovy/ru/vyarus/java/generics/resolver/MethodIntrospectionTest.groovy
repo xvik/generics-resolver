@@ -2,7 +2,6 @@ package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.*
-import ru.vyarus.java.generics.resolver.util.NoGenericException
 import spock.lang.Specification
 import spock.lang.Unroll
 
@@ -56,14 +55,14 @@ class MethodIntrospectionTest extends Specification {
         ((ParameterizedType) res).getActualTypeArguments()[0] == Model
 
         when: "resolve generic of no generic type"
-        context.resolveGenericOf(doSomth.genericReturnType)
+        res = context.resolveGenericOf(doSomth.genericReturnType)
         then:
-        thrown(NoGenericException)
+        res == null
 
         when: "resolve generic of no generic type 2"
-        context.resolveGenericOf(doSomth2.genericReturnType)
+        res == context.resolveGenericOf(doSomth2.genericReturnType)
         then:
-        thrown(NoGenericException)
+        res == null
 
         where:
         type        | root     | bean

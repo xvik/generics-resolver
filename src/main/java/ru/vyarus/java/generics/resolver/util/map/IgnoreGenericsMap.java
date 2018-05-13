@@ -1,7 +1,7 @@
-package ru.vyarus.java.generics.resolver.util;
+package ru.vyarus.java.generics.resolver.util.map;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -12,7 +12,7 @@ import java.util.Map;
  * @author Vyacheslav Rusakov
  * @since 11.05.2018
  */
-public final class IgnoreGenericsMap extends HashMap<String, Type> {
+public final class IgnoreGenericsMap extends LinkedHashMap<String, Type> {
 
     public IgnoreGenericsMap() {
         // default

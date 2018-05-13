@@ -1,5 +1,8 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
+import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import ru.vyarus.java.generics.resolver.util.walk.ComparatorTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.CompatibilityTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
@@ -48,23 +51,39 @@ public final class GenericsResolutionUtils {
         try {
             analyzeType(generics, type, knownGenerics, ignoreClasses);
         } catch (Exception ex) {
-            throw new IllegalStateException(String.format("Failed to analyze hierarchy for %s%s",
-                    TypeToStringUtils.toStringClassWithGenerics(type, rootGenerics),
-                    formatKnownGenerics(knownGenerics)), ex);
+            throw new GenericsResolutionException(type, rootGenerics, knownGenerics, ex);
         }
         return generics;
     }
 
+    /**
+     * Universal generics resolution. For {@link ParameterizedType} real generic values will be resolved and
+     * for simple types, raw generics (lower bounds) will be returned.
+     *
+     * @param type     type to resolve generics for
+     * @param generics generics of context class
+     * @return
+     */
+    public static LinkedHashMap<String, Type> resolveGenerics(final Type type,
+                                                              final Map<String, Type> generics) {
+        return type instanceof ParameterizedType
+                ? resolveDeclaredGenerics(type, generics)
+                : resolveRawGenerics(GenericsUtils.resolveClass(type, generics));
+    }
 
     /**
-     * Resolve generics for type. Returns non empty map only if type is {@link ParameterizedType}.
+     * Resolve declared generics for type (actually declared generics in context of some type).
+     * <p>
+     * WARNING: returns non empty map only if type is {@link ParameterizedType}, because otherwise generics are
+     * not resolvable.
      *
      * @param type     type to resolve generics for
      * @param generics generics of context class
      * @return resolved generics of parameterized type or empty map
+     * @see #resolveGenerics(Type, Map) as more universal method
      */
-    public static LinkedHashMap<String, Type> resolveGenerics(final Type type,
-                                                              final Map<String, Type> generics) {
+    public static LinkedHashMap<String, Type> resolveDeclaredGenerics(final Type type,
+                                                                      final Map<String, Type> generics) {
         final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
         if (type instanceof ParameterizedType) {
             final ParameterizedType actualType = (ParameterizedType) type;
@@ -205,20 +224,14 @@ public final class GenericsResolutionUtils {
             } else if (iface instanceof ParameterizedType) {
                 final ParameterizedType parametrization = (ParameterizedType) iface;
                 final LinkedHashMap<String, Type> generics =
-                        resolveGenerics(parametrization, types.get(hostType));
+                        resolveDeclaredGenerics(parametrization, types.get(hostType));
 
                 if (types.containsKey(interfaceType)) {
                     // class hierarchy may contain multiple implementations for the same interface
                     // in this case we can merge known generics, using most specific types
                     // (root type unifies interfaces, so we just collecting actual maximum known info
                     // from multiple sources)
-                    try {
-                        merge(generics, types.get(interfaceType));
-                    } catch (Exception ex) {
-                        throw new IllegalStateException(String.format(
-                                "Interface %s appears multiple times in class hierarchy with "
-                                        + "incompatible parametrization", interfaceType.getSimpleName()), ex);
-                    }
+                    merge(interfaceType, generics, types.get(interfaceType));
                 }
                 types.put(interfaceType, generics);
             } else if (interfaceType.getTypeParameters().length > 0) {
@@ -232,7 +245,8 @@ public final class GenericsResolutionUtils {
         }
     }
 
-    private static void merge(final LinkedHashMap<String, Type> main,
+    private static void merge(final Class<?> type,
+                              final LinkedHashMap<String, Type> main,
                               final LinkedHashMap<String, Type> additional) {
         for (Map.Entry<String, Type> entry : additional.entrySet()) {
             final String generic = entry.getKey();
@@ -243,10 +257,10 @@ public final class GenericsResolutionUtils {
                 main.put(generic, getMoreSpecificType(value, currentValue));
             } else {
                 // all variables already replaces, so no actual generics required
-                throw new IllegalStateException(String.format(
-                        "Incompatible values found for generic %s: %s and %s",
-                        generic, TypeToStringUtils.toStringType(currentValue, EMPTY_MAP),
-                        TypeToStringUtils.toStringType(value, EMPTY_MAP)));
+                throw new IncompatibleTypesException(String.format(
+                        "Interface %s appears multiple times in root class hierarchy with incompatible "
+                                + "parametrization for generic %s: %%s and %%s",
+                        TypeToStringUtils.toStringWithNamedGenerics(type), generic), currentValue, value);
             }
         }
     }
@@ -267,28 +281,11 @@ public final class GenericsResolutionUtils {
         final Class parent = type.getSuperclass();
         if (!type.isInterface() && parent != null && parent != Object.class
                 && type.getGenericSuperclass() instanceof ParameterizedType) {
-            res = resolveGenerics(type.getGenericSuperclass(), generics);
+            res = resolveDeclaredGenerics(type.getGenericSuperclass(), generics);
         } else if (parent != null && parent.getTypeParameters().length > 0) {
             // root class didn't declare generics
             res = resolveRawGenerics(parent);
         }
         return res == null ? EMPTY_MAP : res;
-    }
-
-    private static String formatKnownGenerics(final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
-        if (knownGenerics.isEmpty()) {
-            return "";
-        }
-        final StringBuilder known = new StringBuilder(50);
-        known.append(" (with known generics: ");
-        boolean first = true;
-        for (Map.Entry<Class<?>, LinkedHashMap<String, Type>> entry : knownGenerics.entrySet()) {
-            known.append(first ? "" : ", ")
-                    .append(TypeToStringUtils
-                            .toStringClassWithGenerics(entry.getKey(), entry.getValue()));
-            first = false;
-        }
-        known.append(')');
-        return known.toString();
     }
 }

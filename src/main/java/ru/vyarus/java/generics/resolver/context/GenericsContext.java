@@ -1,6 +1,9 @@
 package ru.vyarus.java.generics.resolver.context;
 
-import ru.vyarus.java.generics.resolver.util.*;
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.GenericInfoUtils;
+import ru.vyarus.java.generics.resolver.util.GenericsUtils;
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -225,11 +228,9 @@ public abstract class GenericsContext {
      * {@code type(B.class).resolveGenericsOf(B.class.getMethod("doSmth").getGenericReturnType()) == [Long.class]}
      *
      * @param type type to resolve generics
-     * @return resolved generic class
-     * @throws NoGenericException if provided type does not contain generic (exception required to distinguish
-     *                            {@code Object.class} generic value from class which doesn't support generic)
+     * @return resolved generic classes or empty list if type does not use generics
      */
-    public List<Class<?>> resolveGenericsOf(final Type type) throws NoGenericException {
+    public List<Class<?>> resolveGenericsOf(final Type type) {
         try {
             return GenericsUtils.resolveGenericsOf(type, contextGenerics());
         } catch (UnknownGenericException e) {
@@ -242,13 +243,12 @@ public abstract class GenericsContext {
      * when just first generic required.
      *
      * @param type type to resolve generic
-     * @return first resolved generic
-     * @throws NoGenericException if provided type does not contain generic (exception required to distinguish
-     *                            {@code Object.class} generic value from class which doesn't support generic)
+     * @return first resolved generic or null if type does not use generics
      */
-    public Class<?> resolveGenericOf(final Type type) throws NoGenericException {
+    public Class<?> resolveGenericOf(final Type type) {
         try {
-            return resolveGenericsOf(type).get(0);
+            final List<Class<?>> res = resolveGenericsOf(type);
+            return res.isEmpty() ? null : res.get(0);
         } catch (UnknownGenericException e) {
             throw e.rethrowWithType(currentType);
         }

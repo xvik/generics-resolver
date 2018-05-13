@@ -111,7 +111,8 @@ public final class GenericInfoUtils {
         }
 
         // known middle type
-        LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
+        LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils
+                .resolveDeclaredGenerics(actual, rootGenerics);
         final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
         knownGenerics.put(middleType, typeGenerics);
@@ -119,7 +120,7 @@ public final class GenericInfoUtils {
         // root type
         typeGenerics = asType.getTypeParameters().length > 0
                 // special case: root class also contains generics
-                ? GenericsTrackingUtils.trackGenerics(asType, middleType, typeGenerics)
+                ? GenericsTrackingUtils.track(asType, middleType, typeGenerics)
                 : EMPTY_MAP;
         return create(asType, typeGenerics, knownGenerics, ignoreClasses);
     }

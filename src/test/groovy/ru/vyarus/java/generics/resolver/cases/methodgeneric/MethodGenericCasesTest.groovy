@@ -5,7 +5,7 @@ import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.MethodGeneri
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.MethodGenericsContext
-import ru.vyarus.java.generics.resolver.util.UnknownGenericException
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import spock.lang.Specification
 
 import java.lang.reflect.Method

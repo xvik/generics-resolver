@@ -2,6 +2,7 @@ package ru.vyarus.java.generics.resolver.context;
 
 import ru.vyarus.java.generics.resolver.util.GenericInfoUtils;
 
+import java.util.ConcurrentModificationException;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -54,7 +55,7 @@ public final class GenericsInfoFactory {
                     if (isCacheEnabled()) {
                         // internal check
                         if (CACHE.get(type) != null) {
-                            throw new IllegalStateException("Bad concurrency: descriptor already present in cache");
+                            throw new ConcurrentModificationException("Descriptor already present in cache");
                         }
                         CACHE.put(type, descriptor);
                     }

@@ -2,7 +2,7 @@ package ru.vyarus.java.generics.resolver.util.walk;
 
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
-import ru.vyarus.java.generics.resolver.util.IgnoreGenericsMap;
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
@@ -60,6 +60,7 @@ public final class TypesWalker {
         }
     }
 
+    @SuppressWarnings({"checkstyle:NPathComplexity", "PMD.NPathComplexity"})
     private static void visitGenerics(final Type one, final Class<?> oneType,
                                       final Type two, final Class<?> twoType,
                                       final TypesVisitor visitor) {
@@ -87,9 +88,12 @@ public final class TypesWalker {
                     Collections.<Class<?>>emptyList())
                     .get(lowerClass);
         }
-        for (Map.Entry<String, Type> entry : lowerGenerics.entrySet()) {
+        // generics must be compared with correct sides (otherwise real comparision is impossible)
+        final Map<String, Type> oneGenerics = oneLower ? lowerGenerics : upperGenerics;
+        final Map<String, Type> twoGenerics = oneLower ? upperGenerics : lowerGenerics;
+        for (Map.Entry<String, Type> entry : oneGenerics.entrySet()) {
             final String generic = entry.getKey();
-            walk(entry.getValue(), upperGenerics.get(generic), visitor);
+            walk(entry.getValue(), twoGenerics.get(generic), visitor);
         }
     }
 

@@ -2,7 +2,8 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.GenericsResolver;
 import ru.vyarus.java.generics.resolver.context.GenericsContext;
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
+import ru.vyarus.java.generics.resolver.error.GenericsTrackingException;
+import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
 
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -31,7 +32,26 @@ public final class GenericsTrackingUtils {
     /**
      * Track root generics with known middle type generic. For example, {@code Some<P> extends Base<P>}
      * and we know generic of {@code Base<T>} then it is possible to track that P == T and so known.
-     * <p>
+     *
+     * @param type          root type to track generics for
+     * @param known         class or interface with known generics (in the middle of root type hierarchy)
+     * @param knownGenerics generics of known type
+     * @return root class generics (row types were impossible to track)
+     * @throws IllegalStateException when resolved generic of known type contradict with known generic value
+     *                               (type can't be casted to known type)
+     */
+    public static LinkedHashMap<String, Type> track(final Class<?> type,
+                                                    final Class<?> known,
+                                                    final LinkedHashMap<String, Type> knownGenerics) {
+        try {
+            return trackGenerics(type, known, knownGenerics);
+        } catch (Exception ex) {
+            throw new GenericsTrackingException(type, known, knownGenerics, ex);
+        }
+    }
+
+
+    /**
      * Base idea: resolving class hierarchy with root generics as variables and compare resolved known type generics
      * with actual generics (in the simplest case {@code Some<T> extends Base<T>} we will get
      * {@code TypeVariable(T) == known generic (of Base)}; other cases eventually leads to this one, e.g.
@@ -44,9 +64,9 @@ public final class GenericsTrackingUtils {
      * @throws IllegalStateException when resolved generic of known type contradict with known generic value
      *                               (type can't be casted to known type)
      */
-    public static LinkedHashMap<String, Type> trackGenerics(final Class<?> type,
-                                                            final Class<?> known,
-                                                            final LinkedHashMap<String, Type> knownGenerics) {
+    private static LinkedHashMap<String, Type> trackGenerics(final Class<?> type,
+                                                             final Class<?> known,
+                                                             final LinkedHashMap<String, Type> knownGenerics) {
         if (type.getTypeParameters().length == 0 || knownGenerics.isEmpty()) {
             return EMPTY_MAP;
         }
@@ -115,7 +135,7 @@ public final class GenericsTrackingUtils {
      * @param known           known class (sub type of root)
      * @param knownGenerics   known class's generic values
      */
-    @SuppressWarnings({"checkstyle:ParameterNumber", "PMD.ExcessiveMethodLength"})
+    @SuppressWarnings("checkstyle:ParameterNumber")
     private static void trackType(final Map<String, Type> resolved,
                                   final Map<String, Type> rawRootGenerics,
                                   final String genericName,
@@ -131,13 +151,13 @@ public final class GenericsTrackingUtils {
             // look what minimal type is acceptable according to root class declaration
             // Available if root class use wildcard ({@code <T extends Something>})
             final Class<?> variableType = GenericsUtils.resolveClass(variable.getBounds()[0], rawRootGenerics);
-            checkTypesCompatibility(variableType, knownGenericType, genericName, root, known, knownGenerics);
+            checkTypesCompatibility(variableType, knownGenericType, genericName, root, known);
             // use the lowest possible type to avoid wildcard declaration (? extends something)
             resolved.put(variable.getName(), knownGenericType);
         } else if (actualGeneric instanceof ParameterizedType) {
             final Class<?> exactActualType = (Class) ((ParameterizedType) actualGeneric).getRawType();
             // look raw compatibility
-            checkTypesCompatibility(exactActualType, knownGenericType, genericName, root, known, knownGenerics);
+            checkTypesCompatibility(exactActualType, knownGenericType, genericName, root, known);
             // if generic is not parameterized, but types compatible then simply types not declared properly -
             // nothing to do
             if (knownGeneric instanceof ParameterizedType) {
@@ -166,7 +186,7 @@ public final class GenericsTrackingUtils {
             // (Root extends Base<Something>).. tracking impossible
             // We only need to check that class not contradicts with known (declared) generic type.
             final Class exactActualType = (Class) actualGeneric;
-            checkTypesCompatibility(exactActualType, knownGenericType, genericName, root, known, knownGenerics);
+            checkTypesCompatibility(exactActualType, knownGenericType, genericName, root, known);
         }
         // otherwise, in case of different type (possible?).. do nothing (give up)
     }
@@ -187,8 +207,8 @@ public final class GenericsTrackingUtils {
             if (knownGenericType.isAssignableFrom(exactActualType)) {
                 // Actual type is higher then declared in generic: need to analyze this mismatch
                 // (again not known root generics and known generics in sub type)
-                final LinkedHashMap<String, Type> sub = trackGenerics(exactActualType, knownGenericType,
-                        GenericsResolutionUtils.resolveGenerics(knownGeneric, knownGenerics));
+                final LinkedHashMap<String, Type> sub = track(exactActualType, knownGenericType,
+                        GenericsResolutionUtils.resolveDeclaredGenerics(knownGeneric, knownGenerics));
                 knownArguments = sub.values().toArray(new Type[0]);
             } else {
                 // actual class, resolved in root class hierarchy is a subtype of known generic type
@@ -207,41 +227,22 @@ public final class GenericsTrackingUtils {
      * {@code Base<String>} then types are not compatible: for Root hierarchy we have {@code Target<Integer>} which
      * is not compatible with {@code String}.
      *
-     * @param exactActualType  generic type in root class hierarchy
-     * @param knownGenericType known generic type
-     * @param genericName      name of generic variable in known class
-     * @param root             root class (hierarchy resolved for, can be casted to known)
-     * @param known            class with known generics
-     * @param knownGenerics    known class generics
+     * @param actualType  generic type in root class hierarchy
+     * @param knownType   known generic type
+     * @param genericName name of generic variable in known class
+     * @param root        root class (hierarchy resolved for, can be casted to known)
+     * @param known       class with known generics
      */
-    private static void checkTypesCompatibility(final Class<?> exactActualType,
-                                                final Class<?> knownGenericType,
+    private static void checkTypesCompatibility(final Type actualType,
+                                                final Type knownType,
                                                 final String genericName,
                                                 final Class<?> root,
-                                                final Class<?> known,
-                                                final LinkedHashMap<String, Type> knownGenerics) {
-        if (exactActualType == Object.class) {
-            // If resolved type is Object - assuming it's compatible (most likely generic is simply not declared)
-            // Example: class Root extends Sub, class Sub<T> here generic of Sub is not declared and
-            // should be Object.class, but instead known generic value would be used: for example, Sub<String>
-            return;
-        }
-        // both sides could contain more detailed type (e.g. List<T> and ArrayList<T>), but in any
-        // case they must be in single hierarchy
-        if (!(knownGenericType.isAssignableFrom(exactActualType)
-                || exactActualType.isAssignableFrom(knownGenericType))) {
-            throw new IllegalStateException(String.format(
-                    "Failed to track generics of %s with known subtype %s because known generic "
-                            + "%s (of %s) is %s, but in %s hierarchy it's %s",
-                    root.getSimpleName(),
-                    TypeToStringUtils.toStringType(
-                            new ParameterizedTypeImpl(known, knownGenerics.values().toArray(new Type[0])),
-                            knownGenerics),
-                    genericName,
-                    known.getSimpleName(),
-                    knownGenericType.getSimpleName(),
-                    root.getSimpleName(),
-                    exactActualType.getSimpleName()));
+                                                final Class<?> known) {
+        if (!GenericsResolutionUtils.isCompatible(actualType, knownType)) {
+            throw new IncompatibleTypesException(String.format(
+                    "Known generic %s of %s is not compatible with %s hierarchy: %%s when required %%s",
+                    genericName, TypeToStringUtils.toStringWithNamedGenerics(known), root.getSimpleName()),
+                    knownType, actualType);
         }
     }
 }
