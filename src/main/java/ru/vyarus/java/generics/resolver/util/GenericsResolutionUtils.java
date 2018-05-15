@@ -2,10 +2,6 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
-import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
-import ru.vyarus.java.generics.resolver.util.walk.ComparatorTypesVisitor;
-import ru.vyarus.java.generics.resolver.util.walk.CompatibilityTypesVisitor;
-import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -35,9 +31,11 @@ public final class GenericsResolutionUtils {
      * Analyze class hierarchy and resolve actual generic values for all composing types.
      *
      * @param type          class to analyze
-     * @param rootGenerics  resolved root type generics
-     * @param knownGenerics type generics known before analysis (some middle class generics are known)
-     * @param ignoreClasses interface classes to ignore during analysis
+     * @param rootGenerics  resolved root type generics (including owner type generics)
+     * @param knownGenerics type generics known before analysis (some middle class generics are known) and
+     *                      could contain possible outer generics (types for sure not included in resolving type
+     *                      hierarchy)
+     * @param ignoreClasses classes to ignore during analysis
      * @return resolved generics for all types in class hierarchy
      */
     public static Map<Class<?>, LinkedHashMap<String, Type>> resolve(
@@ -57,45 +55,38 @@ public final class GenericsResolutionUtils {
     }
 
     /**
-     * Universal generics resolution. For {@link ParameterizedType} real generic values will be resolved and
-     * for simple types, raw generics (lower bounds) will be returned.
-     *
-     * @param type     type to resolve generics for
-     * @param generics generics of context class
-     * @return
-     */
-    public static LinkedHashMap<String, Type> resolveGenerics(final Type type,
-                                                              final Map<String, Type> generics) {
-        return type instanceof ParameterizedType
-                ? resolveDeclaredGenerics(type, generics)
-                : resolveRawGenerics(GenericsUtils.resolveClass(type, generics));
-    }
-
-    /**
      * Resolve declared generics for type (actually declared generics in context of some type).
+     * If provided class is inner class - resolves outer class generics as upper bound
      * <p>
-     * WARNING: returns non empty map only if type is {@link ParameterizedType}, because otherwise generics are
-     * not resolvable.
+     * If type is not {@link ParameterizedType} and so does not contains actual generics info, resolve
+     * generics from type declaration ({@link #resolveRawGenerics(Class)}),
      *
      * @param type     type to resolve generics for
      * @param generics generics of context class
      * @return resolved generics of parameterized type or empty map
-     * @see #resolveGenerics(Type, Map) as more universal method
      */
-    public static LinkedHashMap<String, Type> resolveDeclaredGenerics(final Type type,
-                                                                      final Map<String, Type> generics) {
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+    public static LinkedHashMap<String, Type> resolveGenerics(final Type type,
+                                                              final Map<String, Type> generics) {
+        final LinkedHashMap<String, Type> res;
         if (type instanceof ParameterizedType) {
+            res = new LinkedHashMap<String, Type>();
             final ParameterizedType actualType = (ParameterizedType) type;
             final Type[] genericTypes = actualType.getActualTypeArguments();
-            final Class interfaceType = (Class) actualType.getRawType();
-            final TypeVariable[] genericNames = interfaceType.getTypeParameters();
+            final Class target = (Class) actualType.getRawType();
+            final TypeVariable[] genericNames = target.getTypeParameters();
+
+            // inner class can use outer class generics
+            if (actualType.getOwnerType() != null) {
+                fillOuterGenerics(target, res, null);
+            }
 
             final int cnt = genericNames.length;
             for (int i = 0; i < cnt; i++) {
                 final Type resolvedGenericType = GenericsUtils.resolveTypeVariables(genericTypes[i], generics);
                 res.put(genericNames[i].getName(), resolvedGenericType);
             }
+        } else {
+            res = resolveRawGenerics(GenericsUtils.resolveClass(type, generics));
         }
         return res;
     }
@@ -104,79 +95,64 @@ public final class GenericsResolutionUtils {
      * Resolve type generics by declaration (as lower bound). Used for cases when actual generic definition is not
      * available (so actual generics are unknown). In most cases such generics resolved as Object
      * (for example, {@code Some<T>}).
+     * <p>
+     * If class is inner class, resolve outer class generics (which may be used in class)
      *
-     * @param type class to analuze generics for
+     * @param type class to analyze generics for
      * @return resolved generics or empty map if not generics used
      */
     public static LinkedHashMap<String, Type> resolveRawGenerics(final Class<?> type) {
         final TypeVariable[] declaredGenerics = type.getTypeParameters();
-        final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        // inner class can use outer class generics
+        fillOuterGenerics(type, res, null);
         for (TypeVariable variable : declaredGenerics) {
-            generics.put(variable.getName(), GenericsUtils.resolveTypeVariables(variable.getBounds()[0], generics));
+            res.put(variable.getName(), GenericsUtils.resolveTypeVariables(variable.getBounds()[0], res));
         }
-        return generics;
+        return res;
     }
 
     /**
-     * Checks if type is more specific than provided one. E.g. {@code ArrayList} is more specific then
-     * {@code List} or {@code List<Integer>} is more specific then {@code List<Object>}.
+     * Inner class could reference outer class generics and so this generics must be included into class context.
+     * Outer class generics resolved as lower bound (by declaration). Class may declare the same generic name
+     * and, in this case, outer generic will be ignored (as not visible).
      * <p>
-     * Not resolved type variables are resolved to Object.
+     * During inlying context resolution we know outer context, and, if outer class is in outer context hierarchy,
+     * we could assume that it's actual parent class and so we could use more specific generics. This will be true for
+     * most sane cases (often inner class is used inside owner), but other cases are still possible (anyway,
+     * the chance that inner class will appear in two different hierarchies of outer class is quite small).
      *
-     * @param what        type to check
-     * @param comparingTo type to compare to
-     * @return true when provided type is more specific than other type. false otherwise
-     * @throws IllegalArgumentException when types are not compatible
+     * @param type          context type
+     * @param generics      resolved type generics
+     * @param knownGenerics map of known middle generics and possibly known outer context (outer context may contain
+     *                      outer class generics declarations). May be null.
      */
-    public static boolean isMoreSpecific(final Type what, final Type comparingTo) {
-        final ComparatorTypesVisitor visitor = new ComparatorTypesVisitor();
-        TypesWalker.walk(what, comparingTo, visitor);
-
-        final IgnoreGenericsMap ignoreVars = new IgnoreGenericsMap();
-        if (!visitor.isCompatible()) {
-            throw new IllegalArgumentException(String.format(
-                    "Type %s can't be compared to %s because they are not compatible",
-                    TypeToStringUtils.toStringType(what, ignoreVars),
-                    TypeToStringUtils.toStringType(comparingTo, ignoreVars)));
+    public static void fillOuterGenerics(final Class<?> type,
+                                         final Map<String, Type> generics,
+                                         final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
+        final Class<?> outer = TypeUtils.getOuter(type);
+        if (outer == null) {
+            // not inner class
+            return;
         }
-        return visitor.isMoreSpecific();
-    }
-
-    /**
-     * Not resolved type variables are resolved to Object.
-     *
-     * @param one first type
-     * @param two second type
-     * @return more specific type or first type is they are equal
-     * @see #isMoreSpecific(Type, Type)
-     */
-    public static Type getMoreSpecificType(final Type one, final Type two) {
-        return isMoreSpecific(one, two) ? one : two;
-    }
-
-
-    /**
-     * Check if types are compatible: types must be equal or one extend another. Object is compatible with any type.
-     * <p>
-     * Not resolved type variables are resolved to Object.
-     *
-     * @param one first type
-     * @param two second type
-     * @return true if types are alignable, false otherwise
-     */
-    public static boolean isCompatible(final Type one, final Type two) {
-        final CompatibilityTypesVisitor visitor = new CompatibilityTypesVisitor();
-        TypesWalker.walk(one, two, visitor);
-        return visitor.isCompatible();
+        final Map<String, Type> outerGenerics = knownGenerics != null && knownGenerics.containsKey(outer)
+                ? new LinkedHashMap<String, Type>(knownGenerics.get(outer))
+                : resolveRawGenerics(outer);
+        // class may declare generics with the same name and they must not be overridden
+        for (TypeVariable var : type.getTypeParameters()) {
+            outerGenerics.remove(var.getName());
+        }
+        generics.putAll(outerGenerics);
     }
 
     /**
      * Analyze type hierarchy (all subclasses and interfaces).
      *
      * @param generics      resolved generics of already analyzed types
-     * @param knownGenerics type generics known before analysis (some middle class generics are known)
+     * @param knownGenerics type generics known before analysis (some middle class generics are known) and
+     *                      possible owner types (types not present in analyzed type hierarchy)
      * @param type          class to analyze
-     * @param ignoreClasses interface classes to ignore during analysis
+     * @param ignoreClasses classes to ignore during analysis
      */
     private static void analyzeType(final Map<Class<?>, LinkedHashMap<String, Type>> generics,
                                     final Class<?> type,
@@ -195,6 +171,7 @@ public final class GenericsResolutionUtils {
             generics.put(next, knownGenerics.containsKey(next)
                     ? knownGenerics.get(next)
                     : analyzeParent(supertype, generics.get(supertype)));
+            fillOuterGenerics(next, generics.get(next), knownGenerics);
             supertype = next;
         }
     }
@@ -207,7 +184,7 @@ public final class GenericsResolutionUtils {
      * @param knownTypes    type generics known before analysis (some middle class generics are known)
      * @param iface         interface to analyze
      * @param hostType      class implementing interface (where generics actually defined)
-     * @param ignoreClasses interface classes to ignore during analysis
+     * @param ignoreClasses classes to ignore during analysis
      */
     private static void analyzeInterface(final Map<Class<?>, LinkedHashMap<String, Type>> types,
                                          final Map<Class<?>, LinkedHashMap<String, Type>> knownTypes,
@@ -224,7 +201,7 @@ public final class GenericsResolutionUtils {
             } else if (iface instanceof ParameterizedType) {
                 final ParameterizedType parametrization = (ParameterizedType) iface;
                 final LinkedHashMap<String, Type> generics =
-                        resolveDeclaredGenerics(parametrization, types.get(hostType));
+                        resolveGenerics(parametrization, types.get(hostType));
 
                 if (types.containsKey(interfaceType)) {
                     // class hierarchy may contain multiple implementations for the same interface
@@ -253,8 +230,8 @@ public final class GenericsResolutionUtils {
             final Type value = entry.getValue();
             final Type currentValue = main.get(generic);
 
-            if (isCompatible(value, currentValue)) {
-                main.put(generic, getMoreSpecificType(value, currentValue));
+            if (TypeUtils.isCompatible(value, currentValue)) {
+                main.put(generic, TypeUtils.getMoreSpecificType(value, currentValue));
             } else {
                 // all variables already replaces, so no actual generics required
                 throw new IncompatibleTypesException(String.format(
@@ -281,7 +258,7 @@ public final class GenericsResolutionUtils {
         final Class parent = type.getSuperclass();
         if (!type.isInterface() && parent != null && parent != Object.class
                 && type.getGenericSuperclass() instanceof ParameterizedType) {
-            res = resolveDeclaredGenerics(type.getGenericSuperclass(), generics);
+            res = resolveGenerics(type.getGenericSuperclass(), generics);
         } else if (parent != null && parent.getTypeParameters().length > 0) {
             // root class didn't declare generics
             res = resolveRawGenerics(parent);

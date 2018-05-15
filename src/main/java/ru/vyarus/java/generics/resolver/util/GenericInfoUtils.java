@@ -24,8 +24,6 @@ import java.util.*;
 @SuppressWarnings("PMD.LooseCoupling")
 public final class GenericInfoUtils {
 
-    private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
-
     private GenericInfoUtils() {
     }
 
@@ -39,10 +37,8 @@ public final class GenericInfoUtils {
      * @return analyzed type generics info
      */
     public static GenericsInfo create(final Class<?> type, final Class<?>... ignoreClasses) {
-        final LinkedHashMap<String, Type> generics = type.getTypeParameters().length > 0
-                // special case: root class also contains generics
-                ? GenericsResolutionUtils.resolveRawGenerics(type)
-                : EMPTY_MAP;
+        // root class may contain generics or it may be inner class
+        final LinkedHashMap<String, Type> generics = GenericsResolutionUtils.resolveRawGenerics(type);
         return create(type, generics, null, ignoreClasses);
     }
 
@@ -65,9 +61,13 @@ public final class GenericInfoUtils {
         final Map<String, Type> rootGenerics = context.genericsMap();
         // first step: solve type to replace transitive generics with direct values
         final Type actual = GenericsUtils.resolveTypeVariables(type, rootGenerics);
-        final Class target = context.resolveClass(actual);
+        final Class<?> target = context.resolveClass(actual);
+
         final LinkedHashMap<String, Type> generics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
-        return create(target, generics, null, ignoreClasses);
+        GenericsResolutionUtils.fillOuterGenerics(target, generics, context.getGenericsInfo().getTypesMap());
+        return create(target, generics,
+                // store possible owner types from parent context
+                usePossiblyOwnerGenerics(target, context.getGenericsInfo()), ignoreClasses);
     }
 
     /**
@@ -112,16 +112,21 @@ public final class GenericInfoUtils {
 
         // known middle type
         LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils
-                .resolveDeclaredGenerics(actual, rootGenerics);
+                .resolveGenerics(actual, rootGenerics);
         final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
         knownGenerics.put(middleType, typeGenerics);
+        // store other types for possible outer classes generics resolution
+        knownGenerics.putAll(usePossiblyOwnerGenerics(asType, context.getGenericsInfo()));
 
         // root type
         typeGenerics = asType.getTypeParameters().length > 0
                 // special case: root class also contains generics
                 ? GenericsTrackingUtils.track(asType, middleType, typeGenerics)
-                : EMPTY_MAP;
+                // root type may be inner type and so could use outer class generics
+                : GenericsResolutionUtils.resolveRawGenerics(asType);
+
+        GenericsResolutionUtils.fillOuterGenerics(asType, typeGenerics, context.getGenericsInfo().getTypesMap());
         return create(asType, typeGenerics, knownGenerics, ignoreClasses);
     }
 
@@ -137,5 +142,29 @@ public final class GenericInfoUtils {
                 knownGenerics == null ? Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap() : knownGenerics,
                 Arrays.asList(ignoreClasses));
         return new GenericsInfo(type, generics, ignoreClasses);
+    }
+
+    /**
+     * When building inlying context, target type may be inner class, and if root context contains owner type
+     * then we can assume that it's known more specific generics may be used. This is not correct in general,
+     * as inner class may be created inside different class, but in most cases inner classes are used within
+     * outer class and the chance that different outer class hierarchies will interact are quite low.
+     * <p>
+     * Storing all types, not present in target class hieararchy (to avoid affecting actual generics resolution)
+     *
+     * @param type target (inlying) type
+     * @param info root context generics info (possibly outer)
+     * @return possible owner classes, not present in target type hierarchy
+     */
+    private static Map<Class<?>, LinkedHashMap<String, Type>> usePossiblyOwnerGenerics(
+            final Class<?> type, final GenericsInfo info) {
+        final Map<Class<?>, LinkedHashMap<String, Type>> res = new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        // use only types, not included in target hierarchy
+        for (Class<?> root : info.getComposingTypes()) {
+            if (!root.isAssignableFrom(type)) {
+                res.put(root, (LinkedHashMap<String, Type>) info.getTypeGenerics(root));
+            }
+        }
+        return res;
     }
 }

@@ -31,7 +31,7 @@ public class GenericsResolutionException extends GenericsException {
                                        final Exception ex) {
         super(String.format("Failed to analyze hierarchy for %s%s",
                 TypeToStringUtils.toStringWithGenerics(type, rootGenerics),
-                formatKnownGenerics(knownGenerics)), ex);
+                formatKnownGenerics(type, knownGenerics)), ex);
         this.type = type;
         this.rootGenerics = rootGenerics;
         this.knownGenerics = knownGenerics;
@@ -52,26 +52,28 @@ public class GenericsResolutionException extends GenericsException {
     }
 
     /**
-     * @return known generics of middle types or empty map if no generics are known
+     * @return known generics of middle types and possible owner types or empty map if no generics are known
      */
     public Map<Class<?>, LinkedHashMap<String, Type>> getKnownGenerics() {
         return knownGenerics;
     }
 
-    private static String formatKnownGenerics(final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
+    private static String formatKnownGenerics(final Class<?> type,
+                                              final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
         if (knownGenerics.isEmpty()) {
             return "";
         }
         final StringBuilder known = new StringBuilder(50);
-        known.append(" (with known generics: ");
         boolean first = true;
         for (Map.Entry<Class<?>, LinkedHashMap<String, Type>> entry : knownGenerics.entrySet()) {
-            known.append(first ? "" : ", ")
-                    .append(TypeToStringUtils
-                            .toStringWithGenerics(entry.getKey(), entry.getValue()));
-            first = false;
+            // filter out possible owner types generics
+            if (entry.getKey().isAssignableFrom(type)) {
+                known.append(first ? "" : ", ")
+                        .append(TypeToStringUtils
+                                .toStringWithGenerics(entry.getKey(), entry.getValue()));
+                first = false;
+            }
         }
-        known.append(')');
-        return known.toString();
+        return known.length() > 0 ? " (with known generics: " + known.toString() + ')' : "";
     }
 }

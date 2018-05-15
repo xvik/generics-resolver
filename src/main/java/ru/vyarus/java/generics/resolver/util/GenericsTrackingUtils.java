@@ -208,7 +208,7 @@ public final class GenericsTrackingUtils {
                 // Actual type is higher then declared in generic: need to analyze this mismatch
                 // (again not known root generics and known generics in sub type)
                 final LinkedHashMap<String, Type> sub = track(exactActualType, knownGenericType,
-                        GenericsResolutionUtils.resolveDeclaredGenerics(knownGeneric, knownGenerics));
+                        GenericsResolutionUtils.resolveGenerics(knownGeneric, knownGenerics));
                 knownArguments = sub.values().toArray(new Type[0]);
             } else {
                 // actual class, resolved in root class hierarchy is a subtype of known generic type
@@ -238,7 +238,7 @@ public final class GenericsTrackingUtils {
                                                 final String genericName,
                                                 final Class<?> root,
                                                 final Class<?> known) {
-        if (!GenericsResolutionUtils.isCompatible(actualType, knownType)) {
+        if (!TypeUtils.isCompatible(actualType, knownType)) {
             throw new IncompatibleTypesException(String.format(
                     "Known generic %s of %s is not compatible with %s hierarchy: %%s when required %%s",
                     genericName, TypeToStringUtils.toStringWithNamedGenerics(known), root.getSimpleName()),

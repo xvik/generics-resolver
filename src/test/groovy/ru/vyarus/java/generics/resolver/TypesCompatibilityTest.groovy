@@ -4,7 +4,7 @@ import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Root
-import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils
+import ru.vyarus.java.generics.resolver.util.TypeUtils
 import spock.lang.Specification
 
 import java.lang.reflect.GenericArrayType
@@ -20,7 +20,7 @@ class TypesCompatibilityTest extends Specification {
     def "Check types compatibility"() {
 
         expect:
-        GenericsResolutionUtils.isCompatible(type1, type2) == res
+        TypeUtils.isCompatible(type1, type2) == res
 
         where:
         type1                          | type2                       | res
@@ -47,7 +47,7 @@ class TypesCompatibilityTest extends Specification {
 
     def "Check types comparison"() {
         expect:
-        GenericsResolutionUtils.isMoreSpecific(type1, type2) == res
+        TypeUtils.isMoreSpecific(type1, type2) == res
 
         where:
         type1                    | type2                    | res
@@ -67,7 +67,7 @@ class TypesCompatibilityTest extends Specification {
     def "Check type comparison failure"() {
 
         when: "compare incopatible types"
-        GenericsResolutionUtils.isMoreSpecific(String, Integer)
+        TypeUtils.isMoreSpecific(String, Integer)
         then: "err"
         def ex = thrown(IllegalArgumentException)
         ex.message == "Type String can't be compared to Integer because they are not compatible"
@@ -76,7 +76,7 @@ class TypesCompatibilityTest extends Specification {
     def "Check specific type resolution"() {
 
         expect:
-        GenericsResolutionUtils.getMoreSpecificType(Base1, Root) == Root
+        TypeUtils.getMoreSpecificType(Base1, Root) == Root
     }
 
     ParameterizedType param(Class root, Type... types) {

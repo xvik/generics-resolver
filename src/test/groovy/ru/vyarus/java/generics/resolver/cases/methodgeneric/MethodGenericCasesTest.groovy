@@ -9,6 +9,7 @@ import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import spock.lang.Specification
 
 import java.lang.reflect.Method
+import java.lang.reflect.ParameterizedType
 
 /**
  * @author Vyacheslav Rusakov 
@@ -24,11 +25,25 @@ class MethodGenericCasesTest extends Specification {
         then: "resolved"
         params == [Class, Object]
 
+        when: "parameter with method generic"
+        def type = GenericsResolver.resolve(MethodGenericCase)
+                .method(MethodGenericCase.getMethod("test", Class, Object)).resolveParameterType(0)
+        then: "resolved"
+        type instanceof ParameterizedType
+        ((ParameterizedType)type).rawType == Class
+        ((ParameterizedType)type).actualTypeArguments == [Object]
+
         when: "return type with method generic"
         Class res = GenericsResolver.resolve(MethodGenericCase)
                 .method(MethodGenericCase.getMethod("test", Class, Object)).resolveReturnClass()
         then: "resolved"
         res == Object
+
+        when: "returned resul type"
+        type = GenericsResolver.resolve(MethodGenericCase)
+                .method(MethodGenericCase.getMethod("test", Class, Object)).resolveReturnType()
+        then: "resolved"
+        type == Object
     }
 
     def "Check bounded method generic"() {

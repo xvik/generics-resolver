@@ -5,10 +5,7 @@ import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Builds string representation for type in context of generified class.
@@ -62,7 +59,7 @@ public final class TypeToStringUtils {
     }
 
     /**
-     * Formats class as {@code Class<generics>}. Class is not checked to actually have generics!
+     * Formats class as {@code Class<generics>}. Only actual class generics are rendered.
      * Intended to be used for error reporting.
      *
      * @param type     class class to print with generics
@@ -72,8 +69,11 @@ public final class TypeToStringUtils {
      * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
      */
     public static String toStringWithGenerics(final Class<?> type, final Map<String, Type> generics) {
+        // provided generics may contain outer type generics, but we will render only required generics
+        final Map<String, Type> actual = type.getTypeParameters().length == generics.size()
+                ? generics : GenericsUtils.getSelfGenerics(generics, GenericsUtils.getOwnerGenerics(type, generics));
         return toStringType(new ParameterizedTypeImpl(type, generics.values().toArray(new Type[0])),
-                generics);
+                actual);
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")

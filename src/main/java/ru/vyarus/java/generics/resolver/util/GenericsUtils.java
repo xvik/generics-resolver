@@ -6,9 +6,7 @@ import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Helper utilities to correctly resolve generified types of super interfaces.
@@ -146,6 +144,49 @@ public final class GenericsUtils {
                     resolve(wildcard.getLowerBounds(), generics));
         }
         return resolvedGenericType;
+    }
+
+    /**
+     * It is important to keep possible outer class generics, because they may be used in type declarations.
+     *
+     * @param type type
+     * @return owner class generics if type is inner class or empty map if not
+     */
+    public static Map<String, Type> getOwnerGenerics(final Class<?> type,
+                                                     final Map<String, Type> generics) {
+        final boolean hasOwnerGenerics =
+                type.isMemberClass() && type.getTypeParameters().length != generics.size();
+        if (!hasOwnerGenerics) {
+            return Collections.emptyMap();
+        }
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>(generics);
+        // owner generics are all generics not mentioned in signature
+        for (TypeVariable var : type.getTypeParameters()) {
+            res.remove(var.getName());
+        }
+        return res;
+    }
+
+    /**
+     * Filter owner generics from all generics map.
+     *
+     * @param generics all generics
+     * @param owner    used owner type generics
+     * @return type's own generics only
+     * @see #getOwnerGenerics(Class, Map)
+     */
+    public static Map<String, Type> getSelfGenerics(final Map<String, Type> generics,
+                                                    final Map<String, Type> owner) {
+        final Map<String, Type> res;
+        if (owner.isEmpty()) {
+            res = generics;
+        } else {
+            res = new LinkedHashMap<String, Type>(generics);
+            for (String key : owner.keySet()) {
+                res.remove(key);
+            }
+        }
+        return res;
     }
 
     private static Type[] resolve(final Type[] types, final Map<String, Type> generics) {
