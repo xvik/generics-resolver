@@ -1,7 +1,7 @@
 Compatibility notes: 
-    - API did not changed, only new methods were added. 
-    - NoGenericException was removed: detect generic absence by returned result instead
-    - UnknownGenericsException was moved to different package  
+    * API did not changed, only new methods were added. 
+    * NoGenericException was removed: detect generic absence by returned result instead
+    * UnknownGenericsException was moved to different package  
 
 * Inlying contexts: generics context building for type "inside" known hierarchy: 
     "Drill down" case, when new generics context must be build for some type, using generics of current context. 
