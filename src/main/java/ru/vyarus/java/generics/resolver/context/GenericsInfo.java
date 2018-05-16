@@ -15,7 +15,7 @@ import static ru.vyarus.java.generics.resolver.util.TypeToStringUtils.toStringWi
  * safe for all types from hierarchy.
  * <p>
  * Maps also may hold outer type's generics (if type is inner class), because inner classes could access outer
- * generics ({@see ru.vyarus.java.generics.resolver.context.TypeGenericsContext} for separation logic).
+ * generics ({@link ru.vyarus.java.generics.resolver.context.TypeGenericsContext} for separation logic).
  *
  * @author Vyacheslav Rusakov
  * @since 16.10.2014

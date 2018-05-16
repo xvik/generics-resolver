@@ -150,6 +150,7 @@ public final class GenericsUtils {
      * It is important to keep possible outer class generics, because they may be used in type declarations.
      *
      * @param type type
+     * @param generics all type's context generics (self + outer class)
      * @return owner class generics if type is inner class or empty map if not
      */
     public static Map<String, Type> getOwnerGenerics(final Class<?> type,
