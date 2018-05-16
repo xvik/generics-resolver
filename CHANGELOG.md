@@ -18,27 +18,28 @@
     - Shortcuts, by analogy with simple inlying contexts: fieldTypeAs(Field, Class), returnTypeAs(Class), parameterTypeAs(pos, Class)
     - Tracks root type generics from known middle generics (e.g. Root<T> extends Base<T> when known Base<String> will resolve to Root<String>).
        Support composite generic declarations (and any hierarchy depth). 
-* Internal analysis logic opened as utilities (for low level usage without GenericsResolved) 
-    - GenericsResolutionUtils - generics analysis logic
-    - GenericsTrackingUtils - root generics recovery from known middle type
+* Internal analysis logic opened as utilities (for low level usage without GenericsResolver) 
+    - GenericsResolutionUtils - generics analysis logic (with access to analyzed type)
+    - GenericsTrackingUtils - root generics tracking from middle class's known generics (with access to analyzed types)
     - TypeUtils - generic utilities on types (ignoring unknown generics)
 * Types deep comparison api: TypesWalker.walk(Type, Type, Visitor) could walk on two types side by side to check or compare actual classes on each level
     Usages:
     - TypeUtils.isCompatible(Type, Type) - deep types compatibility check
     - TypeUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose more specific like TypeUtils.getMoreSpecificType(Type, Type))  
-* Improved multiple interfaces in the same hierarchy case support: before exception was thrown if the same interface appears multiple times
+* Improved support for multiple interface appearances in hierarchy: before exception was thrown if the same interface appears multiple times
     with different generics, now different declarations are merged to use the most specific types for interface. 
     Types compatibility explicitly checked during merge. 
 * Reworked exceptions:
     - Now all exceptions extend base type GenericsException (runtime) to simplify generic analysis errors interception (catch(GenericException ex))
     - General tracking exception: GenericsTrackingException - thrown on generics tracking problems
     - General resolution exception: GenericsResolutionException - thrown on type hierarchy generics analysis problems
+    - More informative error messages
     - (breaking) UnknownGenericException moved to different package
     - (breaking) NoGenericException removed. Was thrown for resolveGenericsOf(Type) methods when class does not declare generics.
         Now empty list or null will be returned.       
 * Context api improvements:
     * Type resolution methods (return type with all generic variables replaced with known values): 
-        - resolveType(Type)
+        - resolveType(Type) = Type
         - Shortcuts: 
             - resolveFieldType(Field) - field type without generic variables 
             - resolveParameterType(pos) - (method context) parameter type without generic variables 
@@ -57,7 +58,7 @@
     - For customized context string rendering: context.getGenericsInfo().toStringHierarchy(TypeWriter) 
     - Direct toString() on context (GenericsContext) prints entire hierarchy with current position marker "<-- current" marker.
         In intellij idea you can use "view" value link inside debugger to quickly overview current context (with resolved generics) and position      
-* Inner classes support: outer class generics are resolved to avoid UknownGenericException 
+* Inner classes support (Outer<T>.Inner, not static): outer class generics are resolved to avoid UnknownGenericException 
     - Used owner class generics: TypeGenericsContext.ownerTypeGenericsMap() (empty map for not inner class)
     - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
         This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct                                      
