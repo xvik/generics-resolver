@@ -1,8 +1,3 @@
-Compatibility notes: 
-    * API did not changed, only new methods were added. 
-    * NoGenericException was removed: detect generic absence by returned result instead
-    * UnknownGenericsException was moved to different package  
-
 * Inlying contexts: generics context building for type "inside" known hierarchy: 
     "Drill down" case, when new generics context must be build for some type, using generics of current context. 
     For example, we have some generics context and analyzing class fields. Some field is MyType<T> - generified with
@@ -66,6 +61,11 @@ Compatibility notes:
     - Used owner class generics: TypeGenericsContext.ownerTypeGenericsMap() (empty map for not inner class)
     - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
         This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct                                      
+
+Compatibility notes: 
+* API did not changed, only new methods were added. 
+* NoGenericException was removed: detect generic absence by returned result instead
+* UnknownGenericsException was moved to different package
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution
