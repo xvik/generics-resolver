@@ -129,28 +129,33 @@ public final class GenericsResolutionUtils {
      *                      outer class generics declarations). May be null.
      * @return actual generics map (incoming map may be default empty map and in this case it must be replaced)
      */
-    public static LinkedHashMap<String, Type> fillOuterGenerics(final Class<?> type,
-                                         final LinkedHashMap<String, Type> generics,
-                                         final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
+    public static LinkedHashMap<String, Type> fillOuterGenerics(
+            final Class<?> type,
+            final LinkedHashMap<String, Type> generics,
+            final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
+        final LinkedHashMap<String, Type> res;
         final Class<?> outer = TypeUtils.getOuter(type);
         if (outer == null) {
             // not inner class
-            return generics;
-        }
-        final LinkedHashMap<String, Type> outerGenerics = knownGenerics != null && knownGenerics.containsKey(outer)
-                ? new LinkedHashMap<String, Type>(knownGenerics.get(outer))
-                : resolveRawGenerics(outer);
-        // class may declare generics with the same name and they must not be overridden
-        for (TypeVariable var : type.getTypeParameters()) {
-            outerGenerics.remove(var.getName());
-        }
-        if (generics.isEmpty()) {
-            // empty generics map almost sure means that passed map is shared empty map which must not be modified
-            return outerGenerics;
+            res = generics;
         } else {
-            generics.putAll(outerGenerics);
-            return generics;
+            final LinkedHashMap<String, Type> outerGenerics = knownGenerics != null && knownGenerics.containsKey(outer)
+                    ? new LinkedHashMap<String, Type>(knownGenerics.get(outer))
+                    : resolveRawGenerics(outer);
+            // class may declare generics with the same name and they must not be overridden
+            for (TypeVariable var : type.getTypeParameters()) {
+                outerGenerics.remove(var.getName());
+            }
+
+            if (generics.isEmpty()) {
+                // empty generics map almost sure means that passed map is shared empty map which must not be modified
+                res = outerGenerics;
+            } else {
+                generics.putAll(outerGenerics);
+                res = generics;
+            }
         }
+        return res;
     }
 
     /**
