@@ -1,7 +1,7 @@
 * Inlying contexts: generics context building for type "inside" known hierarchy: 
     "Drill down" case, when new generics context must be build for some type, using generics of current context. 
-    For example, we have some generics context and analyzing class fields. Some field is MyType<T> - generified with
-    current class's generic. Inlying context is building new hierarchy with extra known generics (for example for class MyType<String>).
+    For example, we have some generics context and analyzing class fields. Some field is MyType<T\> - generified with
+    current class's generic. Inlying context is building new hierarchy with extra known generics (for example for class MyType<String\>).
     Context methods:          
     - inlyingType(Type) = GenericsContext - universal inlying context builder (the same as GenericsResolver.resolve(class) if class does not have generics)
     - context.fieldType(Field) - shortcut for fields (guarantee correct base type or error if type not in hierarchy)
@@ -11,12 +11,12 @@
 * Inlying context building for sub type: it's like inlying context (knowing type's root generics), but target type is 
     a subtype for current. Very special case, required for instance analysis: useful when not just type declarations, but
     also actual instance is used for analysis:
-    Suppose we have field MyType<String> inside class. But we know that actual instance is MySpecificType<T, K> extends MyType<T>.
+    Suppose we have field MyType<String\> inside class. But we know that actual instance is MySpecificType<T, K\> extends MyType<T\>.
     We need to build generics context for actual class (MySpecificType), but as we know base class type, we can track class generics
-    as MySpecificType<String, Object> (partially tracked) 
+    as MySpecificType<String, Object\> (partially tracked) 
     - inlyingTypeAs(Type, Class) = GenericsContext - universal inlying context building for target class
     - Shortcuts, by analogy with simple inlying contexts: fieldTypeAs(Field, Class), returnTypeAs(Class), parameterTypeAs(pos, Class)
-    - Tracks root type generics from known middle generics (e.g. Root<T> extends Base<T> when known Base<String> will resolve to Root<String>).
+    - Tracks root type generics from known middle generics (e.g. Root<T\> extends Base<T\> when known Base<String\> will resolve to Root<String\>).
        Support composite generic declarations (and any hierarchy depth). 
 * Internal analysis logic opened as utilities (for low level usage without GenericsResolver) 
     - GenericsResolutionUtils - generics analysis logic (with access to analyzed type)
@@ -46,7 +46,7 @@
             - resolveReturnType() - (method context) return type without generic variables
     * Shortcuts for Field's type resolution (with automatic context tracking to avoid silly mistakes):
         - resolveFieldClass(Field) - field class
-        - resolveFieldGenerics(Field) - field's class generics (List<Class>)
+        - resolveFieldGenerics(Field) - field's class generics (List<Class\>)
         - resolveFieldGeneric(Field) - field's class generic (Class) 
     * More to string utilities:
         - GenericsContext to string methods for context type: 
@@ -58,7 +58,7 @@
     - For customized context string rendering: context.getGenericsInfo().toStringHierarchy(TypeWriter) 
     - Direct toString() on context (GenericsContext) prints entire hierarchy with current position marker "<-- current" marker.
         In intellij idea you can use "view" value link inside debugger to quickly overview current context (with resolved generics) and position      
-* Inner classes support (Outer<T>.Inner, not static): outer class generics are resolved to avoid UnknownGenericException 
+* Inner classes support (Outer<T\>.Inner, not static): outer class generics are resolved to avoid UnknownGenericException 
     - Used owner class generics: TypeGenericsContext.ownerTypeGenericsMap() (empty map for not inner class)
     - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
         This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct                                      
