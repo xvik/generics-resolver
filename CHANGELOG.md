@@ -1,44 +1,71 @@
-* Add type's full resolution method (in returned type all variables are replaced with actual known types): context.resolveType(Type).
-    - add shortcut methods: context.resolveFieldType(Field), methodContext.resolveParameterType(pos), methodContext.resolveReturnType()   
-* Support inlying contexts: class generics resolution in context of class (to correctly handle root class generics).
-    Required for correct generics context building for field type, method return type or method parameter.      
-    - context.inlyingType(Type) - universal resolver (the same as GenericsResolver.resolve(class) if class does not have generics (resolution cached))
-    - context.fieldType(Field) - shortcut for fields (guarantee correct base type)
+Compatibility notes: 
+    - API did not changed, only new methods were added. 
+    - NoGenericException was removed: detect generic absence by returned result instead
+    - UnknownGenericsException was moved to different package  
+
+* Inlying contexts: generics context building for type "inside" known hierarchy: 
+    "Drill down" case, when new generics context must be build for some type, using generics of current context. 
+    For example, we have some generics context and analyzing class fields. Some field is MyType<T> - generified with
+    current class's generic. Inlying context is building new hierarchy with extra known generics (for example for class MyType<String>).
+    Context methods:          
+    - inlyingType(Type) = GenericsContext - universal inlying context builder (the same as GenericsResolver.resolve(class) if class does not have generics)
+    - context.fieldType(Field) - shortcut for fields (guarantee correct base type or error if type not in hierarchy)
     - method(Method).returnType() - shortcut for method return type (guarantee correct base type)
     - method(Method).parameterType(pos) - shortcut for method parameter type (guarantee correct base type)
-    - returned inlying context have reference to root context: TypeGenericsContext.rootContext()
-* Type generics resolution with partial generics knowledge: building inlying context (using declared type information) for sub type.
-    This is useful for instance analysis when you need to build generics context for actual object (with not known root generics), 
-    but you know generics for declared middle type.
-    - by analogy with direct inlying: inlyingTypeAs(Type, Class), fieldTypeAs(Field, Class), returnTypeAs(Class), parameterTypeAs(pos, Class)
-    - tracks root type generics from known middle generics (e.g. Root<T> extends Base<T> when known Base<String> will resolve to Root<String>).
+    - returned context have reference to root context: TypeGenericsContext.rootContext()
+* Inlying context building for sub type: it's like inlying context (knowing type's root generics), but target type is 
+    a subtype for current. Very special case, required for instance analysis: useful when not just type declarations, but
+    also actual instance is used for analysis:
+    Suppose we have field MyType<String> inside class. But we know that actual instance is MySpecificType<T, K> extends MyType<T>.
+    We need to build generics context for actual class (MySpecificType), but as we know base class type, we can track class generics
+    as MySpecificType<String, Object> (partially tracked) 
+    - inlyingTypeAs(Type, Class) = GenericsContext - universal inlying context building for target class
+    - Shortcuts, by analogy with simple inlying contexts: fieldTypeAs(Field, Class), returnTypeAs(Class), parameterTypeAs(pos, Class)
+    - Tracks root type generics from known middle generics (e.g. Root<T> extends Base<T> when known Base<String> will resolve to Root<String>).
        Support composite generic declarations (and any hierarchy depth). 
-* Low level analysis logic opened as utilities: GenericsResolutionUtils, GenericsTrackingUtils
-* Types comparison api: TypesWalker.walk(Type, Type, Visitor) could walk two types side by side to check or compare actual classes on each level
+* Internal analysis logic opened as utilities (for low level usage without GenericsResolved) 
+    - GenericsResolutionUtils - generics analysis logic
+    - GenericsTrackingUtils - root generics recovery from known middle type
+    - TypeUtils - generic utilities on types (ignoring unknown generics)
+* Types deep comparison api: TypesWalker.walk(Type, Type, Visitor) could walk on two types side by side to check or compare actual classes on each level
     Usages:
-    - GenericsResolutionUtils.isCompatible(Type, Type) - deep types compatibility check
-    - GenericsResolutionUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose mroe specific like GenericsResolutionUtils.getMoreSpecificType(Type, Type))  
-* Proper support for interface appearance in multiple hierarchy branches (appeared during analysis): 
-    resolved generics from different branches now merged to use the most concrete known types
-    (before it was failing if interface appears multiple times with different generics)
-* (breaking) When type does not contain generics return empty list or null (NoGenericException checked exception removed) from
-    context's .resolveGenericsOf() and .resolveGenericOf()
-* (breaking) UnknownGenericsException moved to different package
-* Add base type for all used exceptions: GenericsException (runtime exception) to simplify generic analysis errors interception
-    - GenericsTrackingException - thrown on generics tracking problems
-    - GenericsResolutionException - thrown on type hierarchy generics analysis problems
-* TypeToStringUtils new methods:
-    - toStringWithNamedGenerics() - print class with generic variables (List<E>)
-    - toStringWithGenerics() - print class with known generics (List<Known>)
-    - GenericsContext to string methods for context type: toStringCurrentClassDeclaration(), toStringCurrentClass()
-* Add shortcuts for fields with automatic context switching (for less usage errors): context.resolveFieldClass, resolveFieldGenerics, resolveFieldGeneric
-* Add class hierarchy to string print: GenericsInfo.toStringHierarchy() (context.getGenericsInfo())
-    - All context classes now render default toString as complete class hierarchy with resolved generics and pointer to current location (for debug)
-    - add methodContext().toStringMethod() to reneder method declartion with resolved generics
-* Support outer class generics recognition during inner classes resolution: 
-    - TypeGenericsContext.ownerTypeGenericsMap() returns used owner generics
-    - for inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
-        This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct                                   
+    - TypeUtils.isCompatible(Type, Type) - deep types compatibility check
+    - TypeUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose more specific like TypeUtils.getMoreSpecificType(Type, Type))  
+* Improved multiple interfaces in the same hierarchy case support: before exception was thrown if the same interface appears multiple times
+    with different generics, now different declarations are merged to use the most specific types for interface. 
+    Types compatibility explicitly checked during merge. 
+* Reworked exceptions:
+    - Now all exceptions extend base type GenericsException (runtime) to simplify generic analysis errors interception (catch(GenericException ex))
+    - General tracking exception: GenericsTrackingException - thrown on generics tracking problems
+    - General resolution exception: GenericsResolutionException - thrown on type hierarchy generics analysis problems
+    - (breaking) UnknownGenericsException moved to different package
+    - (breaking) NoGenericException removed. Was thrown for resolveGenericsOf(Type) methods when class does not declare generics.
+        Now empty list or null will be returned.       
+* Context api improvements:
+    * Type resolution methods (return type with all generic variables replaced with known values): 
+        - resolveType(Type)
+        - Shortcuts: 
+            - resolveFieldType(Field) - field type without generic variables 
+            - resolveParameterType(pos) - (method context) parameter type without generic variables 
+            - resolveReturnType() - (method context) return type without generic variables
+    * Shortcuts for Field's type resolution (with automatic context tracking to avoid silly mistakes):
+        - resolveFieldClass(Field) - field class
+        - resolveFieldGenerics(Field) - field's class generics (List<Class>)
+        - resolveFieldGeneric(Field) - field's class generic (Class) 
+    * More to string utilities:
+        - GenericsContext to string methods for context type: 
+            - toStringCurrentClassDeclaration() - current with resolved generics ("MyClass<Integer>")
+            - toStringCurrentClass() - current class with named generics ("MyClass<T>")
+        - toStringMethod() in method context - method string with resolved generics ("void do(MyType)")                
+* Improved debugging support:
+    - Core context could be printed as string (class hierarchy with resolved generics): context.getGenericsInfo().toString()
+    - For customized context string rendering: context.getGenericsInfo().toStringHierarchy(TypeWriter) 
+    - Direct toString() on context (GenericsContext) prints entire hierarchy with current position marker "<-- current" marker.
+        In intellij idea you can use "view" value link inside debugger to quickly overview current context (with resolved generics) and position      
+* Inner classes support: outer class generics are resolved to avoid UknownGenericException 
+    - Used owner class generics: TypeGenericsContext.ownerTypeGenericsMap() (empty map for not inner class)
+    - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
+        This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct                                      
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution
