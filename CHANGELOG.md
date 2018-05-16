@@ -33,7 +33,7 @@
     - Now all exceptions extend base type GenericsException (runtime) to simplify generic analysis errors interception (catch(GenericException ex))
     - General tracking exception: GenericsTrackingException - thrown on generics tracking problems
     - General resolution exception: GenericsResolutionException - thrown on type hierarchy generics analysis problems
-    - (breaking) UnknownGenericsException moved to different package
+    - (breaking) UnknownGenericException moved to different package
     - (breaking) NoGenericException removed. Was thrown for resolveGenericsOf(Type) methods when class does not declare generics.
         Now empty list or null will be returned.       
 * Context api improvements:
@@ -65,7 +65,7 @@
 Compatibility notes: 
 * API did not changed, only new methods were added. 
 * NoGenericException was removed: detect generic absence by returned result instead
-* UnknownGenericsException was moved to different package
+* UnknownGenericException was moved to different package
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution
