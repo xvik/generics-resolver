@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.tostring.Base
 import ru.vyarus.java.generics.resolver.support.tostring.GenerifiedInterface
 import ru.vyarus.java.generics.resolver.support.tostring.TSBase
@@ -8,6 +9,7 @@ import ru.vyarus.java.generics.resolver.support.tostring.TSRoot
 import ru.vyarus.java.generics.resolver.support.wildcard.WCBase
 import ru.vyarus.java.generics.resolver.support.wildcard.WCBaseLvl2
 import ru.vyarus.java.generics.resolver.support.wildcard.WCRoot
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import spock.lang.Specification
 
 /**
@@ -43,5 +45,23 @@ class ToStringTest extends Specification {
         context.genericAsString(1) == "? super Model"
 
         context.type(WCBaseLvl2).genericAsString(0) == "? extends Model"
+    }
+
+    def "Inner context to string"() {
+
+        when: "reasolve type with outer generics"
+        GenericsContext context = GenericsResolver.resolve(InnerTypesTest.Root)
+        TypeGenericsContext innerContext = context.fieldType(InnerTypesTest.Root.getDeclaredField('target'))
+
+        then: "to string properly selects type generics only"
+        innerContext.toStringCurrentClass() == "Inner"
+        innerContext.toStringCurrentClassDeclaration() == "Inner"
+
+        when: "parametrized context type"
+        innerContext = context.fieldType(InnerTypesTest.Root.getDeclaredField('ptarget'))
+
+        then: "to string properly selects type generics only"
+        innerContext.toStringCurrentClass() == "PInner<Integer>"
+        innerContext.toStringCurrentClassDeclaration() == "PInner<K>"
     }
 }

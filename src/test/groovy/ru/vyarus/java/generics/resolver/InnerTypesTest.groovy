@@ -2,7 +2,12 @@ package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
+import ru.vyarus.java.generics.resolver.util.TypeUtils
 import spock.lang.Specification
+
+import java.lang.reflect.Type
 
 
 /**
@@ -92,6 +97,16 @@ class InnerTypesTest extends Specification {
         then:
         context.resolveFieldClass(Owner.PInner.getField('field')) == Object
         context.resolveFieldClass(Owner.PInner.getField('field2')) == Object
+    }
+
+    def "Check inner type recognition from parameterized"() {
+
+        setup: "intentionally not inner class to check that parametrized type used instead of class"
+        Type type = new ParameterizedTypeImpl(Owner, [Integer] as Type[], Root)
+
+        expect:
+        TypeUtils.isInner(type) == true
+        TypeUtils.getOuter(type) == Root
     }
 
     static class Owner<T> {

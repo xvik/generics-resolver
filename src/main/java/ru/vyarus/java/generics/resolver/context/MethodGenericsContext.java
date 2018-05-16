@@ -221,9 +221,8 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return method declaration string with actual generics
      */
     public String toStringMethod() {
-        return String.format("%s %s%s%s",
+        return String.format("%s %s%s",
                 TypeToStringUtils.toStringType(resolveReturnType(), contextGenerics()),
-                toStringMethodGenerics(),
                 method.getName(),
                 toStringMethodParameters());
     }
@@ -260,26 +259,6 @@ public class MethodGenericsContext extends TypeGenericsContext {
                     "Can't request parameter %s of method '%s' (%s) because it have only %s parameters",
                     pos, method.getName(), currentClass().getSimpleName(), genericParams.length));
         }
-    }
-
-    private String toStringMethodGenerics() {
-        final String res;
-        if (methodGenerics.isEmpty()) {
-            res = "";
-        } else {
-            final StringBuilder builder = new StringBuilder(methodGenerics.size() * 30)
-                    .append("<");
-            boolean first = true;
-            for (Type type : methodGenerics.values()) {
-                if (!first) {
-                    builder.append(SPLIT);
-                }
-                builder.append(TypeToStringUtils.toStringType(type, allGenerics));
-                first = false;
-            }
-            res = builder.append("> ").toString();
-        }
-        return res;
     }
 
     private String toStringMethodParameters() {

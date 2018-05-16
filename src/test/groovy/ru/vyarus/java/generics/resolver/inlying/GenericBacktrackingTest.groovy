@@ -18,6 +18,10 @@ import ru.vyarus.java.generics.resolver.inlying.support.track.Wildcard
 import ru.vyarus.java.generics.resolver.inlying.support.track.WildcardDeclaration
 import ru.vyarus.java.generics.resolver.inlying.support.track.WildcardDeclaration2
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException
+import ru.vyarus.java.generics.resolver.support.Base1
+import ru.vyarus.java.generics.resolver.support.Lvl2Base1
+import ru.vyarus.java.generics.resolver.support.Root
+import ru.vyarus.java.generics.resolver.util.GenericsTrackingUtils
 import spock.lang.Specification
 
 /**
@@ -121,5 +125,18 @@ class GenericBacktrackingTest extends Specification {
         ex = thrown(GenericsTrackingException)
         ex.message == "Failed to track generics of RootScopeContradiction2<T, K> from sub type Target<String>"
         ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction2 hierarchy: String when required Integer"
+    }
+
+    def "No tracking required cases"() {
+
+        when: "no generics in class"
+        def res = GenericsTrackingUtils.track(Root, Base1, [:])
+        then: "empty"
+        res.isEmpty()
+
+        when: "empty known generics"
+        res = GenericsTrackingUtils.track(Base1, Lvl2Base1, [:])
+        then: "empty"
+        res.isEmpty()
     }
 }

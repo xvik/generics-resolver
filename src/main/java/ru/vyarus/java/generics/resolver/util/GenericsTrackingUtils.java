@@ -43,6 +43,10 @@ public final class GenericsTrackingUtils {
     public static LinkedHashMap<String, Type> track(final Class<?> type,
                                                     final Class<?> known,
                                                     final LinkedHashMap<String, Type> knownGenerics) {
+        if (type.getTypeParameters().length == 0 || knownGenerics.isEmpty()) {
+            return EMPTY_MAP;
+        }
+
         try {
             return trackGenerics(type, known, knownGenerics);
         } catch (Exception ex) {
@@ -67,10 +71,6 @@ public final class GenericsTrackingUtils {
     private static LinkedHashMap<String, Type> trackGenerics(final Class<?> type,
                                                              final Class<?> known,
                                                              final LinkedHashMap<String, Type> knownGenerics) {
-        if (type.getTypeParameters().length == 0 || knownGenerics.isEmpty()) {
-            return EMPTY_MAP;
-        }
-
         // leave type variables to track where would they go
         final LinkedHashMap<String, Type> rootGenerics = new LinkedHashMap<String, Type>();
         for (TypeVariable var : type.getTypeParameters()) {

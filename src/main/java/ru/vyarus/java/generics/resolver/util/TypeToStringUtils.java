@@ -72,8 +72,7 @@ public final class TypeToStringUtils {
         // provided generics may contain outer type generics, but we will render only required generics
         final Map<String, Type> actual = type.getTypeParameters().length == generics.size()
                 ? generics : GenericsUtils.getSelfGenerics(generics, GenericsUtils.getOwnerGenerics(type, generics));
-        return toStringType(new ParameterizedTypeImpl(type, generics.values().toArray(new Type[0])),
-                actual);
+        return toStringType(new ParameterizedTypeImpl(type, actual.values().toArray(new Type[0])), actual);
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")

@@ -69,16 +69,13 @@ public final class GenericsResolutionUtils {
                                                               final Map<String, Type> generics) {
         final LinkedHashMap<String, Type> res;
         if (type instanceof ParameterizedType) {
-            res = new LinkedHashMap<String, Type>();
             final ParameterizedType actualType = (ParameterizedType) type;
             final Type[] genericTypes = actualType.getActualTypeArguments();
             final Class target = (Class) actualType.getRawType();
             final TypeVariable[] genericNames = target.getTypeParameters();
 
             // inner class can use outer class generics
-            if (actualType.getOwnerType() != null) {
-                fillOuterGenerics(target, res, null);
-            }
+            res = fillOuterGenerics(target, new LinkedHashMap<String, Type>(), null);
 
             final int cnt = genericNames.length;
             for (int i = 0; i < cnt; i++) {
@@ -103,9 +100,10 @@ public final class GenericsResolutionUtils {
      */
     public static LinkedHashMap<String, Type> resolveRawGenerics(final Class<?> type) {
         final TypeVariable[] declaredGenerics = type.getTypeParameters();
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
         // inner class can use outer class generics
-        fillOuterGenerics(type, res, null);
+        final LinkedHashMap<String, Type> res =
+                fillOuterGenerics(type, new LinkedHashMap<String, Type>(), null);
+
         for (TypeVariable variable : declaredGenerics) {
             res.put(variable.getName(), GenericsUtils.resolveTypeVariables(variable.getBounds()[0], res));
         }
@@ -121,28 +119,38 @@ public final class GenericsResolutionUtils {
      * we could assume that it's actual parent class and so we could use more specific generics. This will be true for
      * most sane cases (often inner class is used inside owner), but other cases are still possible (anyway,
      * the chance that inner class will appear in two different hierarchies of outer class is quite small).
+     * <p>
+     * It is very important to use returned map instead of passed in map because, incoming empty map is always replaced
+     * to avoid modifications of shared empty maps.
      *
      * @param type          context type
      * @param generics      resolved type generics
      * @param knownGenerics map of known middle generics and possibly known outer context (outer context may contain
      *                      outer class generics declarations). May be null.
+     * @return actual generics map (incoming map may be default empty map and in this case it must be replaced)
      */
-    public static void fillOuterGenerics(final Class<?> type,
-                                         final Map<String, Type> generics,
+    public static LinkedHashMap<String, Type> fillOuterGenerics(final Class<?> type,
+                                         final LinkedHashMap<String, Type> generics,
                                          final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
         final Class<?> outer = TypeUtils.getOuter(type);
         if (outer == null) {
             // not inner class
-            return;
+            return generics;
         }
-        final Map<String, Type> outerGenerics = knownGenerics != null && knownGenerics.containsKey(outer)
+        final LinkedHashMap<String, Type> outerGenerics = knownGenerics != null && knownGenerics.containsKey(outer)
                 ? new LinkedHashMap<String, Type>(knownGenerics.get(outer))
                 : resolveRawGenerics(outer);
         // class may declare generics with the same name and they must not be overridden
         for (TypeVariable var : type.getTypeParameters()) {
             outerGenerics.remove(var.getName());
         }
-        generics.putAll(outerGenerics);
+        if (generics.isEmpty()) {
+            // empty generics map almost sure means that passed map is shared empty map which must not be modified
+            return outerGenerics;
+        } else {
+            generics.putAll(outerGenerics);
+            return generics;
+        }
     }
 
     /**
@@ -168,10 +176,11 @@ public final class GenericsResolutionUtils {
                 break;
             }
             // possibly provided generics (externally)
-            generics.put(next, knownGenerics.containsKey(next)
+            final LinkedHashMap<String, Type> nextGenerics = knownGenerics.containsKey(next)
                     ? knownGenerics.get(next)
-                    : analyzeParent(supertype, generics.get(supertype)));
-            fillOuterGenerics(next, generics.get(next), knownGenerics);
+                    : analyzeParent(supertype, generics.get(supertype));
+            generics.put(next,
+                    fillOuterGenerics(next, nextGenerics, knownGenerics));
             supertype = next;
         }
     }

@@ -119,6 +119,7 @@ class MethodGenericCasesTest extends Specification {
         then:
         context.methodGenericsMap() == ["T": Cloneable.class]
         context.methodGenericTypes() == [Cloneable.class]
+        context.toStringMethod() == "Cloneable testSub(Class<Cloneable>, Cloneable)"
 
         when: "looking for complex method generics"
         context = GenericsResolver.resolve(MethodGenericCase).type(SubMethodGenericCase)
@@ -127,5 +128,6 @@ class MethodGenericCasesTest extends Specification {
         then:
         context.methodGenericsMap() == ["T": Cloneable.class, "K": Cloneable.class]
         context.methodGenericTypes() == [Cloneable.class, Cloneable.class]
+        context.toStringMethod() == "Cloneable testSub2(Class<Cloneable>, Cloneable)"
     }
 }

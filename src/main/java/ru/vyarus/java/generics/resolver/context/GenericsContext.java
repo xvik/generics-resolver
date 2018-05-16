@@ -185,6 +185,9 @@ public abstract class GenericsContext {
     /**
      * {@code class A extends B<Object, C<Long>>} and {@code class B<T, K>}.
      * <pre>{@code type(B.class).genericsMap() == ["T": Object.class, "K": ParametrizedType]}</pre>
+     * <p>
+     * NOTE: if type is inner class then it will include outer class generics.
+     * See {@link #genericTypes()} for class only generics.
      *
      * @return map of current generics (runtime mapping of generic name to actual type)
      */
@@ -510,6 +513,27 @@ public abstract class GenericsContext {
             generics = GenericsInfoFactory.create(asType, genericsInfo.getIgnoredTypes());
         }
         return new TypeGenericsContext(generics, asType, this);
+    }
+
+    /**
+     * For example, {@code class Root extends Base<String>} (and we resolve generics from Root):
+     * {@code context.toStringCurrentClass() == "Root"} and
+     * {@code context.type(Base.class).toStringCurrentClass() == "Base<String>"}.
+     *
+     * @return string representation of current class in hierarchy with known generics
+     */
+    public String toStringCurrentClass() {
+        return TypeToStringUtils.toStringWithGenerics(currentType, contextGenerics());
+    }
+
+    /**
+     * For example, {@code Base<T>}.
+     * {@code context.type(Base.class).toStringCurrentClassDeclaration() == "Base<T>"}.
+     *
+     * @return current class declaration (with declared generic names)
+     */
+    public String toStringCurrentClassDeclaration() {
+        return TypeToStringUtils.toStringWithNamedGenerics(currentType);
     }
 
     /**

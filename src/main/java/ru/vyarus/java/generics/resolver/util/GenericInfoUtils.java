@@ -63,8 +63,9 @@ public final class GenericInfoUtils {
         final Type actual = GenericsUtils.resolveTypeVariables(type, rootGenerics);
         final Class<?> target = context.resolveClass(actual);
 
-        final LinkedHashMap<String, Type> generics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
-        GenericsResolutionUtils.fillOuterGenerics(target, generics, context.getGenericsInfo().getTypesMap());
+        LinkedHashMap<String, Type> generics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
+        generics = GenericsResolutionUtils
+                .fillOuterGenerics(target, generics, context.getGenericsInfo().getTypesMap());
         return create(target, generics,
                 // store possible owner types from parent context
                 usePossiblyOwnerGenerics(target, context.getGenericsInfo()), ignoreClasses);
@@ -111,8 +112,7 @@ public final class GenericInfoUtils {
         }
 
         // known middle type
-        LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils
-                .resolveGenerics(actual, rootGenerics);
+        LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
         final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
         knownGenerics.put(middleType, typeGenerics);
@@ -121,12 +121,12 @@ public final class GenericInfoUtils {
 
         // root type
         typeGenerics = asType.getTypeParameters().length > 0
-                // special case: root class also contains generics
                 ? GenericsTrackingUtils.track(asType, middleType, typeGenerics)
-                // root type may be inner type and so could use outer class generics
-                : GenericsResolutionUtils.resolveRawGenerics(asType);
+                // not default empty map because of possible outer generics
+                : new LinkedHashMap<String, Type>();
 
-        GenericsResolutionUtils.fillOuterGenerics(asType, typeGenerics, context.getGenericsInfo().getTypesMap());
+        typeGenerics = GenericsResolutionUtils
+                .fillOuterGenerics(asType, typeGenerics, context.getGenericsInfo().getTypesMap());
         return create(asType, typeGenerics, knownGenerics, ignoreClasses);
     }
 
@@ -150,7 +150,7 @@ public final class GenericInfoUtils {
      * as inner class may be created inside different class, but in most cases inner classes are used within
      * outer class and the chance that different outer class hierarchies will interact are quite low.
      * <p>
-     * Storing all types, not present in target class hieararchy (to avoid affecting actual generics resolution)
+     * Storing all types, not present in target class hierarchy (to avoid affecting actual generics resolution)
      *
      * @param type target (inlying) type
      * @param info root context generics info (possibly outer)

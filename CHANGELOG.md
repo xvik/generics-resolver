@@ -30,6 +30,7 @@
 * TypeToStringUtils new methods:
     - toStringWithNamedGenerics() - print class with generic variables (List<E>)
     - toStringWithGenerics() - print class with known generics (List<Known>)
+    - GenericsContext to string methods for context type: toStringCurrentClassDeclaration(), toStringCurrentClass()
 * Add shortcuts for fields with automatic context switching (for less usage errors): context.resolveFieldClass, resolveFieldGenerics, resolveFieldGeneric
 * Add class hierarchy to string print: GenericsInfo.toStringHierarchy() (context.getGenericsInfo())
     - All context classes now render default toString as complete class hierarchy with resolved generics and pointer to current location (for debug)
