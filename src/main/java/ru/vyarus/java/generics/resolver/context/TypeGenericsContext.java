@@ -85,7 +85,7 @@ public class TypeGenericsContext extends GenericsContext {
 
     @Override
     public TypeGenericsContext type(final Class<?> type) {
-        return new TypeGenericsContext(genericsInfo, type, root);
+        return type == currentType ? this : new TypeGenericsContext(genericsInfo, type, root);
     }
 
     @Override

@@ -373,7 +373,7 @@ public abstract class GenericsContext {
      * Navigates current context to specific type in class hierarchy.
      *
      * @param type class to navigate to
-     * @return new context instance specific to requested class
+     * @return new context instance specific to requested class or current context if type is the same
      * @throws IllegalArgumentException if requested class is not present in root class hierarchy
      */
     public abstract TypeGenericsContext type(Class<?> type);
@@ -559,7 +559,7 @@ public abstract class GenericsContext {
     private GenericsContext chooseContext(final Class target, final String message) {
         try {
             // switch context to avoid silly mistakes (will fail if declaring type is not in hierarchy)
-            return target != currentClass() ? type(target) : this;
+            return type(target);
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(String.format(message,
                     target.getSimpleName(), genericsInfo.getRootClass().getSimpleName()), ex);
