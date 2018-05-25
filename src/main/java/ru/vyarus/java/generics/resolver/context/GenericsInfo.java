@@ -113,11 +113,11 @@ public class GenericsInfo {
                                    final StringBuilder res,
                                    final TypeWriter typeWriter) {
         final LinkedHashMap<String, Type> generics = types.get(type);
-        final Map<String, Type> ownerGenerics = GenericsUtils.getOwnerGenerics(type, generics);
-        final Class<?> outer = TypeUtils.getOuter(type);
+        final Map<String, Type> ownerGenerics = GenericsUtils.extractOwnerGenerics(type, generics);
+        final Class<?> outer = (Class<?>) TypeUtils.getOuter(type);
         res.append(String.format("%s%s%s%n",
                 shift, prefix.isEmpty() ? (type.isInterface() ? "interface " : "class ") : prefix,
-                typeWriter.write(type, GenericsUtils.getSelfGenerics(generics, ownerGenerics),
+                typeWriter.write(type, GenericsUtils.filterOwnerGenerics(generics, ownerGenerics),
                         outer, ownerGenerics, shift)));
         final Class<?> superclass = type.getSuperclass();
         // not ignored (or not last)

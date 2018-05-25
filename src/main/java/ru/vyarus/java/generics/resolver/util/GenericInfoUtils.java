@@ -24,6 +24,8 @@ import java.util.*;
 @SuppressWarnings("PMD.LooseCoupling")
 public final class GenericInfoUtils {
 
+    private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
+
     private GenericInfoUtils() {
     }
 
@@ -65,7 +67,7 @@ public final class GenericInfoUtils {
 
         LinkedHashMap<String, Type> generics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
         generics = GenericsResolutionUtils
-                .fillOuterGenerics(target, generics, context.getGenericsInfo().getTypesMap());
+                .fillOuterGenerics(actual, generics, context.getGenericsInfo().getTypesMap());
         return create(target, generics,
                 // store possible owner types from parent context
                 usePossiblyOwnerGenerics(target, context.getGenericsInfo()), ignoreClasses);
@@ -83,7 +85,7 @@ public final class GenericInfoUtils {
      * K will be tracked as String.
      * <p>
      * In essence: root generics are partially resolved by tracking definition from known middle class.
-     * Other root generics resolved as lower bound (the same as in usual type resolution case).
+     * Other root generics resolved as upper bound (the same as in usual type resolution case).
      * If middle type generic is not specified (and so resolved as Object) then known specific type used
      * (assuming root type would be used in place with known parametrization and so more specifi generic may be
      * counted).
@@ -115,18 +117,28 @@ public final class GenericInfoUtils {
         LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
         final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics =
                 new HashMap<Class<?>, LinkedHashMap<String, Type>>();
-        knownGenerics.put(middleType, typeGenerics);
-        // store other types for possible outer classes generics resolution
-        knownGenerics.putAll(usePossiblyOwnerGenerics(asType, context.getGenericsInfo()));
+        // field could be declared as (Outer<String>.Inner field) and already contain actual outer generics
+        knownGenerics.put(middleType, GenericsResolutionUtils
+                .fillOuterGenerics(actual, typeGenerics, context.getGenericsInfo().getTypesMap()));
+        if (TypeUtils.isInner(middleType)) {
+            // remember possibly specified outer generics (they were already resolved above)
+            knownGenerics.put((Class) TypeUtils.getOuter(middleType), new LinkedHashMap<String, Type>(
+                    GenericsUtils.extractOwnerGenerics(middleType, knownGenerics.get(middleType))));
+        } else {
+            // store other types for possible outer classes generics resolution
+            knownGenerics.putAll(usePossiblyOwnerGenerics(asType, context.getGenericsInfo()));
+        }
+
 
         // root type
         typeGenerics = asType.getTypeParameters().length > 0
                 ? GenericsTrackingUtils.track(asType, middleType, typeGenerics)
-                // not default empty map because of possible outer generics
-                : new LinkedHashMap<String, Type>();
+                : EMPTY_MAP;
 
         typeGenerics = GenericsResolutionUtils
-                .fillOuterGenerics(asType, typeGenerics, context.getGenericsInfo().getTypesMap());
+                .fillOuterGenerics(asType, typeGenerics, knownGenerics.size() > 1
+                        // if known middle type is inner class then owner already filled
+                        ? knownGenerics : context.getGenericsInfo().getTypesMap());
         return create(asType, typeGenerics, knownGenerics, ignoreClasses);
     }
 

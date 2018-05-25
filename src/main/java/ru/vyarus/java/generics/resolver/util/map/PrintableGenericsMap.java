@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver.util.map;
 
-import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
+import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
@@ -27,6 +27,6 @@ public class PrintableGenericsMap extends LinkedHashMap<String, Type> {
     public Type get(final Object key) {
         // always Object for unknown generic name
         final Type res = super.get(key);
-        return res == null ? new TypeToStringUtils.PrintableTypeVariable((String) key) : res;
+        return res == null ? new ExplicitTypeVariable((String) key) : res;
     }
 }

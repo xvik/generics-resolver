@@ -40,7 +40,7 @@ class GenericsInfoToStringTest extends Specification {
 """
 
         toString(GenericsResolver.resolve(ArRoot)) == """interface ArRoot 
-  extends ArBase<Model, ? extends Model, ? super Model> 
+  extends ArBase<Model, Model, ? super Model> 
     extends ArBaseLvl2<Model[], List<Model>> 
 """
 
@@ -54,8 +54,8 @@ class GenericsInfoToStringTest extends Specification {
 """
 
         toString(GenericsResolver.resolve(WCRoot)) == """interface WCRoot 
-  extends WCBase<? extends Model, ? super Model> 
-    extends WCBaseLvl2<? extends Model> 
+  extends WCBase<Model, ? super Model> 
+    extends WCBaseLvl2<Model> 
 """
     }
 

@@ -469,10 +469,13 @@ public abstract class GenericsContext {
 
         if (target.getTypeParameters().length > 0 || couldRequireKnownOuterGenerics(type)) {
             // resolve class hierarchy in context (non cachable context)
+            // can't be primitive here
             generics = GenericInfoUtils.create(this, type, genericsInfo.getIgnoredTypes());
         } else {
             // class without generics - use cachable context
-            generics = GenericsInfoFactory.create(target, genericsInfo.getIgnoredTypes());
+            generics = GenericsInfoFactory.create(
+                    // always build hierarchy for non primitive type
+                    TypeUtils.wrapPrimitive(target), genericsInfo.getIgnoredTypes());
         }
 
         return new TypeGenericsContext(generics, target, this);
@@ -507,10 +510,13 @@ public abstract class GenericsContext {
         if (target.getTypeParameters().length > 0
                 || couldRequireKnownOuterGenerics(type) || couldRequireKnownOuterGenerics(asType)) {
             // resolve class hierarchy in context and from higher type (non cachable context)
+            // can't be primitive 
             generics = GenericInfoUtils.create(this, type, asType, genericsInfo.getIgnoredTypes());
         } else {
             // class without generics - use cachable context
-            generics = GenericsInfoFactory.create(asType, genericsInfo.getIgnoredTypes());
+            generics = GenericsInfoFactory.create(
+                    // always build hierarchy for non primitive type
+                    TypeUtils.wrapPrimitive(asType), genericsInfo.getIgnoredTypes());
         }
         return new TypeGenericsContext(generics, asType, this);
     }
@@ -571,11 +577,11 @@ public abstract class GenericsContext {
      * we can assume to use it's generics (correct for most cases, but may be corner cases).
      *
      * @param type type to check
-     * @return true if type is inner and outer class is presetn in current hierarchy
+     * @return true if type is inner and outer class is present in current hierarchy
      */
     private boolean couldRequireKnownOuterGenerics(final Type type) {
-        final Class<?> outer = TypeUtils.getOuter(type);
+        final Type outer = TypeUtils.getOuter(type);
         // inner class may use generics of the root class
-        return outer != null && genericsInfo.getComposingTypes().contains(outer);
+        return outer != null && genericsInfo.getComposingTypes().contains(resolveClass(outer));
     }
 }

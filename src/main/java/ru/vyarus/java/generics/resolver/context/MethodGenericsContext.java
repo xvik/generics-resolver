@@ -60,7 +60,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * <pre>{@code context.method(A.getMethod("method", Object.class)).methodGenericsMap() ==
      *          ["T": Object.class, "K": Serializable.class]}</pre>
      * For method generics it's impossible to know actual type (available only in time of method call),
-     * so generics resolved as lower bound.
+     * so generics resolved as upper bound.
      *
      * @return map of current method generics (runtime mapping of generic name to actual type)
      */
@@ -86,18 +86,35 @@ public class MethodGenericsContext extends TypeGenericsContext {
 
     /**
      * Useful for introspection, to know exact parameter types.
-     * <pre>{@code class A extends B<Long>;
+     * <pre>{@code class A extends B<Long> {}
      * class B<T> {
      *     void doSmth(T a, Integer b);
      * }}</pre>
      * Resolving parameters in context of root class:
-     * {@code type(B.class).resolveParameters(B.class.getMethod("doSmth", Object.class)) ==
+     * {@code type(A.class).resolveParameters(B.class.getMethod("doSmth", Object.class)) ==
      * [Long.class, Integer.class]}
      *
      * @return resolved method parameters or empty list if method doesn't contain parameters
+     * @see #resolveParametersTypes()
      */
     public List<Class<?>> resolveParameters() {
         return GenericsUtils.getMethodParameters(method, contextGenerics());
+    }
+
+    /**
+     * Returns parameter types with resolved named generics.
+     * <pre>{@code class A extends B<Long> {}
+     * class B<T>{
+     *     void doSmth(List<T> a);
+     * }}</pre>
+     * Resolving parameters types in context of root class:
+     * {@code type(B.class).resolveParameters(B.class.getMethod("doSmth", List.class)) == [List<Long>]}
+     *
+     * @return resolved method parameters types or empty list if method doesn't contain parameters
+     * @see #resolveParameters()
+     */
+    public List<Type> resolveParametersTypes() {
+        return GenericsUtils.getMethodParametersTypes(method, contextGenerics());
     }
 
     /**

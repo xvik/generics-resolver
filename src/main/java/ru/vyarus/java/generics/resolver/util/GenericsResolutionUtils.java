@@ -1,15 +1,15 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.WildcardType;
+import java.util.*;
 
 /**
  * Generics analysis utilities.
@@ -18,7 +18,7 @@ import java.util.Map;
  * @since 11.05.2018
  */
 // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
-@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass"})
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass", "PMD.AvoidLiteralsInIfCondition"})
 public final class GenericsResolutionUtils {
 
     private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
@@ -69,13 +69,14 @@ public final class GenericsResolutionUtils {
                                                               final Map<String, Type> generics) {
         final LinkedHashMap<String, Type> res;
         if (type instanceof ParameterizedType) {
-            final ParameterizedType actualType = (ParameterizedType) type;
+            final ParameterizedType actualType =
+                    (ParameterizedType) GenericsUtils.resolveTypeVariables(type, generics);
             final Type[] genericTypes = actualType.getActualTypeArguments();
             final Class target = (Class) actualType.getRawType();
             final TypeVariable[] genericNames = target.getTypeParameters();
 
             // inner class can use outer class generics
-            res = fillOuterGenerics(target, new LinkedHashMap<String, Type>(), null);
+            res = fillOuterGenerics(type, new LinkedHashMap<String, Type>(), null);
 
             final int cnt = genericNames.length;
             for (int i = 0; i < cnt; i++) {
@@ -89,7 +90,7 @@ public final class GenericsResolutionUtils {
     }
 
     /**
-     * Resolve type generics by declaration (as lower bound). Used for cases when actual generic definition is not
+     * Resolve type generics by declaration (as upper bound). Used for cases when actual generic definition is not
      * available (so actual generics are unknown). In most cases such generics resolved as Object
      * (for example, {@code Some<T>}).
      * <p>
@@ -105,20 +106,75 @@ public final class GenericsResolutionUtils {
                 fillOuterGenerics(type, new LinkedHashMap<String, Type>(), null);
 
         for (TypeVariable variable : declaredGenerics) {
-            res.put(variable.getName(), GenericsUtils.resolveTypeVariables(variable.getBounds()[0], res));
+            res.put(variable.getName(), resolveRawGeneric(variable, res));
+        }
+        return res;
+    }
+
+    /**
+     * Extracts declared upper bound from generic declaration. For example, {@code Base<T>} will be resolved
+     * as Object (default bound). {@code Base<T extends A & B>} resolved as "impossible" wildcard
+     * {@code ? extends A & B} in order to preserve all known information.
+     * <p>
+     * Map of already resolved generics is required because declaration may rely on them. For example,
+     * {@code Base<T extends Serializable, K extends T>} could be solved as {@code T = Serializable, K = Serializable}.
+     *
+     * @param variable generic declaration to analyze
+     * @param generics already resolved generics (on the left of current)
+     * @return either upper bound class or wildcard with multiple bounds
+     */
+    public static Type resolveRawGeneric(final TypeVariable variable,
+                                         final LinkedHashMap<String, Type> generics) {
+        final Type res;
+        if (variable.getBounds().length > 1) {
+            // case: T extends A & B -->  ? extends A & B
+            final List<Type> types = new ArrayList<Type>();
+            for (Type bound : variable.getBounds()) {
+                // replace possible named generics with actual type (for cases like K extends T)
+                final Type actual = GenericsUtils.resolveTypeVariables(bound, generics);
+                if (actual instanceof WildcardType && ((WildcardType) actual).getUpperBounds().length > 0) {
+                    // case: T extends A & B, K extends T & C --> K must be aggregated as ? extends A & B & C
+                    // this case is impossible in java, but allowed in groovy
+                    types.addAll(Arrays.asList(GenericsUtils
+                            .resolveTypeVariables(((WildcardType) actual).getUpperBounds(), generics)));
+                } else {
+                    types.add(actual);
+                }
+            }
+            // case: T extends Object & Something (may appear because of transitive generics resolution)
+            // only one object could appear (because wildcard could only be
+            // ? extends type (or generic) & exact interface (& exact interface))
+            // (repackaged from type declaration)
+            types.remove(Object.class);
+            if (types.size() > 1) {
+                // repackaging as impossible wildcard <? extends A & B> to store all known information
+                res = WildcardTypeImpl.upper(types.toArray(new Type[0]));
+            } else {
+                // if one type remain - use it directly; if no types remain - use Object
+                res = types.isEmpty() ? Object.class : types.get(0);
+            }
+        } else {
+            // case: simple generic declaration <T> (implicitly extends Object)
+            res = GenericsUtils.resolveTypeVariables(variable.getBounds()[0], generics);
         }
         return res;
     }
 
     /**
      * Inner class could reference outer class generics and so this generics must be included into class context.
-     * Outer class generics resolved as lower bound (by declaration). Class may declare the same generic name
-     * and, in this case, outer generic will be ignored (as not visible).
      * <p>
-     * During inlying context resolution we know outer context, and, if outer class is in outer context hierarchy,
-     * we could assume that it's actual parent class and so we could use more specific generics. This will be true for
-     * most sane cases (often inner class is used inside owner), but other cases are still possible (anyway,
-     * the chance that inner class will appear in two different hierarchies of outer class is quite small).
+     * Outer generics could be included into declaration like {@code Outer<String>.Inner field}. In this case
+     * incoming type should be {@link ParameterizedType} with generified owner.
+     * <p>
+     * When provided type is simply a class (or anything resolvable to class), then outer class generics are resolved
+     * as upper bound (by declaration). Class may declare the same generic name and, in this case, outer generic
+     * will be ignored (as not visible).
+     * <p>
+     * During inlying context resolution, if outer generic is not declared in type we can try to guess it:
+     * we know outer context, and, if outer class is in outer context hierarchy, we could assume that it's actual
+     * parent class and so we could use more specific generics. This will be true for most sane cases (often inner
+     * class is used inside owner), but other cases are still possible (anyway, the chance that inner class will
+     * appear in two different hierarchies of outer class is quite small).
      * <p>
      * It is very important to use returned map instead of passed in map because, incoming empty map is always replaced
      * to avoid modifications of shared empty maps.
@@ -130,20 +186,29 @@ public final class GenericsResolutionUtils {
      * @return actual generics map (incoming map may be default empty map and in this case it must be replaced)
      */
     public static LinkedHashMap<String, Type> fillOuterGenerics(
-            final Class<?> type,
+            final Type type,
             final LinkedHashMap<String, Type> generics,
             final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics) {
         final LinkedHashMap<String, Type> res;
-        final Class<?> outer = TypeUtils.getOuter(type);
+        final Type outer = TypeUtils.getOuter(type);
         if (outer == null) {
             // not inner class
             res = generics;
         } else {
-            final LinkedHashMap<String, Type> outerGenerics = knownGenerics != null && knownGenerics.containsKey(outer)
-                    ? new LinkedHashMap<String, Type>(knownGenerics.get(outer))
-                    : resolveRawGenerics(outer);
+            final LinkedHashMap<String, Type> outerGenerics;
+            if (outer instanceof ParameterizedType) {
+                // outer generics declared in field definition (ignorance required because provided type
+                // may contain unknown outer generics (Outer<B>.Inner field))
+                outerGenerics = resolveGenerics(outer, new IgnoreGenericsMap(generics));
+            } else {
+                final Class<?> outerType = GenericsUtils.resolveClass(outer, generics);
+                // either use known generics for outer class or resolve by upper bound
+                outerGenerics = knownGenerics != null && knownGenerics.containsKey(outerType)
+                        ? new LinkedHashMap<String, Type>(knownGenerics.get(outerType))
+                        : resolveRawGenerics(outerType);
+            }
             // class may declare generics with the same name and they must not be overridden
-            for (TypeVariable var : type.getTypeParameters()) {
+            for (TypeVariable var : GenericsUtils.resolveClass(type, generics).getTypeParameters()) {
                 outerGenerics.remove(var.getName());
             }
 
@@ -259,7 +324,7 @@ public final class GenericsResolutionUtils {
     /**
      * Analyze super class generics (relative to provided type). Class may not declare generics for super class
      * ({@code Some extends Base} where {@code class Base<T> }) and, in this case, parent class generics could
-     * be resolved only by lower bound. Note that parent type analysis must be performed only when generics
+     * be resolved only by upper bound. Note that parent type analysis must be performed only when generics
      * for perent type are not known ahead of time (inlying resolution cases).
      *
      * @param type     type to analyze parent class for

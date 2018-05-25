@@ -116,7 +116,7 @@ class GenericBacktrackingTest extends Specification {
         then: "error"
         def ex = thrown(GenericsTrackingException)
         ex.message == "Failed to track generics of RootScopeContradiction<T> from sub type Target<String>"
-        ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction hierarchy: String when required Integer"
+        ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction hierarchy: String when required ? extends Integer"
 
         when: "root scope contradicts with known generic"
         context = GenericsResolver.resolve(RootScopeContradiction2)
@@ -124,7 +124,7 @@ class GenericBacktrackingTest extends Specification {
         then: "error"
         ex = thrown(GenericsTrackingException)
         ex.message == "Failed to track generics of RootScopeContradiction2<T, K> from sub type Target<String>"
-        ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction2 hierarchy: String when required Integer"
+        ex.getCause().message == "Known generic T of Target<T> is not compatible with RootScopeContradiction2 hierarchy: String when required ? extends Integer"
     }
 
     def "No tracking required cases"() {

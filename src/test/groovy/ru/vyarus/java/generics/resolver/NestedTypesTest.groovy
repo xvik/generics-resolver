@@ -42,7 +42,7 @@ class NestedTypesTest extends Specification {
         context.generic("T") == NestedGenericType
 
         when: "resolving type with indirectly and directly generified interfaces"
-        context = GenericsResolver.resolve(Root).type(Direct)
+        context = GenericsResolver.resolve(ru.vyarus.java.generics.resolver.support.nestedtype.direct.Root).type(Direct)
         then: "correct resolution"
         context.generic("T") == NestedGenericType
     }
@@ -75,5 +75,34 @@ class NestedTypesTest extends Specification {
         then: "resolved with upper generic"
         res.type(Callable).generic(0) == Integer
 
+    }
+
+    def "Check hierarchy is not tracked more then one level"() {
+
+        // NOTE it is possible to track back more then one level, but it's too weird and hard to search problems
+
+        when: "resolve 3 contexts"
+        GenericsContext context = GenericsResolver.resolve(Root.class)
+                                .fieldType(Root.getDeclaredField("sub"))
+                                .fieldType(Sub.getDeclaredField("inner"))
+        then: "generic was not tracked"
+        context.resolveFieldClass(Owner.Inner.getDeclaredField("foo")) == Object
+    }
+
+    // Root context contains owner type
+    // -> sub field context
+    //      -> inner field context should you super.super context as owner
+    static class Root extends Owner<String> {
+        Sub sub
+    }
+
+    static class Owner<T> {
+        class Inner {
+            T foo
+        }
+    }
+
+    static class Sub  {
+        Owner.Inner inner
     }
 }

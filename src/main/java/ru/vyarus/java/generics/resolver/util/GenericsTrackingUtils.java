@@ -2,6 +2,8 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.GenericsResolver;
 import ru.vyarus.java.generics.resolver.context.GenericsContext;
+import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
+import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
 
@@ -68,13 +70,15 @@ public final class GenericsTrackingUtils {
      * @throws IllegalStateException when resolved generic of known type contradict with known generic value
      *                               (type can't be casted to known type)
      */
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     private static LinkedHashMap<String, Type> trackGenerics(final Class<?> type,
                                                              final Class<?> known,
                                                              final LinkedHashMap<String, Type> knownGenerics) {
         // leave type variables to track where would they go
         final LinkedHashMap<String, Type> rootGenerics = new LinkedHashMap<String, Type>();
         for (TypeVariable var : type.getTypeParameters()) {
-            rootGenerics.put(var.getName(), var);
+            // special variables type, known by resolver (no exceptions for unknown generics will be thrown)
+            rootGenerics.put(var.getName(), new ExplicitTypeVariable(var));
         }
         final Map<Class<?>, LinkedHashMap<String, Type>> generics = GenericsResolutionUtils.resolve(type,
                 rootGenerics,
@@ -100,7 +104,10 @@ public final class GenericsTrackingUtils {
             final String name = gen.getName();
             res.put(name, tracedRootGenerics.containsKey(name)
                     ? tracedRootGenerics.get(name)
-                    : GenericsUtils.resolveTypeVariables(gen.getBounds()[0], res));
+                    // transform to wildcard to preserve possible multiple bounds declaration
+                    // (it will be flatten to Object if single bound declared)
+                    : GenericsUtils.resolveTypeVariables(gen.getBounds().length > 1
+                            ? WildcardTypeImpl.upper(gen.getBounds()) : gen.getBounds()[0], res));
         }
         return res;
     }
@@ -121,9 +128,9 @@ public final class GenericsTrackingUtils {
      * and if {@code Base&lth;String>} then types are incompatible (Root can't be casted to {@code Base<&lth;String>}
      * </li>
      * <li>Dependant root generics {@code Root&lth;A, B extends A> extends Base&lth;A>}. Here A could be tracked and B
-     * resolved to tracked A (as lower bound)</li>
+     * resolved to tracked A (as upper bound)</li>
      * <li>If known generic is wildcard {@code Base&lth;? extends Integer>}, then resolved root value would be
-     * lower bound (Integer) for simplicity</li>
+     * upper bound (Integer) for simplicity</li>
      * </ul>
      *
      * @param resolved        collection with all tracked root generics
@@ -146,14 +153,15 @@ public final class GenericsTrackingUtils {
                                   final LinkedHashMap<String, Type> knownGenerics) {
         final Class<?> knownGenericType = GenericsUtils.resolveClass(knownGeneric, knownGenerics);
 
-        if (actualGeneric instanceof TypeVariable) {
-            final TypeVariable variable = (TypeVariable) actualGeneric;
+        if (actualGeneric instanceof ExplicitTypeVariable) {
+            final ExplicitTypeVariable variable = (ExplicitTypeVariable) actualGeneric;
             // look what minimal type is acceptable according to root class declaration
             // Available if root class use wildcard ({@code <T extends Something>})
-            final Class<?> variableType = GenericsUtils.resolveClass(variable.getBounds()[0], rawRootGenerics);
-            checkTypesCompatibility(variableType, knownGenericType, genericName, root, known);
-            // use the lowest possible type to avoid wildcard declaration (? extends something)
-            resolved.put(variable.getName(), knownGenericType);
+            checkTypesCompatibility(
+                    // use wildcard to check possible multiple bounds definition
+                    WildcardTypeImpl.upper(GenericsUtils.resolveTypeVariables(variable.getBounds(), rawRootGenerics)),
+                    knownGenericType, genericName, root, known);
+            resolved.put(variable.getName(), knownGeneric);
         } else if (actualGeneric instanceof ParameterizedType) {
             final Class<?> exactActualType = (Class) ((ParameterizedType) actualGeneric).getRawType();
             // look raw compatibility

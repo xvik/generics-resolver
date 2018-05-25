@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 
 /**
  * Checks if types hierarchies are compatible (one could be casted to another).
+ * Completely rely on {@link TypesWalker} logic.
  *
  * @author Vyacheslav Rusakov
  * @since 11.05.2018
@@ -13,7 +14,7 @@ public class CompatibilityTypesVisitor implements TypesVisitor {
     private boolean compatible = true;
 
     @Override
-    public boolean next(final Class<?> one, final Class<?> two) {
+    public boolean next(final Type one, final Type two) {
         // all incompatible cases will be detected automatically
         return true;
     }

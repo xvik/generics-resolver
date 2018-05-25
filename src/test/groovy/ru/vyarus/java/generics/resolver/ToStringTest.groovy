@@ -41,10 +41,10 @@ class ToStringTest extends Specification {
         when: "to string wildcard"
         GenericsContext context= GenericsResolver.resolve(WCRoot).type(WCBase)
         then: "correct"
-        context.genericAsString(0) == "? extends Model"
+        context.genericAsString(0) == "Model"
         context.genericAsString(1) == "? super Model"
 
-        context.type(WCBaseLvl2).genericAsString(0) == "? extends Model"
+        context.type(WCBaseLvl2).genericAsString(0) == "Model"
     }
 
     def "Inner context to string"() {

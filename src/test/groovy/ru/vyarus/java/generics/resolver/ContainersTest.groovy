@@ -28,7 +28,7 @@ class ContainersTest extends Specification {
         when: "resolving types"
         GenericsInfo info = GenericsInfoFactory.create(ArRoot)
         GenericArrayType array = info.getTypeGenerics(ArBaseLvl2)['T']
-        WildcardType wildcardUpper = info.getTypeGenerics(ArBase)['K']
+        Class wildcardUpper = info.getTypeGenerics(ArBase)['K']
         WildcardType wildcardLower = info.getTypeGenerics(ArBase)['J']
         ParameterizedType parametrized = info.getTypeGenerics(ArBaseLvl2)['K']
 
@@ -37,11 +37,8 @@ class ContainersTest extends Specification {
         array.genericComponentType == Model
         array.toString() == "Model[]"
 
-        then: "upper wildcard valid"
-        wildcardUpper instanceof WildcardTypeImpl
-        wildcardUpper.getUpperBounds() == [Model]
-        wildcardUpper.getLowerBounds().length == 0
-        wildcardUpper.toString() == "? extends Model"
+        then: "upper wildcard solved to simple type"
+        wildcardUpper == Model
 
         then: "lower wildcard valid"
         wildcardLower instanceof WildcardTypeImpl
@@ -55,5 +52,23 @@ class ContainersTest extends Specification {
         parametrized.getActualTypeArguments() == [Model]
         parametrized.getOwnerType() == null
         parametrized.toString() == "List<Model>"
+    }
+
+    def "Check wildcard methods"() {
+
+        WildcardType wildcardUpper = WildcardTypeImpl.upper(Model)
+        WildcardTypeImpl wildcardLower = WildcardTypeImpl.lower(Model)
+        
+        expect: "upper wildcard valid"
+        wildcardUpper instanceof WildcardTypeImpl
+        wildcardUpper.getUpperBounds() == [Model]
+        wildcardUpper.getLowerBounds().length == 0
+        wildcardUpper.toString() == "? extends Model"
+
+        and: "lower wildcard valid"
+        wildcardLower instanceof WildcardTypeImpl
+        wildcardLower.getLowerBounds() == [Model]
+        wildcardLower.getUpperBounds() == [Object]
+        wildcardLower.toString() == "? super Model"
     }
 }

@@ -25,7 +25,8 @@
 * Types deep comparison api: TypesWalker.walk(Type, Type, Visitor) could walk on two types side by side to check or compare actual classes on each level
     Usages:
     - TypeUtils.isCompatible(Type, Type) - deep types compatibility check
-    - TypeUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose more specific like TypeUtils.getMoreSpecificType(Type, Type))  
+    - TypeUtils.isMoreSpecific(Type, Type) - types specificity check (e.g. to chose more specific like TypeUtils.getMoreSpecificType(Type, Type))
+    - TypeUtils.isAssignable(Type, Type) - checks possibility to cast one type to another (according to known type information)  
 * Improved support for multiple interface appearances in hierarchy: before exception was thrown if the same interface appears multiple times
     with different generics, now different declarations are merged to use the most specific types for interface. 
     Types compatibility explicitly checked during merge. 
@@ -61,12 +62,18 @@
 * Inner classes support (Outer<T\>.Inner, not static): outer class generics are resolved to avoid UnknownGenericException 
     - Used owner class generics: TypeGenericsContext.ownerTypeGenericsMap() (empty map for not inner class)
     - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
-        This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct                                      
+        This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct
+* Improved bounds support:
+    - Support multiple upper bounds declaration: My<T extends A & B\> now stored as wildcard (? extends A & B) and used
+    for more precise checks (compatibility, assignability). As before, resolveClass("T") will use first upper bound (A).
+    - (breaking) avoid upper bound wildcards (transform <? extends Something\> -> Something) as only type matter at runtime
+        affects GenericsUtils.resolveTypeVariables()                                                
 
 Compatibility notes: 
 * API did not changed, only new methods were added. 
 * NoGenericException was removed: detect generic absence by returned result instead
 * UnknownGenericException was moved to different package
+* Generics, previously resolved as ? extends Something, now become simply Something (as upper wildcard not useful at runtime)  
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

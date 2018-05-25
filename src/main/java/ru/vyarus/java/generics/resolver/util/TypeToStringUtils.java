@@ -1,11 +1,16 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
 import java.lang.reflect.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Builds string representation for type in context of generified class.
@@ -37,7 +42,7 @@ public final class TypeToStringUtils {
             res = toStringType(((GenericArrayType) type).getGenericComponentType(), generics) + "[]";
         } else if (type instanceof WildcardType) {
             res = processWildcardType((WildcardType) type, generics);
-        } else if (type instanceof PrintableTypeVariable) {
+        } else if (type instanceof ExplicitTypeVariable) {
             // print generic name (only when PrintableGenericsMap used)
             res = type.toString();
         } else {
@@ -71,29 +76,47 @@ public final class TypeToStringUtils {
     public static String toStringWithGenerics(final Class<?> type, final Map<String, Type> generics) {
         // provided generics may contain outer type generics, but we will render only required generics
         final Map<String, Type> actual = type.getTypeParameters().length == generics.size()
-                ? generics : GenericsUtils.getSelfGenerics(generics, GenericsUtils.getOwnerGenerics(type, generics));
+                ? generics : GenericsUtils.extractSelfGenerics(type, generics);
         return toStringType(new ParameterizedTypeImpl(type, actual.values().toArray(new Type[0])), actual);
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     private static String processParametrizedType(final ParameterizedType parametrized,
                                                   final Map<String, Type> generics) {
-        String res = toStringType(parametrized.getRawType(), generics);
+        final StringBuilder res = new StringBuilder(50);
+        // important to cover potential owner type generics declaration (Owner<String>.Inner<Integer>)
+        final Type outer = TypeUtils.getOuter(parametrized);
+        if (outer != null) {
+            // known outer generics will be contained, but in case of name clash (invisible outer generics)
+            // use raw object)
+            res.append(toStringType(outer, new IgnoreGenericsMap(generics)));
+        }
+        res.append(toStringType(parametrized.getRawType(), generics));
         final List<String> args = new ArrayList<String>();
         for (Type t : parametrized.getActualTypeArguments()) {
             args.add(toStringType(t, generics));
         }
         if (!args.isEmpty()) {
-            res += "<" + join(args) + ">";
+            res.append('<').append(join(args)).append('>');
         }
-        return res;
+        return res.toString();
     }
 
     private static String processWildcardType(final WildcardType wildcard, final Map<String, Type> generics) {
         final String res;
         if (wildcard.getLowerBounds().length == 0) {
-            res = "? extends " + toStringType(
-                    GenericsUtils.resolveClass(wildcard.getUpperBounds()[0], generics), generics);
+            // could be multiple bounds, because of stored named generic bounds (<T extends A & B>)
+            // see GenericsResolutionUtils.resolveRawGeneric()
+            final StringBuilder bounds = new StringBuilder(wildcard.getUpperBounds().length * 10);
+            boolean first = true;
+            for (Type type : wildcard.getUpperBounds()) {
+                if (!first) {
+                    bounds.append(" & ");
+                }
+                bounds.append(toStringType(GenericsUtils.resolveClass(type, generics), generics));
+                first = false;
+            }
+            res = "? extends " + bounds.toString();
         } else {
             res = "? super " + toStringType(
                     GenericsUtils.resolveClass(wildcard.getLowerBounds()[0], generics), generics);
@@ -127,26 +150,10 @@ public final class TypeToStringUtils {
     private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {
         final String name = generic.getName();
         final Type result = declarations.get(name);
-        if (result == null) {
+        // last condition to prevent infinite cycle (should be impossible case)
+        if (result == null || result instanceof TypeVariable) {
             throw new UnknownGenericException(name);
         }
         return result;
-    }
-
-    /**
-     * Special type, used only for Type to string conversion in order to preserve generic name.
-     * Use by wrapping generics in {@link ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap}.
-     */
-    public static class PrintableTypeVariable implements Type {
-        private final String name;
-
-        public PrintableTypeVariable(final String name) {
-            this.name = name;
-        }
-
-        @Override
-        public String toString() {
-            return name;
-        }
     }
 }

@@ -101,7 +101,7 @@ public class TypeGenericsContext extends GenericsContext {
      * (become unreachable).
      */
     private void separateOwnerGenerics() {
-        ownerGenerics = GenericsUtils.getOwnerGenerics(currentType, typeGenerics);
+        ownerGenerics = GenericsUtils.extractOwnerGenerics(currentType, typeGenerics);
         if (ownerGenerics.isEmpty()) {
             allTypeGenerics = typeGenerics;
         } else {
