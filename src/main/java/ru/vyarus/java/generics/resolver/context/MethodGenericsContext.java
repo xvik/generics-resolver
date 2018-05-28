@@ -300,7 +300,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
     /**
      * Hierarchy writer with current method identification.
      */
-    class MethodContextWriter extends GenericsInfo.DefaultTypeWriter {
+    class MethodContextWriter extends RootContextAwareTypeWriter {
         @Override
         public String write(final Class<?> type,
                             final Map<String, Type> generics,

@@ -179,12 +179,15 @@ public final class GenericsUtils {
      * type will be different than provided: for example, original type may be {@link TypeVariable} and returned
      * will be simple {@link Class} (resolved generic value).
      * <p>
+     * Special handling for {@link ExplicitTypeVariable} - this kind of type variable is not resolved and not
+     * throw exception as unknown generic (thought as resolved type). This may be used for cases when type
+     * variable must be preserved (like generics tracking or custom to string).
+     * <p>
      * Note that upper bounded wildcards are flattened to simple type ({@code ? extends Somthing -> Something} as
      * upper bounded wildcards are not useful at runtime. The only exception is wildcard with multiple bounds
      * (repackaged declaration {@code T extends A&B}). Wildcards with Object as bound are also flattened
      * ({@code List<? extends Object> --> List<Object>}, {@code List<?> --> List<Object>},
      * {@code List<? super Object> --> List<Object>}.
-     *
      *
      * @param type     type to resolve
      * @param generics root class generics mapping
@@ -245,6 +248,13 @@ public final class GenericsUtils {
 
     /**
      * It is important to keep possible outer class generics, because they may be used in type declarations.
+     * NOTE: It may be not all generics of owner type, but only visible owner generics.
+     * <pre>{@code class Outer<T, K> {
+     *      // outer generic T hidden
+     *      class Inner<T> {}
+     * }}</pre>
+     * In order to recover possibly missed outer generics use {@code extractTypeGenerics(type, resultedMap)}
+     * (may be required for proper owner type to string printing with all generics).
      *
      * @param type     type
      * @param generics all type's context generics (self + outer class)
@@ -268,13 +278,15 @@ public final class GenericsUtils {
 
     /**
      * Generics declaration may contain type's generics together with outer class generics (if type is inner class).
-     * Return map itself for not inner class (and if no extra generics present in map).
+     * Return map itself for not inner class (or if no extra generics present in map).
+     * <p>
+     * In case when type's generic is not mentioned in map - it will be resolved from variable declaration.
      *
      * @param type     type
      * @param generics all type's context generics (self + outer class)
      * @return generics, declared on type ({@code A<T, K> -> T, K}) or empty map if no generics declared on type
      */
-    public static Map<String, Type> extractSelfGenerics(final Class<?> type,
+    public static Map<String, Type> extractTypeGenerics(final Class<?> type,
                                                         final Map<String, Type> generics) {
         final boolean hasOwnerGenerics =
                 type.isMemberClass() && type.getTypeParameters().length != generics.size();
@@ -285,28 +297,12 @@ public final class GenericsUtils {
         // owner generics are all generics not mentioned in signature
         for (TypeVariable var : type.getTypeParameters()) {
             final String name = var.getName();
-            res.put(name, generics.get(name));
-        }
-        return res;
-    }
-
-    /**
-     * Filter owner generics from all generics map.
-     *
-     * @param generics all generics
-     * @param owner    used owner type generics
-     * @return type's own generics only
-     * @see #extractOwnerGenerics(Class, Map)
-     */
-    public static Map<String, Type> filterOwnerGenerics(final Map<String, Type> generics,
-                                                        final Map<String, Type> owner) {
-        final Map<String, Type> res;
-        if (owner.isEmpty()) {
-            res = generics;
-        } else {
-            res = new LinkedHashMap<String, Type>(generics);
-            for (String key : owner.keySet()) {
-                res.remove(key);
+            if (generics.containsKey(name)) {
+                res.put(name, generics.get(name));
+            } else {
+                // case: generic not provided in map may appear with outer class generics, which
+                // may incompletely present in type's generic map (class may use generics with the same name)
+                res.put(name, resolveClass(var.getBounds()[0], res));
             }
         }
         return res;

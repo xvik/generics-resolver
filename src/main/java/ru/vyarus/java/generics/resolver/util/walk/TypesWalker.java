@@ -129,7 +129,7 @@ public final class TypesWalker {
         // because even if outer generics are different they could not participate in comparing types,
         // and if outer generics participate - type's generics will be already affected
         for (Map.Entry<String, Type> entry : GenericsUtils
-                .extractSelfGenerics(oneLower ? oneType : twoType, oneGenerics).entrySet()) {
+                .extractTypeGenerics(oneLower ? oneType : twoType, oneGenerics).entrySet()) {
             final String generic = entry.getKey();
             doWalk(entry.getValue(), oneKnownGenerics, twoGenerics.get(generic), twoKnownGenerics, visitor);
         }

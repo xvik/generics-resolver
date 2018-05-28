@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import spock.lang.Specification
 
 /**
@@ -49,7 +50,42 @@ class GenericsAccessorsTest extends Specification {
         context.ownerClass() == Outer
     }
 
-    class Root extends Outer<String, Integer, Long> {
+    def "Check to string cases"() {
+
+        when: "outer class"
+        def context = GenericsResolver.resolve(Root).type(Outer)
+        then:
+        toString(context) == """class Root 
+  extends Outer<String, Integer, Long>     <-- current
+"""
+
+        when: "field type context (inner class)"
+        context = context.fieldType(Root.getDeclaredField('field'))
+        then:
+        toString(context) == """class Inner<Double, Comparable> (inner to Outer<Object, Integer, Long>)  resolved in context of Root    <-- current
+"""
+
+        when: "method context"
+        context = context.method(Outer.Inner.getDeclaredMethod('doSmth'))
+        then:
+        toString(context) == """class Inner<Double, Comparable> (inner to Outer<Object, Integer, Long>)  resolved in context of Root
+  Object doSmth()    <-- current
+"""
+
+        when: "method hiding outer class generic context"
+        context = context.method(Outer.Inner.getDeclaredMethod('doSmth2'))
+        then:
+        // generic B of outer is not visible, but here it shown as actual value (universal logic)
+        toString(context) == """class Inner<Double, Comparable> (inner to Outer<Object, Integer, Long>)  resolved in context of Root
+  Object doSmth2()    <-- current
+"""
+    }
+
+    private toString(GenericsContext context) {
+        return context.toString().replace("\r", "")
+    }
+
+    static class Root extends Outer<String, Integer, Long> {
 
         Inner<Double, Comparable> field
     }

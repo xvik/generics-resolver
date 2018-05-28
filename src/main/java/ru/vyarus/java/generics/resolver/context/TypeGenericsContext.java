@@ -115,7 +115,7 @@ public class TypeGenericsContext extends GenericsContext {
 
     @Override
     public String toString() {
-        return genericsInfo.toStringHierarchy(isInlying() ? new InlyingContextWriter() : new TypeContextWriter());
+        return genericsInfo.toStringHierarchy(new TypeContextWriter());
     }
 
     // --------------------------------------------------------------------- navigation impl
@@ -224,25 +224,9 @@ public class TypeGenericsContext extends GenericsContext {
     }
 
     /**
-     * Hierarchy writer with current type identification.
+     * Hierarchy writer with root context info (if available).
      */
-    class TypeContextWriter extends GenericsInfo.DefaultTypeWriter {
-        @Override
-        public String write(final Class<?> type,
-                            final Map<String, Type> generics,
-                            final Class<?> owner,
-                            final Map<String, Type> ownerGenerics,
-                            final String shift) {
-            final String pointer = type == currentType ? CURRENT_POSITION_MARKER : "";
-            return super.write(type, generics, owner, ownerGenerics, shift) + pointer;
-        }
-    }
-
-    /**
-     * Hierarchy writer with current type identification and outer context info.
-     */
-    class InlyingContextWriter extends GenericsInfo.DefaultTypeWriter {
-
+    public abstract class RootContextAwareTypeWriter extends GenericsInfo.DefaultTypeWriter {
         @Override
         @SuppressWarnings("PMD.UseStringBufferForStringAppends")
         public String write(final Class<?> type,
@@ -251,12 +235,29 @@ public class TypeGenericsContext extends GenericsContext {
                             final Map<String, Type> ownerGenerics,
                             final String shift) {
             String res = super.write(type, generics, owner, ownerGenerics, shift);
-            if (type == genericsInfo.getRootClass()) {
+            if (root != null && type == genericsInfo.getRootClass()) {
                 res += String.format("  resolved in context of %s",
                         TypeToStringUtils.toStringWithGenerics(rootContext().genericsInfo.getRootClass(),
                                 rootContext().genericsMap()));
             }
-            return res + (type == currentType ? CURRENT_POSITION_MARKER : "");
+            return res;
+        }
+    }
+
+    /**
+     * Hierarchy writer with current type identification and root context info (if available).
+     */
+    class TypeContextWriter extends RootContextAwareTypeWriter {
+
+        @Override
+        public String write(final Class<?> type,
+                            final Map<String, Type> generics,
+                            final Class<?> owner,
+                            final Map<String, Type> ownerGenerics,
+                            final String shift) {
+            final String res = super.write(type, generics, owner, ownerGenerics, shift);
+            final String pointer = type == currentType ? CURRENT_POSITION_MARKER : "";
+            return res + pointer;
         }
     }
 }
