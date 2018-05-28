@@ -21,6 +21,8 @@ import java.util.Map;
  */
 public final class TypeUtils {
 
+    private static final Map<String, Type> IGNORE_VARS = new IgnoreGenericsMap();
+
     @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.AvoidUsingShortType"})
     private static final Map<Class, Class> PRIMITIVES = new HashMap<Class, Class>() {{
         put(boolean.class, Boolean.class);
@@ -76,11 +78,10 @@ public final class TypeUtils {
         TypesWalker.walk(what, comparingTo, visitor);
 
         if (!visitor.isCompatible()) {
-            final IgnoreGenericsMap ignoreVars = new IgnoreGenericsMap();
             throw new IllegalArgumentException(String.format(
                     "Type %s can't be compared to %s because they are not compatible",
-                    TypeToStringUtils.toStringType(what, ignoreVars),
-                    TypeToStringUtils.toStringType(comparingTo, ignoreVars)));
+                    TypeToStringUtils.toStringType(what, IGNORE_VARS),
+                    TypeToStringUtils.toStringType(comparingTo, IGNORE_VARS)));
         }
         return visitor.isMoreSpecific();
     }
@@ -214,7 +215,7 @@ public final class TypeUtils {
         if (type instanceof ParameterizedType) {
             return ((ParameterizedType) type).getOwnerType() != null;
         }
-        final Class<?> actual = GenericsUtils.resolveClass(type, new IgnoreGenericsMap());
+        final Class<?> actual = GenericsUtils.resolveClass(type, IGNORE_VARS);
         // interface is always static and can't use outer generics
         return !actual.isInterface() && actual.isMemberClass() && !Modifier.isStatic(actual.getModifiers());
     }
@@ -232,7 +233,7 @@ public final class TypeUtils {
             return ((ParameterizedType) type).getOwnerType();
         }
         return isInner(type)
-                ? GenericsUtils.resolveClass(type, new IgnoreGenericsMap()).getEnclosingClass()
+                ? GenericsUtils.resolveClass(type, IGNORE_VARS).getEnclosingClass()
                 : null;
     }
 }

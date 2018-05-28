@@ -279,16 +279,16 @@ class CommonsLangsTests<B> extends Specification {
                 .generic("E") == Object
         GenericsResolver.resolve(AAAClass.BBBClass)
                 .type(AAClass.BBClass)
-                .genericsMap() == ["T": Object, "S": String]
+                .visibleGenericsMap() == ["T": Object, "S": String]
         GenericsResolver.resolve(CommonsLangChecks.Other)
                 .type(CommonsLangChecks.This)
-                .genericsMap() == ["B": Object, "K": String, "V": Object]
+                .visibleGenericsMap() == ["B": Object, "K": String, "V": Object]
         GenericsResolver.resolve(CommonsLangChecks.And)
                 .type(CommonsLangChecks.This)
-                .genericsMap() == ["B": Object, "K": Number, "V": Number]
+                .visibleGenericsMap() == ["B": Object, "K": Number, "V": Number]
         GenericsResolver.resolve(CommonsLangChecks.Thing)
                 .type(CommonsLangChecks.Other)
-                .genericsMap() == ["B": Object, "T": Object]
+                .visibleGenericsMap() == ["B": Object, "T": Object]
     }
 
     def "Check bounded generics"() {

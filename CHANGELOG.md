@@ -39,6 +39,11 @@
     - (breaking) NoGenericException removed. Was thrown for resolveGenericsOf(Type) methods when class does not declare generics.
         Now empty list or null will be returned.       
 * Context api improvements:
+    * Kinds of visible generics:
+        - genericsMap() - type own generics (as before)
+        - ownerGenericsMap() - visible generics of outer class (if current is inner)
+        - methodGenericsMap() - method generics
+        - visibleGenericsMap() - all visible generics (type +owner +method)
     * Type resolution methods (return type with all generic variables replaced with known values): 
         - resolveType(Type) = Type
         - Shortcuts: 
@@ -60,9 +65,9 @@
     - Direct toString() on context (GenericsContext) prints entire hierarchy with current position marker "<-- current" marker.
         In intellij idea you can use "view" value link inside debugger to quickly overview current context (with resolved generics) and position      
 * Inner classes support (Outer<T\>.Inner, not static): outer class generics are resolved to avoid UnknownGenericException 
-    - Used owner class generics: TypeGenericsContext.ownerTypeGenericsMap() (empty map for not inner class)
-    - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains outer class).
-        This is not always true, but, for most cases, inner class is used inside outer and so generics resolution will be correct
+    - Used owner class (context.ownerClass()) generics: context.ownerGenericsMap() (empty map for not inner class)
+    - For inlying context building, root class may be used as generics source for inner class (if root class hierachy contains owner class).
+        This is not always true, but, for most cases, inner class is used inside owner and so generics resolution will be correct
 * Improved bounds support:
     - Support multiple upper bounds declaration: My<T extends A & B\> now stored as wildcard (? extends A & B) and used
     for more precise checks (compatibility, assignability). As before, resolveClass("T") will use first upper bound (A).

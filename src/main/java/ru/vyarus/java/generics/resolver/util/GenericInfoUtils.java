@@ -60,7 +60,7 @@ public final class GenericInfoUtils {
     public static GenericsInfo create(
             final GenericsContext context, final Type type, final Class<?>... ignoreClasses) {
         // root generics are required only to properly solve type
-        final Map<String, Type> rootGenerics = context.genericsMap();
+        final Map<String, Type> rootGenerics = context.visibleGenericsMap();
         // first step: solve type to replace transitive generics with direct values
         final Type actual = GenericsUtils.resolveTypeVariables(type, rootGenerics);
         final Class<?> target = context.resolveClass(actual);
@@ -104,7 +104,7 @@ public final class GenericInfoUtils {
                                       final Class<?> asType,
                                       final Class<?>... ignoreClasses) {
         // root generics are required only to properly solve type
-        final Map<String, Type> rootGenerics = context.genericsMap();
+        final Map<String, Type> rootGenerics = context.visibleGenericsMap();
         // first step: solve type to replace transitive generics with direct values
         final Type actual = GenericsUtils.resolveTypeVariables(type, rootGenerics);
         final Class<?> middleType = context.resolveClass(actual);

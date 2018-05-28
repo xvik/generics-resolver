@@ -29,8 +29,8 @@ public class MethodGenericsContext extends TypeGenericsContext {
     private Map<String, Type> methodGenerics;
     private Map<String, Type> allGenerics;
 
-    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method) {
-        super(genericsInfo, method.getDeclaringClass());
+    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method, final GenericsContext root) {
+        super(genericsInfo, method.getDeclaringClass(), root);
         this.method = method;
         initGenerics();
     }
@@ -266,6 +266,8 @@ public class MethodGenericsContext extends TypeGenericsContext {
             final Class<?> value = resolveClass(generic.getBounds()[0]);
             this.methodGenerics.put(generic.getName(), value);
             this.allGenerics.put(generic.getName(), value);
+            // method generic could override outer generic name (making it invisible)
+            ownerGenerics.remove(generic.getName());
         }
     }
 

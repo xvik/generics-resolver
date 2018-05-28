@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver;
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext;
 import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory;
 import ru.vyarus.java.generics.resolver.context.TypeGenericsContext;
 import ru.vyarus.java.generics.resolver.util.TypeUtils;
@@ -28,7 +27,7 @@ public final class GenericsResolver {
      *                      or to limit resolution depth)
      * @return resolved generics context object
      */
-    public static GenericsContext resolve(final Class<?> type, final Class<?>... ignoreClasses) {
+    public static TypeGenericsContext resolve(final Class<?> type, final Class<?>... ignoreClasses) {
         final Class<?> notPrimitiveType = TypeUtils.wrapPrimitive(type);
         return new TypeGenericsContext(
                 GenericsInfoFactory.create(notPrimitiveType, ignoreClasses), notPrimitiveType);

@@ -44,7 +44,7 @@ class InnerTypesTest extends Specification {
 
         then:
         innerContext.resolveFieldClass(Owner.Inner.getDeclaredField('field')) == String
-        innerContext.ownerTypeGenericsMap() == ['T': String]
+        innerContext.ownerGenericsMap() == ['T': String]
     }
 
     def "Check inlying context for parametrized inner type"() {
@@ -56,7 +56,7 @@ class InnerTypesTest extends Specification {
         then:
         innerContext.resolveFieldClass(Owner.PInner.getDeclaredField('field')) == Integer
         innerContext.resolveFieldClass(Owner.PInner.getDeclaredField('field2')) == String
-        innerContext.ownerTypeGenericsMap() == ['T': String]
+        innerContext.ownerGenericsMap() == ['T': String]
     }
 
     def "Check inlying context for parametrized inner type with owner type in hierarchy"() {
@@ -116,14 +116,14 @@ class InnerTypesTest extends Specification {
         GenericsContext context = GenericsResolver.resolve(InnerFullDeclaration)
                 .fieldType(InnerFullDeclaration.getDeclaredField("inner"))
         then: "static generic used instead of root hierarchy"
-        context.genericsMap()['T'] == String
+        context.generic('T') == String
         context.resolveFieldClass(InOwner.Inner.getDeclaredField("field")) == String
 
         when: "resolve inner2 class field"
         context = context.rootContext()
                 .fieldType(InnerFullDeclaration.getDeclaredField("inner2"))
         then: "static generic used instead of root hierarchy"
-        context.genericsMap()['T'] == Integer // from root class
+        context.generic('T') == Integer // from root class
         context.resolveFieldClass(InOwner.Inner.getDeclaredField("field")) == Integer
 
 
@@ -131,14 +131,14 @@ class InnerTypesTest extends Specification {
         context = GenericsResolver.resolve(InnerFullDeclaration)
                 .fieldTypeAs(InnerFullDeclaration.getDeclaredField("inner"), InOwner.InnerExt)
         then: "static generic used instead of root hierarchy"
-        context.genericsMap()['T'] == String
+        context.generic('T') == String
         context.resolveFieldClass(InOwner.Inner.getDeclaredField("field")) == String
 
         when: "resolve inner2 class field as ext type"
         context = context.rootContext()
                 .fieldTypeAs(InnerFullDeclaration.getDeclaredField("inner2"), InOwner.InnerExt)
         then: "static generic used instead of root hierarchy"
-        context.genericsMap()['T'] == Integer // from root class
+        context.generic('T') == Integer // from root class
         context.resolveFieldClass(InOwner.Inner.getDeclaredField("field")) == Integer
     }
 

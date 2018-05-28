@@ -1,10 +1,8 @@
 package ru.vyarus.java.generics.resolver.context;
 
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
-import ru.vyarus.java.generics.resolver.util.GenericInfoUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
-import ru.vyarus.java.generics.resolver.util.TypeUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -38,8 +36,6 @@ import java.util.Map;
 @SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace",
         "PMD.TooManyMethods", "PMD.GodClass"})
 public abstract class GenericsContext {
-    private static final String BAD_DECLARATION_TYPE_MSG_PART =
-            "' declaration type %s is not present in hierarchy of %s";
 
     protected final GenericsInfo genericsInfo;
     protected final Class<?> currentType;
@@ -48,7 +44,7 @@ public abstract class GenericsContext {
     public GenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
         this.genericsInfo = genericsInfo;
         this.currentType = type;
-        // collection resolved for fail fast on wrong type
+        // fail on wrong type
         typeGenerics = genericsInfo.getTypeGenerics(type);
     }
 
@@ -118,6 +114,8 @@ public abstract class GenericsContext {
      * {@code class B<T, K>}.
      * <pre>{@code class A extends B<Object, C<Long>>
      * type(B.class).genericType("K") == ParametrizedType }</pre>
+     * <p>
+     * Note: will work for any visible generic (from current context) including outer class and method generics
      *
      * @param genericName generic position (from 0)
      * @return generic type
@@ -145,6 +143,8 @@ public abstract class GenericsContext {
      * {@code class B<T, K>}.
      * <pre>{@code class A extends B<Object, C<Long>>
      * type(B.class).generic("K") == C.class }</pre>
+     * <p>
+     * Note: will work for any visible generic (from current context) including outer class and method generics
      *
      * @param genericName generic name
      * @return resolved generic class
@@ -172,6 +172,8 @@ public abstract class GenericsContext {
      * {@code class B<T, K>}.
      * <pre>{@code class A extends B<Object, C<Long>>
      * type(B.class).genericAsString("K") == "C<Long>" }</pre>
+     * <p>
+     * Note: will work for any visible generic (from current context) including outer class and method generics
      *
      * @param genericName generic name
      * @return resolved generic string representation
@@ -185,13 +187,28 @@ public abstract class GenericsContext {
     /**
      * {@code class A extends B<Object, C<Long>>} and {@code class B<T, K>}.
      * <pre>{@code type(B.class).genericsMap() == ["T": Object.class, "K": ParametrizedType]}</pre>
-     * <p>
-     * NOTE: if type is inner class then it will include outer class generics.
-     * See {@link #genericTypes()} for class only generics.
      *
-     * @return map of current generics (runtime mapping of generic name to actual type)
+     * @return map of current type (runtime mapping of generic name to actual type)
+     * @see #visibleGenericsMap() for all visible generics in current context
      */
     public Map<String, Type> genericsMap() {
+        return new LinkedHashMap<String, Type>(typeGenerics);
+    }
+
+    /**
+     * All reachable generics. Possible generics:
+     * <ul>
+     * <li>Context type generics ({@code Self<T, K>})</li>
+     * <li>Outer type generics ({@code Outer<T>.Inner<K>})</li>
+     * <li>Method generics ({@code <T> T get()})</li>
+     * </ul>
+     *
+     * @return all generics visible from current context
+     * @see #genericsMap() for type only generics
+     * @see MethodGenericsContext#methodGenericsMap()
+     * @see TypeGenericsContext#ownerGenericsMap()
+     */
+    public Map<String, Type> visibleGenericsMap() {
         return new LinkedHashMap<String, Type>(contextGenerics());
     }
 
@@ -390,11 +407,7 @@ public abstract class GenericsContext {
      * @throws IllegalArgumentException if requested method's declaration class is not present in current class
      *                                  hierarchy
      */
-    public MethodGenericsContext method(final Method method) {
-        final GenericsContext context = chooseContext(method.getDeclaringClass(),
-                "Method '" + method.getName() + BAD_DECLARATION_TYPE_MSG_PART);
-        return new MethodGenericsContext(context.genericsInfo, method);
-    }
+    public abstract MethodGenericsContext method(Method method);
 
     /**
      * Create generics context for field type (with correctly resolved root generics)."Drill down".
@@ -463,23 +476,7 @@ public abstract class GenericsContext {
      * @param type type to resolve hierarchy from (it must be generified type, resolved in current class)
      * @return generics context of type (inlying context)
      */
-    public TypeGenericsContext inlyingType(final Type type) {
-        final Class target = resolveClass(type);
-        final GenericsInfo generics;
-
-        if (target.getTypeParameters().length > 0 || couldRequireKnownOuterGenerics(type)) {
-            // resolve class hierarchy in context (non cachable context)
-            // can't be primitive here
-            generics = GenericInfoUtils.create(this, type, genericsInfo.getIgnoredTypes());
-        } else {
-            // class without generics - use cachable context
-            generics = GenericsInfoFactory.create(
-                    // always build hierarchy for non primitive type
-                    TypeUtils.wrapPrimitive(target), genericsInfo.getIgnoredTypes());
-        }
-
-        return new TypeGenericsContext(generics, target, this);
-    }
+    public abstract TypeGenericsContext inlyingType(Type type);
 
     /**
      * Build generics context for type extending some geenric type in context of current class. This is required
@@ -504,22 +501,7 @@ public abstract class GenericsContext {
      * @return generics context for required target type with correct type's generics (inlying context)
      * @see #inlyingType(Type)
      */
-    public TypeGenericsContext inlyingTypeAs(final Type type, final Class<?> asType) {
-        final Class target = resolveClass(type);
-        final GenericsInfo generics;
-        if (target.getTypeParameters().length > 0
-                || couldRequireKnownOuterGenerics(type) || couldRequireKnownOuterGenerics(asType)) {
-            // resolve class hierarchy in context and from higher type (non cachable context)
-            // can't be primitive 
-            generics = GenericInfoUtils.create(this, type, asType, genericsInfo.getIgnoredTypes());
-        } else {
-            // class without generics - use cachable context
-            generics = GenericsInfoFactory.create(
-                    // always build hierarchy for non primitive type
-                    TypeUtils.wrapPrimitive(asType), genericsInfo.getIgnoredTypes());
-        }
-        return new TypeGenericsContext(generics, asType, this);
-    }
+    public abstract TypeGenericsContext inlyingTypeAs(Type type, Class<?> asType);
 
     /**
      * For example, {@code class Root extends Base<String>} (and we resolve generics from Root):
@@ -529,7 +511,7 @@ public abstract class GenericsContext {
      * @return string representation of current class in hierarchy with known generics
      */
     public String toStringCurrentClass() {
-        return TypeToStringUtils.toStringWithGenerics(currentType, contextGenerics());
+        return TypeToStringUtils.toStringWithGenerics(currentType, typeGenerics);
     }
 
     /**
@@ -543,45 +525,27 @@ public abstract class GenericsContext {
     }
 
     /**
-     * NOTE: if type is inner class then it will include outer class generics.
-     * See {@link #genericTypes()} for class only generics.
-     *
      * @return resolved generics mapping for current context
      */
     protected abstract Map<String, Type> contextGenerics();
+
+    /**
+     * Used to switch to appropriate context or fail if type is not found in hierarchy.
+     *
+     * @param target    target type
+     * @param msgPrefix error message prefix, identifying place
+     * @return correct context for type (may be current context instance)
+     */
+    protected abstract GenericsContext chooseContext(Class target, String msgPrefix);
+
+    private GenericsContext chooseFieldContext(final Field field) {
+        return chooseContext(field.getDeclaringClass(), "Field '" + field.getName() + "'");
+    }
 
     private String checkGenericName(final String genericName) {
         if (!contextGenerics().containsKey(genericName)) {
             throw new UnknownGenericException(currentType, genericName);
         }
         return genericName;
-    }
-
-    private GenericsContext chooseFieldContext(final Field field) {
-        return chooseContext(field.getDeclaringClass(),
-                "Field '" + field.getName() + BAD_DECLARATION_TYPE_MSG_PART);
-    }
-
-    private GenericsContext chooseContext(final Class target, final String message) {
-        try {
-            // switch context to avoid silly mistakes (will fail if declaring type is not in hierarchy)
-            return type(target);
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException(String.format(message,
-                    target.getSimpleName(), genericsInfo.getRootClass().getSimpleName()), ex);
-        }
-    }
-
-    /**
-     * Inner class could use outer class generics, and if outer class is known (in current hierarchy),
-     * we can assume to use it's generics (correct for most cases, but may be corner cases).
-     *
-     * @param type type to check
-     * @return true if type is inner and outer class is present in current hierarchy
-     */
-    private boolean couldRequireKnownOuterGenerics(final Type type) {
-        final Type outer = TypeUtils.getOuter(type);
-        // inner class may use generics of the root class
-        return outer != null && genericsInfo.getComposingTypes().contains(resolveClass(outer));
     }
 }
