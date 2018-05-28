@@ -7,7 +7,7 @@ package ru.vyarus.java.generics.resolver.error;
  * <li>Type resolved in context of different class (usage error).</li>
  * <li>Type contains method generic. For example, in method {@code <T> void doSmth(List<T> arg1)} if
  * we try to resolve generic of arg1, it will fail, because generic T is only known within method scope
- * (resolve parameters and resolve method return type api correctly support such generics, but its hard to support it
+ * (resolve parameters and resolve method return type api correctly support such generics, but it's hard to support it
  * in general case).</li>
  * </ul>
  *

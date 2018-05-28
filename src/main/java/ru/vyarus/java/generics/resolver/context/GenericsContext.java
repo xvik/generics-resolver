@@ -14,20 +14,35 @@ import java.util.Map;
 
 /**
  * Context object wraps root type hierarchy generics information descriptor and provides utility methods for
- * actual types resolution. Currently there are two types of contexts: type context (class) and method context.
- * <p>Usage: navigate to required type {@code context.type(MyClass.class)} and use utility methods to
- * get type's own generics or as helper for methods/fields introspection.
- * To navigate to method context use {@code context.method(method)}.</p>
- * <p>Every context object is immutable. Context doesn't hold actual types hierarchy (use reflection api in parallel
- * if you need hierarchy info). Navigation is allowed to any class (within original root class hierarchy) from any
- * child context. For convenience root class is also allowed (no matter the fact that it doesn't contain resolved
- * generics).</p>
- * <p>API operated mainly on types, because it's the only way to resolve recursive generics: e.g. when you have
+ * actual types resolution. This base class contains all type resolution logic (commonly used), whereas type specific
+ * methods are added in {@link TypeGenericsContext} and method context {@link MethodGenericsContext}.
+ * Note that all possible contexts are {@link TypeGenericsContext}, but {@link GenericsContext} will fit for the
+ * majority of cases (while direct outer class or inlying context-aware logic is not required).
+ * <p>
+ * Usage: navigate to required type {@code context.type(MyClass.class)} and use utility methods to
+ * get type's own generics or as helper for methods/fields introspection. To navigate to method context use
+ * {@code context.method(method)}.
+ * <p>
+ * Every context object is immutable. Navigation is allowed to any class (within original root class hierarchy) from
+ * any child context.
+ * <p>
+ * API operated mainly on types, because it's the only way to resolve recursive generics: e.g. when you have
  * {@code List<Integer>} then generic could be represented as {@code Integer} class, but if
  * {@code List<Collection<Integer>>} we can't represent generic as class ({@code Collection}),
- * because this makes actual collection generic not accessible)</p>
- * <p>Complete example: suppose we have {@code class A extends B<Integer>}.
- * {@code GenericsResolver.resolve(A.class).type(B.class).generic(0) == Integer.class}</p>
+ * because this makes actual collection generic not accessible)
+ * <p>
+ * Complete example: suppose we have {@code class A extends B<Integer>}.
+ * {@code GenericsResolver.resolve(A.class).type(B.class).generic(0) == Integer.class}
+ * <p>
+ * It may be required to build context for some type, inside resolved hierarchy (e.g. for field). To do it
+ * use {@link #inlyingType(Type)} or {@link #inlyingTypeAs(Type, Class)}. Essentially, this is teh same as
+ * building usual context, but with additional knowledge (extra generics, known on root type).
+ * <p>
+ * Another special case is inner classes, which could reference outer class generics. To handle this, outer class
+ * generics are also resolved. For inlying context building, if outer class present in current (root) hierarchy,
+ * then known outer class generics will be used from the root hierarchy. Also, not that outer class generics could be
+ * declared directly (e.g. field declaration: {@code Outer<String>.Inner field}) and, in this case, direct
+ * declaration is used in priority.
  *
  * @author Vyacheslav Rusakov
  * @since 17.11.2014

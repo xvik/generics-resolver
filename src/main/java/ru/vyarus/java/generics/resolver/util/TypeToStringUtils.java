@@ -75,8 +75,7 @@ public final class TypeToStringUtils {
      */
     public static String toStringWithGenerics(final Class<?> type, final Map<String, Type> generics) {
         // provided generics may contain outer type generics, but we will render only required generics
-        final Map<String, Type> actual = type.getTypeParameters().length == generics.size()
-                ? generics : GenericsUtils.extractTypeGenerics(type, generics);
+        final Map<String, Type> actual = GenericsUtils.extractTypeGenerics(type, generics);
         return toStringType(new ParameterizedTypeImpl(type, actual.values().toArray(new Type[0])), actual);
     }
 

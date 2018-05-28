@@ -8,12 +8,14 @@ import java.util.WeakHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Analyze class hierarchy and produce class hierarchy resolved generics object.
- * Resolved generics descriptors are cached.
- * <p>Note: when ignore classes used, cache will not work: such descriptors are always resolved.</p>
- * <p>Cache may be disabled (e.g. when JRebel used) by using environment variable or system property e.g.:
+ * Analyze class hierarchy and produce object with resolved generics for each class. Resolved generics descriptors
+ * are cached (for not inlying contexts).
+ * <p>
+ * Note: when ignore classes used, cache will not work: such descriptors are always resolved.
+ * <p>
+ * Cache may be disabled (e.g. when JRebel used) by using environment variable or system property e.g.:
  * {@code System.setProperty(GenericsInfoFactory.CACHE_PROPERTY, 'false')}.
- * Property value checked on cache write. To clear current cache state use static method.</p>
+ * Property value checked on cache write. To clear current cache state use static method.
  *
  * @author Vyacheslav Rusakov
  * @since 16.10.2014

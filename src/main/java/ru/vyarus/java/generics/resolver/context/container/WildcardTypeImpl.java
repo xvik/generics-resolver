@@ -13,8 +13,8 @@ import java.util.Collections;
  * Note: api supports multiple bounds but actually only one bound could be set (not one upper, one lower, but
  * only one upper or only one lower!).
  * <p>
- * But, object is also used to hold multiple bounds of {@link java.lang.reflect.TypeVariable}.
- * For example, {@code MyClass<T extends<Number & Comparable>} will be repackaged as wildcard with multiple
+ * Object is also used to hold multiple bounds of {@link java.lang.reflect.TypeVariable}.
+ * For example, {@code MyClass<T extends Number & Comparable>} will be repackaged as wildcard with multiple
  * bonds {@code <? extends Number & Comparable>} (note that this is impossible declaration in real java code).
  * This should not cause any harm as, I'm sure, all reflection logic always takes first parameter and will not break.
  *

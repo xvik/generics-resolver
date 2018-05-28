@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
+import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable
 import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
@@ -77,4 +78,36 @@ class WrapperTypesEqualsTest extends Specification {
         !w3.equals(w4)
         !w1.equals(null)
     }
+
+    def "Check explicit type equals"() {
+
+        when: "same name"
+        ExplicitTypeVariable v1 = new ExplicitTypeVariable("T")
+        ExplicitTypeVariable v2 = new ExplicitTypeVariable("T")
+        then: "ok"
+        v1.equals(v2)
+        v1.hashCode() == v2.hashCode()
+
+        when: "different name"
+        v2 = new ExplicitTypeVariable("K")
+        then: "not"
+        !v1.equals(v2)
+        v1.hashCode() != v2.hashCode()
+        
+        when: "same type"
+        v1 = new ExplicitTypeVariable(Some.getTypeParameters()[0])
+        v2 = new ExplicitTypeVariable(Some.getTypeParameters()[0])
+        then: "ok"
+        v1.equals(v2)
+        v1.hashCode() == v2.hashCode()
+
+        when: "same name, different source"
+        v2 = new ExplicitTypeVariable(SomeOther.getTypeParameters()[0])
+        then: "not"
+        !v1.equals(v2)
+        v1.hashCode() != v2.hashCode()
+    }
+
+    static class Some<T> {}
+    static class SomeOther<T> {}
 }

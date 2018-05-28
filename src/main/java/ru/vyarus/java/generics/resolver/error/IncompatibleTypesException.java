@@ -6,7 +6,7 @@ import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 import java.lang.reflect.Type;
 
 /**
- * Exception thrown to indicate type incompatibility. Types may contain not resolved variable - they will be
+ * Exception indicates types incompatibility. Types may contain not resolved variable - they will be
  * shown in error message.
  *
  * @author Vyacheslav Rusakov

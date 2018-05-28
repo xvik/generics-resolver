@@ -13,9 +13,10 @@ import java.util.*;
  * <pre>{@code class A {
  *     <T> T method();
  * }}</pre>
- * Such generics are not known in type and as a result any operation on type with such generic will lead to
- * unknown generic.
- * <p>Also, context contains special methods for parameters and return type analysis.</p>
+ * Such generics are not known in type and, as a result, any operation on type with such generic will lead to
+ * unknown generic exception.
+ * <p>
+ * Also, context contains special methods for parameters and return type analysis.
  *
  * @author Vyacheslav Rusakov
  * @since 26.06.2015
@@ -102,7 +103,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
     }
 
     /**
-     * Returns parameter types with resolved named generics.
+     * Returns parameter types with resolved generic variables.
      * <pre>{@code class A extends B<Long> {}
      * class B<T>{
      *     void doSmth(List<T> a);
@@ -134,7 +135,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * }
      * class C extends A<String> {}}</pre>
      * Build generics context for parameter type (to continue analyzing parameter type fields):
-     * {@code type(A.class).method(A.class.getMethod("getSmth", B.class)).parameterType(0)
+     * {@code (context of C).type(A.class).method(A.class.getMethod("getSmth", B.class)).parameterType(0)
      * == generics context of B<String>}
      * <p>
      * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
@@ -194,6 +195,12 @@ public class MethodGenericsContext extends TypeGenericsContext {
     }
 
     /**
+     * <pre>{@code class B extends A<Long> {}
+     * class A<T> {
+     *      List<T> get();
+     * }}</pre>.
+     * {@code (context of B).method(A.class.getMethod("get")).resolveReturnType() == List<Long>}
+     *
      * @return method return type with resolved generic variables
      */
     public Type resolveReturnType() {
@@ -235,7 +242,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
     }
 
     /**
-     * @return method declaration string with actual generics
+     * @return method declaration string with actual types instead of generic variables
      */
     public String toStringMethod() {
         return String.format("%s %s%s",

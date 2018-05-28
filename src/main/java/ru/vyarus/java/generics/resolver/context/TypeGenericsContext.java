@@ -12,10 +12,6 @@ import java.util.Map;
 
 /**
  * Generics context of specific type (class) or inlying context (when root type context known).
- * <p>
- * Inlying type generics context. Used for types, resolved not from root class, but from generic type declaration
- * in context of existing generics context. For example, hierarchy, build for generified field type (
- * {@code private Something<T> something;}).
  *
  * @author Vyacheslav Rusakov
  * @see GenericsContext
@@ -25,7 +21,7 @@ import java.util.Map;
 public class TypeGenericsContext extends GenericsContext {
 
     /**
-     * Current hierarchy position marker (for to string).
+     * Current hierarchy position marker (for toString).
      */
     public static final String CURRENT_POSITION_MARKER = "    <-- current";
 
