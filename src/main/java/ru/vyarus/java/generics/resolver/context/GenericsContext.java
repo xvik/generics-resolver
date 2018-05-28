@@ -559,7 +559,7 @@ public abstract class GenericsContext {
 
     private String checkGenericName(final String genericName) {
         if (!contextGenerics().containsKey(genericName)) {
-            throw new UnknownGenericException(currentType, genericName);
+            throw new UnknownGenericException(currentType, genericName, null);
         }
         return genericName;
     }

@@ -13,6 +13,7 @@ import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap
 import spock.lang.Specification
 
 import java.lang.reflect.ParameterizedType
+import java.lang.reflect.TypeVariable
 
 /**
  * @author Vyacheslav Rusakov
@@ -23,10 +24,11 @@ class ExceptionTests extends Specification {
     def "Check unknown generic exception"() {
 
         when: "complete initialization"
-        def res = new UnknownGenericException(Root, "T")
+        def res = new UnknownGenericException(Root, "T", null)
         then:
         res.genericName == "T"
         res.contextType == Root
+        res.genericSource == null
         res.message == "Generic 'T' is not declared on type ${Root.name}"
 
         when: "rethrow with same typs"
@@ -42,10 +44,11 @@ class ExceptionTests extends Specification {
 
 
         when: "incomplete initialization"
-        res = new UnknownGenericException("T")
+        res = new UnknownGenericException("T", null)
         then:
         res.genericName == "T"
         res.contextType == null
+        res.genericSource == null
         res.message == "Generic 'T' is not declared "
 
         when: "change context"
@@ -54,7 +57,25 @@ class ExceptionTests extends Specification {
         reres != res
         reres.contextType == Root
         reres.genericName == "T"
+        res.genericSource == null
         reres.message == "Generic 'T' is not declared on type ${Root.name}"
+    }
+
+    def "Check unknown generic exception with source"() {
+
+        when: "unknown class generic"
+        TypeVariable type = UnknownGeneric.getDeclaredField("field").getGenericType()
+        def ex = new UnknownGenericException(type.name, type.genericDeclaration)
+        then:
+        ex.message == "Generic 'T' (defined on UnknownGeneric<T>) is not declared "
+        ex.genericSource != null
+
+        when: "unknown method generic"
+        type = UnknownGeneric.getDeclaredMethod("method").getGenericReturnType()
+        ex = new UnknownGenericException(type.name, type.genericDeclaration)
+        then:
+        ex.message == "Generic 'M' (defined on UnknownGeneric#<M> M method()) is not declared "
+        ex.genericSource != null
     }
 
     def "Check resolution exception"() {
@@ -109,5 +130,13 @@ class ExceptionTests extends Specification {
         ((ParameterizedType) res.first).rawType == Base1
         ((ParameterizedType) res.second).rawType == Lvl2Base1
         res.message == "custom Base1<String> Lvl2Base1<Integer>"
+    }
+
+
+    static class UnknownGeneric<T> {
+
+        T field
+
+        public <M> M method() {}
     }
 }

@@ -312,7 +312,7 @@ public final class GenericsUtils {
         final String name = generic.getName();
         final Type result = declarations.get(name);
         if (result == null) {
-            throw new UnknownGenericException(name);
+            throw new UnknownGenericException(name, generic.getGenericDeclaration());
         }
         return result;
     }

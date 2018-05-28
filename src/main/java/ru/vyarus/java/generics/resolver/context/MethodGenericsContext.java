@@ -24,8 +24,6 @@ import java.util.*;
 @SuppressWarnings("PMD.PreserveStackTrace")
 public class MethodGenericsContext extends TypeGenericsContext {
 
-    private static final String SPLIT = ", ";
-
     private final Method method;
     private Map<String, Type> methodGenerics;
     private Map<String, Type> allGenerics;
@@ -245,10 +243,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return method declaration string with actual types instead of generic variables
      */
     public String toStringMethod() {
-        return String.format("%s %s%s",
-                TypeToStringUtils.toStringType(resolveReturnType(), contextGenerics()),
-                method.getName(),
-                toStringMethodParameters());
+        return TypeToStringUtils.toStringMethod(method, contextGenerics());
     }
 
     @Override
@@ -285,23 +280,6 @@ public class MethodGenericsContext extends TypeGenericsContext {
                     "Can't request parameter %s of method '%s' (%s) because it have only %s parameters",
                     pos, method.getName(), currentClass().getSimpleName(), genericParams.length));
         }
-    }
-
-    private String toStringMethodParameters() {
-        final int count = method.getParameterTypes().length;
-        final StringBuilder res = new StringBuilder(count * 10 + 2)
-                .append("(");
-        if (count > 0) {
-            boolean first = true;
-            for (Type type : method.getGenericParameterTypes()) {
-                if (!first) {
-                    res.append(SPLIT);
-                }
-                res.append(TypeToStringUtils.toStringType(type, allGenerics));
-                first = false;
-            }
-        }
-        return res.append(")").toString();
     }
 
     /**

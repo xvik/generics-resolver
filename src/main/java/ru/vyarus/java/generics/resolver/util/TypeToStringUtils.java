@@ -20,6 +20,8 @@ import java.util.Map;
  */
 public final class TypeToStringUtils {
 
+    private static final String SPLIT = ", ";
+
     private TypeToStringUtils() {
     }
 
@@ -77,6 +79,30 @@ public final class TypeToStringUtils {
         // provided generics may contain outer type generics, but we will render only required generics
         final Map<String, Type> actual = GenericsUtils.extractTypeGenerics(type, generics);
         return toStringType(new ParameterizedTypeImpl(type, actual.values().toArray(new Type[0])), actual);
+    }
+
+    /**
+     * <pre>{@code class B extends A<Long> {}
+     * class A<T> {
+     *      List<T> get(T one);
+     * }
+     *
+     * Method method = A.class.getMethod("get", Object.class);
+     * Map<String, Type> generics = (context of B).method().visibleGenericsMap();
+     * TypeToStringUtils.toStringMethod(method, generics) == "List<Long> get(Long)"
+     * }</pre>.
+     *
+     * @param method method
+     * @param generics required generics (type generics and possible method generics)
+     * @return method string with replaced generic variables
+     * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
+     * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
+     */
+    public static String toStringMethod(final Method method, final Map<String, Type> generics) {
+        return String.format("%s %s%s",
+                toStringType(method.getGenericReturnType(), generics),
+                method.getName(),
+                toStringMethodParameters(method, generics));
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -139,11 +165,28 @@ public final class TypeToStringUtils {
 
             while (iterator.hasNext()) {
                 final Object obj = iterator.next();
-                buf.append(", ").append(obj);
+                buf.append(SPLIT).append(obj);
             }
             res = buf.toString();
         }
         return res;
+    }
+
+    private static String toStringMethodParameters(final Method method, final Map<String, Type> generics) {
+        final int count = method.getParameterTypes().length;
+        final StringBuilder res = new StringBuilder(count * 10 + 2)
+                .append("(");
+        if (count > 0) {
+            boolean first = true;
+            for (Type type : method.getGenericParameterTypes()) {
+                if (!first) {
+                    res.append(SPLIT);
+                }
+                res.append(toStringType(type, generics));
+                first = false;
+            }
+        }
+        return res.append(")").toString();
     }
 
     private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {
@@ -151,7 +194,7 @@ public final class TypeToStringUtils {
         final Type result = declarations.get(name);
         // last condition to prevent infinite cycle (should be impossible case)
         if (result == null || result instanceof TypeVariable) {
-            throw new UnknownGenericException(name);
+            throw new UnknownGenericException(name, generic.getGenericDeclaration());
         }
         return result;
     }
