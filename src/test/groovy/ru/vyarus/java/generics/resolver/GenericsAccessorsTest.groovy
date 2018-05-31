@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.support.ConstructorGenerics
 import spock.lang.Specification
 
 /**
@@ -43,11 +44,28 @@ class GenericsAccessorsTest extends Specification {
         context = context.method(Outer.Inner.getDeclaredMethod('doSmth2'))
         then:
         context.genericsMap() == ["A": Double, "T": Comparable]
-        context.ownerGenericsMap() == ["C": Long]
+        context.ownerGenericsMap() == ["B":Integer, "C": Long]
         context.methodGenericsMap() == ["B": Object]
         context.visibleGenericsMap() == ["A": Double, "T": Comparable, "B": Object, "C": Long]
         context.rootContext() != null
         context.ownerClass() == Outer
+    }
+
+    def "Check constructor generics"() {
+
+        when: "constructor context"
+        def context = GenericsResolver.resolve(ConstructorGenerics).constructor(ConstructorGenerics.getConstructor(Object))
+        then:
+        context.genericsMap() == ["P": Object]
+        context.constructorGenericsMap() == ["T": Object]
+        context.visibleGenericsMap() == ["P": Object, "T": Object]
+
+        when: "ctor context with name clash"
+        context = context.constructor(ConstructorGenerics.getConstructor(Comparable))
+        then:
+        context.genericsMap() == ["P": Object] // generic is not visible, but it belongs to type and remain for better consistency
+        context.constructorGenericsMap() == ["P": Comparable]
+        context.visibleGenericsMap() == ["P": Comparable]
     }
 
     def "Check to string cases"() {
@@ -55,20 +73,20 @@ class GenericsAccessorsTest extends Specification {
         when: "outer class"
         def context = GenericsResolver.resolve(Root).type(Outer)
         then:
-        toString(context) == """class Root 
-  extends Outer<String, Integer, Long>     <-- current
+        toString(context) == """class Root
+  extends Outer<String, Integer, Long>    <-- current
 """
 
         when: "field type context (inner class)"
         context = context.fieldType(Root.getDeclaredField('field'))
         then:
-        toString(context) == """class Inner<Double, Comparable> (inner to Outer<Object, Integer, Long>)  resolved in context of Root    <-- current
+        toString(context) == """class Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of Root    <-- current
 """
 
         when: "method context"
         context = context.method(Outer.Inner.getDeclaredMethod('doSmth'))
         then:
-        toString(context) == """class Inner<Double, Comparable> (inner to Outer<Object, Integer, Long>)  resolved in context of Root
+        toString(context) == """class Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of Root
   Object doSmth()    <-- current
 """
 
@@ -76,8 +94,22 @@ class GenericsAccessorsTest extends Specification {
         context = context.method(Outer.Inner.getDeclaredMethod('doSmth2'))
         then:
         // generic B of outer is not visible, but here it shown as actual value (universal logic)
-        toString(context) == """class Inner<Double, Comparable> (inner to Outer<Object, Integer, Long>)  resolved in context of Root
+        toString(context) == """class Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of Root
   Object doSmth2()    <-- current
+"""
+
+        when: "constructor"
+        context = GenericsResolver.resolve(ConstructorGenerics).constructor(ConstructorGenerics.getConstructor(Object))
+        then:
+        toString(context) == """class ConstructorGenerics<Object>
+  ConstructorGenerics(Object)    <-- current
+"""
+
+        when: "constructor 2"
+        context = context.constructor(ConstructorGenerics.getConstructor(Comparable))
+        then:
+        toString(context) == """class ConstructorGenerics<Object>
+  ConstructorGenerics(Comparable)    <-- current
 """
     }
 

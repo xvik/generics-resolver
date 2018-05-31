@@ -1,12 +1,11 @@
 package ru.vyarus.java.generics.resolver.context;
 
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.error.WrongGenericsContextException;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,9 +14,11 @@ import java.util.Map;
 /**
  * Context object wraps root type hierarchy generics information descriptor and provides utility methods for
  * actual types resolution. This base class contains all type resolution logic (commonly used), whereas type specific
- * methods are added in {@link TypeGenericsContext} and method context {@link MethodGenericsContext}.
- * Note that all possible contexts are {@link TypeGenericsContext}, but {@link GenericsContext} will fit for the
- * majority of cases (while direct outer class or inlying context-aware logic is not required).
+ * methods are added in {@link TypeGenericsContext}, method context {@link MethodGenericsContext} or
+ * constructor context {@link ConstructorGenericsContext}.
+ * <p>
+ * Note that all possible contexts extends from {@link TypeGenericsContext}, but {@link GenericsContext} will fit
+ * for the majority of cases (while direct outer class or inlying context-aware logic is not required).
  * <p>
  * Usage: navigate to required type {@code context.type(MyClass.class)} and use utility methods to
  * get type's own generics or as helper for methods/fields introspection. To navigate to method context use
@@ -43,6 +44,9 @@ import java.util.Map;
  * then known outer class generics will be used from the root hierarchy. Also, not that outer class generics could be
  * declared directly (e.g. field declaration: {@code Outer<String>.Inner field}) and, in this case, direct
  * declaration is used in priority.
+ * <p>
+ * It is impossible to to perform incorrect generics resolution through context api: it will either change context
+ * automatically or fail with error (with detailed incompatibility explanation).
  *
  * @author Vyacheslav Rusakov
  * @since 17.11.2014
@@ -73,6 +77,9 @@ public abstract class GenericsContext {
     /**
      * {@code class A extends B<Object, C<Long>>}.
      * <pre>{@code type(B.class).genericTypes() == [Class<Object>, ParametrizedType] }</pre>
+     * <p>
+     * Note: always returns all declared class generics, even inside method or constructor context, where
+     * class generics could be hidden by context generics with the same name.
      *
      * @return current class generics types
      */
@@ -84,6 +91,9 @@ public abstract class GenericsContext {
      * {@code class A extends B<Object, C<Long>>}.
      * <pre>{@code type(B.class).generics() == [Class<Object>, Class<C>] }</pre>
      * Note that this way you loose second level generics info ({@code Long} from {@code C} class)
+     * <p>
+     * Note: always returns all declared class generics, even inside method or constructor context, where
+     * class generics could be hidden by context generics with the same name.
      *
      * @return current class generic classes
      */
@@ -101,6 +111,9 @@ public abstract class GenericsContext {
      * Note, that returned generics are completely resolved, e.g.
      * {@code A extends B<Object> }, where {@code B<T> extends C<T, List<T>>},
      * and when we call {@code type(C.class).genericsAsString() == ["Object", "List<Object>]}
+     * <p>
+     * Note: always returns all declared class generics, even inside method or constructor context, where
+     * class generics could be hidden by context generics with the same name.
      *
      * @return current generics string representation
      */
@@ -130,11 +143,12 @@ public abstract class GenericsContext {
      * <pre>{@code class A extends B<Object, C<Long>>
      * type(B.class).genericType("K") == ParametrizedType }</pre>
      * <p>
-     * Note: will work for any visible generic (from current context) including outer class and method generics
+     * Note: will work for any visible generic (from current context) including outer class, method
+     * and constructor generics.
      *
      * @param genericName generic position (from 0)
      * @return generic type
-     * @throws java.lang.IllegalArgumentException for wrong generic name
+     * @throws UnknownGenericException for wrong generic name
      * @see #genericTypes() for details
      */
     public Type genericType(final String genericName) {
@@ -159,11 +173,12 @@ public abstract class GenericsContext {
      * <pre>{@code class A extends B<Object, C<Long>>
      * type(B.class).generic("K") == C.class }</pre>
      * <p>
-     * Note: will work for any visible generic (from current context) including outer class and method generics
+     * Note: will work for any visible generic (from current context) including outer class, method and
+     * constructor generics.
      *
      * @param genericName generic name
      * @return resolved generic class
-     * @throws java.lang.IllegalArgumentException for wrong generic name
+     * @throws UnknownGenericException for wrong generic name
      * @see #resolveClass(java.lang.reflect.Type)
      */
     public Class<?> generic(final String genericName) {
@@ -202,6 +217,9 @@ public abstract class GenericsContext {
     /**
      * {@code class A extends B<Object, C<Long>>} and {@code class B<T, K>}.
      * <pre>{@code type(B.class).genericsMap() == ["T": Object.class, "K": ParametrizedType]}</pre>
+     * <p>
+     * Note: always returns all declared class generics, even inside method or constructor context, where
+     * class generics could be hidden by context generics with the same name.
      *
      * @return map of current type (runtime mapping of generic name to actual type)
      * @see #visibleGenericsMap() for all visible generics in current context
@@ -242,38 +260,28 @@ public abstract class GenericsContext {
      * }}</pre>
      * Resolving class of return type:
      * {@code type(B.class).resolveClass(B.class.getMethod("doSmth").getGenericReturnType()) == Long.class}
+     * <p>
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
      *
      * @param type type to resolve class
      * @return resolved type class
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
      */
     public Class<?> resolveClass(final Type type) {
-        try {
-            return GenericsUtils.resolveClass(type, contextGenerics());
-        } catch (UnknownGenericException e) {
-            throw e.rethrowWithType(currentType);
-        }
+        return GenericsUtils.resolveClass(type, chooseContext(type).contextGenerics());
     }
 
     /**
-     * Shortcut for {@link #resolveClass(Type)} for fields. Applies resolution in field declaration type to correctly
-     * process generics. Use this method to shield from simple errors when field obtained from superclass and
-     * resolved with it's generics context (which can't contain required generics or will contain generics with the
-     * same name which will lead to wrong results). Also, method prevents usage of incompatible fields.
+     * Shortcut for {@link #resolveClass(Type)} for fields (same as {@code resolveClass(field.getGenericType()}).
+     * Use for more informative error message on incorrect usage.
      * <p>
-     * For example: <pre>{@code class Root<T> extends Base<Integer> {}
-     * class Base<T> {
-     *   T field
-     * }
-     * GenericsContext context = GenericsResolver.resolve(Root.class);
-     * }</pre>
-     * Direct field obtaining and type resolution will lead to wrong result:
-     * {@code context.resolveClass(Root.getDeclaredField("field").getGenericType()) == Object.class}
-     * when working through field will switch context to use proper generic:
-     * {@code context.resolveFieldClass(Root.getDeclaredField("field")) == Integer.class}
+     * Automatically choose correct context or fail if field does not belong to current hierarchy.
      *
      * @param field field to resolve type
      * @return resolved type class
-     * @throws IllegalArgumentException if field is not belongs to any class in hierarchy
+     * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      */
     public Class<?> resolveFieldClass(final Field field) {
         return chooseFieldContext(field).resolveClass(field.getGenericType());
@@ -287,27 +295,29 @@ public abstract class GenericsContext {
      * }}</pre>
      * Resolving parameters in context of root class:
      * {@code type(B.class).resolveGenericsOf(B.class.getMethod("doSmth").getGenericReturnType()) == [Long.class]}
+     * <p>
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
      *
      * @param type type to resolve generics
      * @return resolved generic classes or empty list if type does not use generics
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
      */
     public List<Class<?>> resolveGenericsOf(final Type type) {
-        try {
-            return GenericsUtils.resolveGenericsOf(type, contextGenerics());
-        } catch (UnknownGenericException e) {
-            throw e.rethrowWithType(currentType);
-        }
+        return GenericsUtils.resolveGenericsOf(type, chooseContext(type).contextGenerics());
     }
 
     /**
-     * Shortcut for {@link #resolveGenericsOf(Type)} for fields. Applies resolution in field declaration type to
-     * correctly process generics. Use this method to shield from simple errors when field obtained from superclass and
-     * resolved with it's generics context (which can't contain required generics or will contain generics with the
-     * same name which will lead to wrong results). Also, method prevents usage of incompatible fields.
+     * Shortcut for {@link #resolveGenericsOf(Type)} for fields (same as
+     * {@code resolveGenericsOf(field.getGenericType())}.
+     * Use for more informative error message on incorrect usage.
+     * <p>
+     * Automatically choose correct context or fail if field does not belong to current hierarchy.
      *
      * @param field field to resolve generics for
      * @return resolved field generics or empty list if field does not contain generics
-     * @throws IllegalArgumentException if field is not belongs to any class in hierarchy
+     * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      * @see #resolveFieldClass(Field) for complete example of possible issues
      */
     public List<Class<?>> resolveFieldGenerics(final Field field) {
@@ -315,30 +325,31 @@ public abstract class GenericsContext {
     }
 
     /**
-     * Shortcut for {@link #resolveGenericsOf(java.lang.reflect.Type)} useful for single generic types or
+     * Shortcut for {@link #resolveGenericsOf(Type)} useful for single generic types or
      * when just first generic required.
+     * <p>
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
      *
      * @param type type to resolve generic
      * @return first resolved generic or null if type does not use generics
      */
     public Class<?> resolveGenericOf(final Type type) {
-        try {
-            final List<Class<?>> res = resolveGenericsOf(type);
-            return res.isEmpty() ? null : res.get(0);
-        } catch (UnknownGenericException e) {
-            throw e.rethrowWithType(currentType);
-        }
+        final List<Class<?>> res = resolveGenericsOf(type);
+        return res.isEmpty() ? null : res.get(0);
     }
 
     /**
-     * Shortcut for {@link #resolveGenericOf(Type)} for fields. Applies resolution in field declaration type to
-     * correctly process generics. Use this method to shield from simple errors when field obtained from superclass and
-     * resolved with it's generics context (which can't contain required generics or will contain generics with the
-     * same name which will lead to wrong results). Also, method prevents usage of incompatible fields.
+     * Shortcut for {@link #resolveGenericOf(Type)} for fields
+     * (same as {@code resolveGenericOf(field.getGenericType())}).
+     * Use for more informative error message on incorrect usage.
+     * <p>
+     * Automatically choose correct context or fail if field does not belong to current hierarchy.
      *
      * @param field field to resolve generic for
      * @return resolved field generic or null if field does not declare generics
-     * @throws IllegalArgumentException if field is not belongs to any class in hierarchy
+     * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      * @see #resolveFieldClass(Field) for complete example of possible issues
      */
     public Class<?> resolveFieldGeneric(final Field field) {
@@ -348,10 +359,12 @@ public abstract class GenericsContext {
     /**
      * {@code List<T> field} could be resolved as {@code resolveFiledType(field) == List<String> as ParameterizedType}
      * (if T == String).
+     * <p>
+     * Automatically choose correct context or fail if field does not belong to current hierarchy.
      *
      * @param field field to resolve generics for
      * @return field type with resolved generic variables
-     * @throws IllegalArgumentException if field is not belongs to any class in hierarchy
+     * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      */
     public Type resolveFieldType(final Field field) {
         return chooseFieldContext(field).resolveType(field.getGenericType());
@@ -366,19 +379,16 @@ public abstract class GenericsContext {
      * <p>
      * Useful when complete type information is required elsewhere (for example, to create typed DI binding).
      * <p>
-     * WARNING: don't forget to set correct context type before resolution because otherwise wrong generics set
-     * might be used! For fields and methods always rely on declaring type, like this:
-     * {@code .type(field.getDeclaringType()).resolveType(field.getGenericType())}
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
      *
      * @param type type to resolve named generics in
      * @return type without named generics (replaced by known actual types)
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
      */
     public Type resolveType(final Type type) {
-        try {
-            return GenericsUtils.resolveTypeVariables(type, contextGenerics());
-        } catch (UnknownGenericException e) {
-            throw e.rethrowWithType(currentType);
-        }
+        return GenericsUtils.resolveTypeVariables(type, chooseContext(type).contextGenerics());
     }
 
     /**
@@ -389,16 +399,17 @@ public abstract class GenericsContext {
      * }}</pre>
      * Resolving parameters in type of root class:
      * {@code type(B.class).toStringType(B.class.getMethod("doSmth").getGenericReturnType()) == "List<Long>"}
+     * <p>
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
      *
      * @param type to to get string of
      * @return string representation for resolved type
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
      */
     public String toStringType(final Type type) {
-        try {
-            return TypeToStringUtils.toStringType(type, contextGenerics());
-        } catch (UnknownGenericException e) {
-            throw e.rethrowWithType(currentType);
-        }
+        return TypeToStringUtils.toStringType(type, chooseContext(type).contextGenerics());
     }
 
     /**
@@ -406,15 +417,16 @@ public abstract class GenericsContext {
      *
      * @param type class to navigate to
      * @return new context instance specific to requested class or current context if type is the same
-     * @throws IllegalArgumentException if requested class is not present in root class hierarchy
+     * @throws IllegalArgumentException if requested class not present in root class hierarchy
      */
     public abstract TypeGenericsContext type(Class<?> type);
 
     /**
-     * Navigates current context to specific method (type context is switched(!) to method declaring class).
+     * Navigates current context to specific method (type context is switched to method declaring class).
      * It is required because method could contain it's own generics.
      * For example, {@code <T> void myMethod(T arg);}.
-     * <p>Use context to work with method parameters, return type or resolving types inside method.</p>
+     * <p>
+     * Use context to work with method parameters, return type or resolving types inside method.
      *
      * @param method method in current class hierarchy to navigate to (may be method from subclass, relative to
      *               currently selected, in this case context type will be automatically switched)
@@ -423,6 +435,21 @@ public abstract class GenericsContext {
      *                                  hierarchy
      */
     public abstract MethodGenericsContext method(Method method);
+
+    /**
+     * Navigates current context to specific constructor (type context is switched to constructor declaring class).
+     * It is required because constructor could contain it's own generics.
+     * For example, {@code <T> MyType(T arg)}.
+     * <p>
+     * Use context to work with constructor arguments.
+     *
+     * @param constructor constructor in current class hierarchy to navigate to (may be constructor from subclass,
+     *                    relative to currently selected, in this case context type is automatically switched)
+     * @return new context instance specific to requested constructor
+     * @throws IllegalArgumentException if requested constructor's declaration class is not present in current class
+     *                                  hierarchy
+     */
+    public abstract ConstructorGenericsContext constructor(Constructor constructor);
 
     /**
      * Create generics context for field type (with correctly resolved root generics)."Drill down".
@@ -439,6 +466,7 @@ public abstract class GenericsContext {
      * @param field field in current class hierarchy to resolve type from (may be field from superclass, relative to
      *              currently selected, in this case context type will be automatically switched)
      * @return generics context for field type (inlying context)
+     * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      * @see #inlyingType(Type)
      */
     public TypeGenericsContext fieldType(final Field field) {
@@ -457,6 +485,7 @@ public abstract class GenericsContext {
      *               currently selected, in this case context type will be automatically switched)
      * @param asType required actual root type (extending field type)
      * @return generics context for required target type with correct field type's generics (inlying context)
+     * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      * @see #inlyingTypeAs(Type, Class)
      */
     public TypeGenericsContext fieldTypeAs(final Field field, final Class<?> asType) {
@@ -471,15 +500,16 @@ public abstract class GenericsContext {
      *    private C<T> field;
      * }
      * class C extends A<String> {}}</pre>
-     * To continue analysis of field type: {@code type(C.class).fieldType(A.class.getField("field")
-     * .getGenericType()) == generics context of B<String>}
+     * To continue analysis of field type: {@code type(A.class).inlyingType(A.class.getField("field")
+     * .getGenericType()) == generics context of C<String>}
      * <p>
-     * It is very important to resolve type in context of class declaring class, because otherwise it would not
-     * be possible to correctly resolve generics (if declared). For example,
-     * {@code type(C.class).inlyingType(A.class.getField("field").getGenericType()) == generics context of B<Object>}
-     * because there is no generic T in class C. To avoid mistakes use shortcut methods, which automatically switch
-     * context type: {@link #fieldType(Field)}, {@link MethodGenericsContext#returnType()} and
-     * {@link MethodGenericsContext#parameterType(int)}.
+     * Use shortcut methods to simplify navigation: {@link #fieldType(Field)},
+     * {@link MethodGenericsContext#returnType()}, {@link MethodGenericsContext#parameterType(int)} and
+     * {@link ConstructorGenericsContext#parameterType(int)}.
+     * <p>
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
      * <p>
      * If provided type did not contains generic then cached type resolution will be used (the same as
      * {@code GenericsResolver.resolve(Target.class)} and if generics present then type will be built on each call.
@@ -490,30 +520,32 @@ public abstract class GenericsContext {
      *
      * @param type type to resolve hierarchy from (it must be generified type, resolved in current class)
      * @return generics context of type (inlying context)
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
      */
     public abstract TypeGenericsContext inlyingType(Type type);
 
     /**
-     * Build generics context for type extending some geenric type in context of current class. This is required
+     * Build generics context for type extending some generic type in context of current class. This is required
      * when only base/abstract type is declared in class, but we need to build context for actual value class
-     * use. In this case, we can build context from target implementation class (where generics is unknown) but
+     * use. In this case, we can build context from target implementation class (where generics are unknown) but
      * include known generics for middle type (represented by provided).
-     * For object instance analysis case (introspecting actual object).
+     * Useful for object instance analysis case (introspecting actual object).
      * <p>
      * Example case: field declaration is {@code SomeInterface<T> field} and we need to build inlying context
-     * for actual field value class {@code SimeImpl<K> implements SomeInterface<K>}. Here we can't know
-     * the type of K and so resolved generic will be Object, but we know the type of T on interface and
-     * so this context subtree will be correctly resolved. This way we can use all provided generics info even in
-     * such non obvious case.
+     * for actual field value class {@code SomeImpl<K> implements SomeInterface<K>}. Type of root generic K will be
+     * tracked from known generic T (on interface), but even if it's not possible to track root generics, hierarchy
+     * starting from known type (interface in this case) will use correct generic value. This way, all known
+     * generics information is used.
      * <p>
-     * Other than different target type, method is the same as {@link #inlyingType(Type)} with tha same restrictions
-     * applied. By analogy, provides shortcuts for field {@link #fieldTypeAs(Field, Class)},
-     * method return {@link MethodGenericsContext#returnTypeAs(Class)} and method parameter
-     * {@link MethodGenericsContext#parameterTypeAs(int, Class)}.
+     * Other than different target type, method is the same as {@link #inlyingType(Type)}. By analogy, shortcuts
+     * are provided for simpler navigation: {@link #fieldTypeAs(Field, Class)},
+     * {@link MethodGenericsContext#returnTypeAs(Class)}, {@link MethodGenericsContext#parameterTypeAs(int, Class)}
+     * and {@link ConstructorGenericsContext#parameterTypeAs(int, Class)}.
      *
      * @param type   type to resolve actual generics from (it must be generified type, resolved in current class)
      * @param asType required target type to build generics context for (must include declared type as base class)
      * @return generics context for required target type with correct type's generics (inlying context)
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
      * @see #inlyingType(Type)
      */
     public abstract TypeGenericsContext inlyingTypeAs(Type type, Class<?> asType);
@@ -540,6 +572,24 @@ public abstract class GenericsContext {
     }
 
     /**
+     * For example, {@code CLASS} scope could resolve only class level generics, whereas
+     * {@code METHOD} could see method context generics. May be used for current context differentiation
+     * (instead of instanceof).
+     *
+     * @return maximum declaration scope for current context
+     * @see #getGenericsSource()
+     */
+    public abstract GenericDeclarationScope getGenericsScope();
+
+    /**
+     * Declaration source could be: class, method or constructor.
+     *
+     * @return declaration source for current context
+     * @see #getGenericsScope()
+     */
+    public abstract GenericDeclaration getGenericsSource();
+
+    /**
      * @return resolved generics mapping for current context
      */
     protected abstract Map<String, Type> contextGenerics();
@@ -550,8 +600,24 @@ public abstract class GenericsContext {
      * @param target    target type
      * @param msgPrefix error message prefix, identifying place
      * @return correct context for type (may be current context instance)
+     * @throws IllegalArgumentException when context can't be switched
      */
     protected abstract GenericsContext chooseContext(Class target, String msgPrefix);
+
+    /**
+     * Look for generic variables presence inside type and, if found, try to switch to correct context.
+     * Switching is based on declaration source information, contained inside generic.
+     * <p>
+     * Note that {@link WrongGenericsContextException} used instead of {@link IllegalArgumentException}, as in
+     * other cases, because it is more specific error: type may come from anywhere and it may be not so easy to
+     * track it's correct usage.
+     *
+     * @param type type, possibly containing generic variables
+     * @return correct context for generics resolution inside type or the same context if type does not contains
+     * generics
+     * @throws WrongGenericsContextException when it is impossible to resolve type in correct context
+     */
+    protected abstract GenericsContext chooseContext(Type type);
 
     private GenericsContext chooseFieldContext(final Field field) {
         return chooseContext(field.getDeclaringClass(), "Field '" + field.getName() + "'");

@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.context.GenericDeclarationScope;
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
@@ -31,36 +32,6 @@ public final class GenericsUtils {
     public static Class<?> getReturnClass(final Method method, final Map<String, Type> generics) {
         final Type returnType = method.getGenericReturnType();
         return resolveClass(returnType, generics);
-    }
-
-    /**
-     * Resolve generics in method parameters.
-     *
-     * @param method   method to resolve parameters
-     * @param generics type generics
-     * @return resolved method parameter types
-     */
-    public static List<Class<?>> getMethodParameters(final Method method, final Map<String, Type> generics) {
-        final List<Class<?>> params = new ArrayList<Class<?>>();
-        for (Type type : method.getGenericParameterTypes()) {
-            params.add(resolveClass(type, generics));
-        }
-        return params;
-    }
-
-    /**
-     * Resolve named variables in method parameters types.
-     *
-     * @param method   method to resolve parameters
-     * @param generics type generics
-     * @return resolved method parameter types without named generics
-     */
-    public static List<Type> getMethodParametersTypes(final Method method, final Map<String, Type> generics) {
-        final List<Type> params = new ArrayList<Type>();
-        for (Type type : method.getGenericParameterTypes()) {
-            params.add(resolveTypeVariables(type, generics));
-        }
-        return params;
     }
 
     /**
@@ -130,6 +101,21 @@ public final class GenericsUtils {
             }
         }
         return res;
+    }
+
+    /**
+     * Resolve classes of provided types.
+     *
+     * @param types    types to resolve
+     * @param generics type generics
+     * @return list of resolved types classes
+     */
+    public static List<Class<?>> resolveClasses(final Type[] types, final Map<String, Type> generics) {
+        final List<Class<?>> params = new ArrayList<Class<?>>();
+        for (Type type : types) {
+            params.add(resolveClass(type, generics));
+        }
+        return params;
     }
 
     /**
@@ -306,6 +292,115 @@ public final class GenericsUtils {
             }
         }
         return res;
+    }
+
+    /**
+     * @param variable generic variable
+     * @return declaration class or null if not supported declaration source (should be impossible)
+     */
+    public static Class<?> getDeclarationClass(final TypeVariable variable) {
+        return getDeclarationClass(variable.getGenericDeclaration());
+    }
+
+    /**
+     * @param source generic declaration source (could be null)
+     * @return declaration class or null if not supported declaration source (should be impossible)
+     */
+    public static Class<?> getDeclarationClass(final GenericDeclaration source) {
+        Class<?> res = null;
+        if (source != null) {
+            if (source instanceof Class) {
+                res = (Class<?>) source;
+            } else if (source instanceof Method) {
+                res = ((Method) source).getDeclaringClass();
+            } else if (source instanceof Constructor) {
+                res = ((Constructor) source).getDeclaringClass();
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Generics visibility (from inside context class):
+     * <ul>
+     * <li>Generics declared on class</li>
+     * <li>Generics declared on outer class (if current is inner)</li>
+     * <li>Constructor generics (if inside constructor)</li>
+     * <li>Method generics (if inside method)</li>
+     * </ul>.
+     *
+     * @param type    type to check
+     * @param context current context class
+     * @param contextScope current context scope (class, method, constructor)
+     * @param contextSource context source object (required for method and constructor scopes)
+     * @return first variable, containing generic not visible from current class or null if no violations
+     */
+    public static TypeVariable findIncompatibleVariable(final Type type,
+                                                        final Class<?> context,
+                                                        final GenericDeclarationScope contextScope,
+                                                        final GenericDeclaration contextSource) {
+        TypeVariable res = null;
+        for (TypeVariable var : findVariables(type)) {
+            final Class<?> target = getDeclarationClass(var);
+            // declaration class must be context or it's outer class (even if outer = null equals will be correct)
+            if (!target.equals(context) && !target.equals(TypeUtils.getOuter(context))) {
+                res = var;
+                break;
+            }
+            // e.g. correct class, but method generic when current context represents class
+            if (!contextScope.isCompatible(GenericDeclarationScope.from(var.getGenericDeclaration()))
+                    // e.g. method scope could match but actual methods differ
+                    || contextSource != var.getGenericDeclaration()) {
+                res = var;
+                break;
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Searches for generic variable declarations in type. May be used for scope checks.
+     * For example, in {@code List<T>} it will find "T", in {@code Some<Long, T, List<K>} "T" and "K".
+     *
+     * @param type type to analyze.
+     * @return list of generic variables inside type or empty list
+     */
+    public static List<TypeVariable> findVariables(final Type type) {
+        if (type instanceof Class) {
+            return Collections.emptyList();
+        }
+        final List<TypeVariable> res = new ArrayList<TypeVariable>();
+        findVariables(type, res);
+        return res;
+    }
+
+    private static void findVariables(final Type type, final List<TypeVariable> found) {
+        // note ExplicitTypeVariable is not checked as it's considered as known type
+        if (type instanceof TypeVariable) {
+            found.add((TypeVariable) type);
+        } else if (type instanceof ParameterizedType) {
+            final ParameterizedType parametrizedType = (ParameterizedType) type;
+            if (parametrizedType.getOwnerType() != null) {
+                findVariables(parametrizedType.getOwnerType(), found);
+            }
+            for (Type par : parametrizedType.getActualTypeArguments()) {
+                findVariables(par, found);
+            }
+        } else if (type instanceof GenericArrayType) {
+            findVariables(((GenericArrayType) type).getGenericComponentType(), found);
+        } else if (type instanceof WildcardType) {
+            final WildcardType wildcard = (WildcardType) type;
+            if (wildcard.getLowerBounds().length > 0) {
+                // ? super
+                findVariables(wildcard.getLowerBounds()[0], found);
+            } else {
+                // ? extends
+                // in java only one bound could be defined, but here could actually be repackaged TypeVariable
+                for (Type par : wildcard.getUpperBounds()) {
+                    findVariables(par, found);
+                }
+            }
+        }
     }
 
     private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {

@@ -1,3 +1,4 @@
+* Add constructor generics support (ConstructorGenericsContext)
 * Inlying contexts: generics context building for type "inside" known hierarchy: 
     "Drill down" case, when new generics context must be build for some type, using generics of current context. 
     For example, we have some generics context and analyzing class fields. Some field is MyType<T\> - generified with
@@ -34,15 +35,21 @@
     - Now all exceptions extend base type GenericsException (runtime) to simplify generic analysis errors interception (catch(GenericException ex))
     - General tracking exception: GenericsTrackingException - thrown on generics tracking problems
     - General resolution exception: GenericsResolutionException - thrown on type hierarchy generics analysis problems
+    - WrongGenericsContextException thrown when supplied type contains generics incompatible with current class 
+        (not reachable from current context) 
     - More informative error messages
     - (breaking) UnknownGenericException moved to different package
     - (breaking) NoGenericException removed. Was thrown for resolveGenericsOf(Type) methods when class does not declare generics.
         Now empty list or null will be returned.       
 * Context api improvements:
+    * Check all supplied types for compatibility with current class: throw exception when type contains generics
+        belonging to other class (avoid usage errors)
+    * Constructor generics support: context.constructor(ctor)
     * Kinds of visible generics:
         - genericsMap() - type own generics (as before)
         - ownerGenericsMap() - visible generics of outer class (if current is inner)
         - methodGenericsMap() - method generics
+        - constructorGenericsMap() - constructor generics
         - visibleGenericsMap() - all visible generics (type +owner +method)
     * Type resolution methods (return type with all generic variables replaced with known values): 
         - resolveType(Type) = Type
@@ -58,7 +65,8 @@
         - GenericsContext to string methods for context type: 
             - toStringCurrentClassDeclaration() - current with resolved generics ("MyClass<Integer>")
             - toStringCurrentClass() - current class with named generics ("MyClass<T>")
-        - toStringMethod() in method context - method string with resolved generics ("void do(MyType)")                
+            - toStringMethod() - method string with resolved generics ("void do(MyType)")
+            - toStringConstructor() - constructor string with resolved generics ("Some(Long)")                
 * Improved debugging support:
     - Core context could be printed as string (class hierarchy with resolved generics): context.getGenericsInfo().toString()
     - For customized context string rendering: context.getGenericsInfo().toStringHierarchy(TypeWriter) 
@@ -75,10 +83,15 @@
         affects GenericsUtils.resolveTypeVariables()                                                
 
 Compatibility notes: 
-* API did not changed, only new methods were added. 
+* API did not changed, only new methods were added.
+    - removed GenericsUtils.getMethodParameters(method, generics): use instead resolveClasses(method.getGenericParameterTypes(), generics) 
 * NoGenericException was removed: detect generic absence by returned result instead
-* UnknownGenericException was moved to different package
-* Generics, previously resolved as ? extends Something, now become simply Something (as upper wildcard not useful at runtime)  
+* UnknownGenericException: 
+    - was moved to different package
+    - now it is impossible to resolve generics in incorrect context, so UnknownGenericException is never thrown (when context api used), 
+        instead WrongGenericsContextException could be thrown to indicate incompatible hierarchy
+* It is not as important as before to always set correct contextContext: context now automatically switched to resolve generics in correct scope        
+* Generics, previously resolved as <? extends Something\>, now become simply <Something\> (as upper wildcard not useful at runtime)  
 
 ### 2.0.1 (2015-12-16)
 * Fix dependent root generics resolution

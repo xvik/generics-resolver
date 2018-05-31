@@ -7,9 +7,6 @@ import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,8 +16,6 @@ import java.util.Map;
  * @since 17.11.2014
  */
 public final class TypeToStringUtils {
-
-    private static final String SPLIT = ", ";
 
     private TypeToStringUtils() {
     }
@@ -92,17 +87,40 @@ public final class TypeToStringUtils {
      * TypeToStringUtils.toStringMethod(method, generics) == "List<Long> get(Long)"
      * }</pre>.
      *
-     * @param method method
+     * @param method   method
      * @param generics required generics (type generics and possible method generics)
      * @return method string with replaced generic variables
      * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
      * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
      */
     public static String toStringMethod(final Method method, final Map<String, Type> generics) {
-        return String.format("%s %s%s",
+        return String.format("%s %s(%s)",
                 toStringType(method.getGenericReturnType(), generics),
                 method.getName(),
-                toStringMethodParameters(method, generics));
+                join(method.getGenericParameterTypes(), generics));
+    }
+
+    /**
+     * <pre>{@code class B extends A<Long> {}
+     * class A<T> {
+     *      A(T arg);
+     * }
+     *
+     * Constructor method = A.class.getConstructor(Object.class);
+     * Map<String, Type> generics = (context of B).method().visibleGenericsMap();
+     * TypeToStringUtils.toStringConstructor(constructor, generics) == "A(Long)"
+     * }</pre>.
+     *
+     * @param constructor constructor
+     * @param generics    required generics (type generics and possible constructor generics)
+     * @return constructor string with replaced generic variables
+     * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
+     * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
+     */
+    public static String toStringConstructor(final Constructor constructor, final Map<String, Type> generics) {
+        return String.format("%s(%s)",
+                constructor.getDeclaringClass().getSimpleName(),
+                join(constructor.getGenericParameterTypes(), generics));
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -117,12 +135,9 @@ public final class TypeToStringUtils {
             res.append(toStringType(outer, new IgnoreGenericsMap(generics)));
         }
         res.append(toStringType(parametrized.getRawType(), generics));
-        final List<String> args = new ArrayList<String>();
-        for (Type t : parametrized.getActualTypeArguments()) {
-            args.add(toStringType(t, generics));
-        }
-        if (!args.isEmpty()) {
-            res.append('<').append(join(args)).append('>');
+        final Type[] args = parametrized.getActualTypeArguments();
+        if (args.length > 0) {
+            res.append('<').append(join(args, generics)).append('>');
         }
         return res.toString();
     }
@@ -149,44 +164,27 @@ public final class TypeToStringUtils {
         return res;
     }
 
-    private static String join(final List<?> args) {
-        final Iterator iterator = args.iterator();
-
-        final Object first = iterator.next();
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+    private static String join(final Type[] args, final Map<String, Type> generics) {
         final String res;
-        if (!iterator.hasNext()) {
-            res = String.valueOf(first);
+        if (args.length == 0) {
+            res = "";
+        } else if (args.length == 1) {
+            // only one argument
+            res = toStringType(args[0], generics);
         } else {
-
-            final StringBuilder buf = new StringBuilder(256);
-            if (first != null) {
-                buf.append(first);
-            }
-
-            while (iterator.hasNext()) {
-                final Object obj = iterator.next();
-                buf.append(SPLIT).append(obj);
+            final StringBuilder buf = new StringBuilder(args.length * 20);
+            boolean first = true;
+            for (Type type : args) {
+                if (!first) {
+                    buf.append(", ");
+                }
+                buf.append(toStringType(type, generics));
+                first = false;
             }
             res = buf.toString();
         }
         return res;
-    }
-
-    private static String toStringMethodParameters(final Method method, final Map<String, Type> generics) {
-        final int count = method.getParameterTypes().length;
-        final StringBuilder res = new StringBuilder(count * 10 + 2)
-                .append("(");
-        if (count > 0) {
-            boolean first = true;
-            for (Type type : method.getGenericParameterTypes()) {
-                if (!first) {
-                    res.append(SPLIT);
-                }
-                res.append(toStringType(type, generics));
-                first = false;
-            }
-        }
-        return res.append(")").toString();
     }
 
     private static Type declaredGeneric(final TypeVariable generic, final Map<String, Type> declarations) {

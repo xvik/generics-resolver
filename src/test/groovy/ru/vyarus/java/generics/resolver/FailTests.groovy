@@ -1,18 +1,14 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
-import ru.vyarus.java.generics.resolver.support.Base1
-import ru.vyarus.java.generics.resolver.support.BeanRoot
-import ru.vyarus.java.generics.resolver.support.Lvl2Base1
-import ru.vyarus.java.generics.resolver.support.Root
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException
+import ru.vyarus.java.generics.resolver.support.*
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashRoot
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub1
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub2
-import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import spock.lang.Specification
 
 import java.util.concurrent.Callable
-
 
 /**
  * @author Vyacheslav Rusakov 
@@ -45,12 +41,10 @@ class FailTests extends Specification {
 
     }
 
-    def "Check type resolution fail"() {
+    def "Check type resolution fail avoid"() {
         when: "trying to access generic with bad name"
-        GenericsResolver.resolve(Root).resolveType(Lvl2Base1.getMethod("doSomth2").getGenericReturnType())
+        def res = GenericsResolver.resolve(Root).resolveType(Lvl2Base1.getMethod("doSomth2").getGenericReturnType())
         then: "fail"
-        def ex = thrown(UnknownGenericException)
-        ex.genericName == "I"
-        ex.contextType == Root
+        res == Model
     }
 }

@@ -16,12 +16,12 @@ import java.util.Arrays;
 public class ExplicitTypeVariable implements Type {
 
     private final String name;
-    private final Object declarationSource;
+    private final TypeVariable declarationSource;
     private final Type[] bounds;
 
     public ExplicitTypeVariable(final TypeVariable variable) {
         this.name = variable.getName();
-        this.declarationSource = variable.getGenericDeclaration();
+        this.declarationSource = variable;
         this.bounds = variable.getBounds();
     }
 
@@ -39,9 +39,9 @@ public class ExplicitTypeVariable implements Type {
     }
 
     /**
-     * @return declaration class/method if available or null
+     * @return original (source) type variable or null
      */
-    public Object getDeclarationSource() {
+    public TypeVariable getDeclarationSource() {
         return declarationSource;
     }
 

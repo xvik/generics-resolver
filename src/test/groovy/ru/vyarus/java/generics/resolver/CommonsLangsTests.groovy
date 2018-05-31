@@ -1,7 +1,5 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.AClass.AInterface
-import ru.vyarus.java.generics.resolver.AClass.BClass
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.CommonsLangChecks
 import ru.vyarus.java.generics.resolver.util.GenericsTrackingUtils
@@ -15,7 +13,9 @@ import java.lang.reflect.Type
 
 /**
  * Adopted tests of commons-lang3 TypeUtils.
- * According to tests generics-resolver is more permissive in isAssignable logic because generics assignment rules
+ * https://github.com/apache/commons-lang/blob/d8ec011d770e1e04ef4f87fba673f3748f363278/src/test/java/org/apache/commons/lang3/reflect/TypeUtilsTest.java
+ *
+ * According to tests, generics-resolver is more permissive in isAssignable logic because generics assignment rules
  * are ignored - only actually known lower bounds are used.
  *
  * @author Vyacheslav Rusakov
@@ -76,9 +76,9 @@ class CommonsLangsTests<B> extends Specification {
         3    | 0    | true       | true       | true       // List<? super Object> | List
         0    | 3    | true       | true       | true       // List | List<? super Object>
         4    | 0    | true       | true       | true       // List<String> | List
-        0    | 4    | true      | true       | false      // List | List<String>
+        0    | 4    | true       | true       | false      // List | List<String>
         5    | 0    | true       | true       | true       // List<? extends String> | List
-        0    | 5    | true      | true       | false      // List| List<? extends String>
+        0    | 5    | true       | true       | false      // List| List<? extends String>
         6    | 0    | true       | true       | true       // List<? super String> | List
         0    | 6    | true       | true       | false      // List | List<? super String>
         1    | 1    | true       | true       | true       // List<Object> | List<Object>
@@ -87,25 +87,25 @@ class CommonsLangsTests<B> extends Specification {
         3    | 1    | true       | true       | true       // List<? super Object> | List<Object>
         1    | 3    | true       | true       | true       // List<Object> | List<? super Object>
         4    | 1    | true       | true       | true       // List<String> | List<Object>
-        1    | 4    | true      | true       | false      // List<Object> | List<String>
+        1    | 4    | true       | true       | false      // List<Object> | List<String>
         5    | 1    | true       | true       | true       // List<? extends String> | List<Object>
-        1    | 5    | true      | true       | false      // List<Object> | List<? extends String>
+        1    | 5    | true       | true       | false      // List<Object> | List<? extends String>
         6    | 1    | true       | true       | true       // List<? super String> | List<Object>
         1    | 6    | true       | true       | false      // List<Object> | List<? super String>
         2    | 2    | true       | true       | true       // List<?> | List<?>
         3    | 2    | true       | true       | true       // List<? super Object> | List<?>
         2    | 3    | true       | true       | true       // List<?> | List<? super Object>
         4    | 2    | true       | true       | true       // List<String> | List<?>
-        2    | 4    | true      | true       | false      // List<?> | List<String>
+        2    | 4    | true       | true       | false      // List<?> | List<String>
         5    | 2    | true       | true       | true       // List<? extends String> | List<?>
-        2    | 5    | true      | true       | false      // List<?> | List<? extends String>
+        2    | 5    | true       | true       | false      // List<?> | List<? extends String>
         6    | 2    | true       | true       | true       // List<? super String> | List<?>
         2    | 6    | true       | true       | false      // List<?> | List<? super String>
         3    | 3    | true       | true       | true       // List<? super Object> | List<? super Object>
         4    | 3    | true       | true       | true       // List<String> | List<? super Object>
-        3    | 4    | true      | true       | false      // List<? super Object> | List<String>
+        3    | 4    | true       | true       | false      // List<? super Object> | List<String>
         5    | 3    | true       | true       | true       // List<? extends String> | List<? super Object>
-        3    | 5    | true      | true       | false      // List<? super Object> | List<? extends String>
+        3    | 5    | true       | true       | false      // List<? super Object> | List<? extends String>
         3    | 6    | true       | true       | false      // List<? super Object> | List<? super String>
         4    | 4    | true       | true       | true       // List<String> | List<String>
         5    | 4    | true       | true       | true       // List<? extends String> | List<String>
@@ -124,9 +124,9 @@ class CommonsLangsTests<B> extends Specification {
         10   | 7    | true       | true       | true      // List<? super Object>[] | List[]
         7    | 10   | true       | true       | true      // List[] | List<? super Object>[]
         11   | 7    | true       | true       | true      // List<String>[] | List[]
-        7    | 11   | true      | true       | false     // List[] | List<String>[]
+        7    | 11   | true       | true       | false     // List[] | List<String>[]
         12   | 7    | true       | true       | true      // List<? extends String>[] | List[]
-        7    | 12   | true      | true       | false     // List[] | List<? extends String>[]
+        7    | 12   | true       | true       | false     // List[] | List<? extends String>[]
         13   | 7    | true       | true       | true      // List<? super String>[] | List[]
         7    | 13   | true       | true       | false     // List[] | List<? super String>[]
         8    | 8    | true       | true       | true      // List<Object>[] | List<Object>[]
@@ -135,25 +135,25 @@ class CommonsLangsTests<B> extends Specification {
         10   | 8    | true       | true       | true      // List<? super Object>[] | List<Object>[]
         8    | 10   | true       | true       | true      // List<Object>[] | List<? super Object>[]
         11   | 8    | true       | true       | true      // List<String>[] | List<Object>[]
-        8    | 11   | true      | true       | false     // List<Object>[] | List<String>[]
+        8    | 11   | true       | true       | false     // List<Object>[] | List<String>[]
         12   | 8    | true       | true       | true      // List<? extends String>[] | List<Object>[]
-        8    | 12   | true      | true       | false     // List<Object>[] | List<? extends String>[]
+        8    | 12   | true       | true       | false     // List<Object>[] | List<? extends String>[]
         13   | 8    | true       | true       | true      // List<? super String>[] | List<Object>[]
         8    | 13   | true       | true       | false     // List<Object>[] | List<? super String>[]
         9    | 9    | true       | true       | true      // List<?>[] | List<?>[]
         10   | 9    | true       | true       | true      // List<? super Object>[] | List<?>[]
         9    | 10   | true       | true       | true      // List<?>[] | List<? super Object>[]
         11   | 9    | true       | true       | true      // List<String>[] | List<?>[]
-        9    | 11   | true      | true       | false     // List<?>[] | List<String>[]
+        9    | 11   | true       | true       | false     // List<?>[] | List<String>[]
         12   | 9    | true       | true       | true      // List<? extends String>[]
-        9    | 12   | true      | true       | false     // List<?>[] | List<? extends String>[]
+        9    | 12   | true       | true       | false     // List<?>[] | List<? extends String>[]
         13   | 9    | true       | true       | true      // List<? super String>[] | List<?>[]
         9    | 13   | true       | true       | false     // List<?>[] | List<? super String>[]
         10   | 10   | true       | true       | true      // List<? super Object>[] | List<? super Object>[]
         11   | 10   | true       | true       | true      // List<String>[] | List<? super Object>[]
-        10   | 11   | true      | true       | false     // List<? super Object>[] | List<String>[]
+        10   | 11   | true       | true       | false     // List<? super Object>[] | List<String>[]
         12   | 10   | true       | true       | true      // List<? extends String>[] | List<? super Object>[]
-        10   | 12   | true      | true       | false     // List<? super Object>[] | List<? extends String>[]
+        10   | 12   | true       | true       | false     // List<? super Object>[] | List<? extends String>[]
         13   | 10   | true       | true       | true      // List<? super String>[] | List<? super Object>[]
         10   | 13   | true       | true       | false     // List<? super Object>[] | List<? super String>[]
         11   | 11   | true       | true       | true      // List<String>[] | List<String>[]
@@ -183,10 +183,10 @@ class CommonsLangsTests<B> extends Specification {
         datType     | disType     | true       | true       | true      // That<String, String> | This<String, String>
         daType      | disType     | false      | false      | false     // The<String, String> | This<String, String>
         uhderType   | disType     | true       | true       | true      // Other<String> | This<String, String>
-        dingType    | disType     | true      | true       | true     // Thing | This<String, String>
+        dingType    | disType     | true       | true       | true     // Thing | This<String, String>
         disType     | dingType    | false      | true       | false      // This<String, String> | Thing
         testerType  | disType     | true       | true       | true      // Tester | This<String, String>
-        tester2Type | disType     | true      | true       | true     // Tester | This<String, String>
+        tester2Type | disType     | true       | true       | true     // Tester | This<String, String>
         disType     | tester2Type | false      | true       | false      // This<String, String> | Tester
         dat2Type    | datType     | true       | true       | true      // That<String, String> | That<String, String>
         datType     | dat2Type    | true       | true       | true      // That<String, String> | That<String, String>
@@ -294,7 +294,7 @@ class CommonsLangsTests<B> extends Specification {
     def "Check bounded generics"() {
 
         expect:
-        println ("${prettyString(t1)} | ${prettyString(t2)}")
+        println("${prettyString(t1)} | ${prettyString(t2)}")
         TypeUtils.isCompatible(t1, t2)     // Comparable | Integer (for all cases)
 
         where:
@@ -367,7 +367,7 @@ class CommonsLangsTests<B> extends Specification {
 
     private String prettyString(Object type) {
         type.toString()
-                .replace(CommonsLangChecks.getPackage().getName()+'.', '')
+                .replace(CommonsLangChecks.getPackage().getName() + '.', '')
                 .replace('java.lang.', '')
                 .replace('java.util.', '')
                 .replace('java.io.', '')

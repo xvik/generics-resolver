@@ -5,7 +5,6 @@ import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.MethodGeneri
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.MethodGenericsContext
-import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import spock.lang.Specification
 
 import java.lang.reflect.Method
@@ -30,8 +29,8 @@ class MethodGenericCasesTest extends Specification {
                 .method(MethodGenericCase.getMethod("test", Class, Object)).resolveParameterType(0)
         then: "resolved"
         type instanceof ParameterizedType
-        ((ParameterizedType)type).rawType == Class
-        ((ParameterizedType)type).actualTypeArguments == [Object]
+        ((ParameterizedType) type).rawType == Class
+        ((ParameterizedType) type).actualTypeArguments == [Object]
 
         when: "return type with method generic"
         Class res = GenericsResolver.resolve(MethodGenericCase)
@@ -91,21 +90,19 @@ class MethodGenericCasesTest extends Specification {
         res == Cloneable
     }
 
-    def "Check direct method generic resolution fail"() {
+    def "Check direct method generic resolution fail avoid"() {
 
         setup:
         Method method = MethodGenericCase.getMethod("test", Class, Object)
         GenericsContext context = GenericsResolver.resolve(MethodGenericCase)
 
         when: 'resolve generic from type with method generic'
-        context.resolveGenericOf(method.getGenericParameterTypes()[0])
-        then:
-        def th = thrown(UnknownGenericException)
-        th.getGenericName() == "T"
-        th.getContextType() == MethodGenericCase
+        def res = context.resolveGenericOf(method.getGenericParameterTypes()[0])
+        then: "context auto switched"
+        res == Object
 
         when: 'resolving generic from method context'
-        def res = context.method(method).resolveGenericOf(method.getGenericParameterTypes()[0])
+        res = context.method(method).resolveGenericOf(method.getGenericParameterTypes()[0])
         then: 'resolved'
         res == Object
     }

@@ -16,51 +16,51 @@ class ContextToStringTest extends Specification {
     def "Type context to string"() {
 
         expect:
-        toString(GenericsResolver.resolve(Root)) == """interface Root     <-- current
-  extends Base1<Model> 
-    extends Lvl2Base1<Model> 
-  extends Base2<Model, OtherModel> 
-    extends Lvl2Base2<Model> 
-    extends Lvl2Base3<Model> 
-  extends ComplexGenerics<Model, List<Model>> 
-  extends ComplexGenerics2<Model[]> 
+        toString(GenericsResolver.resolve(Root)) == """interface Root    <-- current
+  extends Base1<Model>
+    extends Lvl2Base1<Model>
+  extends Base2<Model, OtherModel>
+    extends Lvl2Base2<Model>
+    extends Lvl2Base3<Model>
+  extends ComplexGenerics<Model, List<Model>>
+  extends ComplexGenerics2<Model[]>
 """
 
-        toString(GenericsResolver.resolve(Root).type(Lvl2Base3)) == """interface Root 
-  extends Base1<Model> 
-    extends Lvl2Base1<Model> 
-  extends Base2<Model, OtherModel> 
-    extends Lvl2Base2<Model> 
-    extends Lvl2Base3<Model>     <-- current
-  extends ComplexGenerics<Model, List<Model>> 
-  extends ComplexGenerics2<Model[]> 
+        toString(GenericsResolver.resolve(Root).type(Lvl2Base3)) == """interface Root
+  extends Base1<Model>
+    extends Lvl2Base1<Model>
+  extends Base2<Model, OtherModel>
+    extends Lvl2Base2<Model>
+    extends Lvl2Base3<Model>    <-- current
+  extends ComplexGenerics<Model, List<Model>>
+  extends ComplexGenerics2<Model[]>
 """
     }
 
     def "Method context test"() {
 
         expect:
-        toString(GenericsResolver.resolve(Root).method(ComplexGenerics2.getMethod("doSomth"))) == """interface Root 
-  extends Base1<Model> 
-    extends Lvl2Base1<Model> 
-  extends Base2<Model, OtherModel> 
-    extends Lvl2Base2<Model> 
-    extends Lvl2Base3<Model> 
-  extends ComplexGenerics<Model, List<Model>> 
-  extends ComplexGenerics2<Model[]> 
+        toString(GenericsResolver.resolve(Root).method(ComplexGenerics2.getMethod("doSomth"))) == """interface Root
+  extends Base1<Model>
+    extends Lvl2Base1<Model>
+  extends Base2<Model, OtherModel>
+    extends Lvl2Base2<Model>
+    extends Lvl2Base3<Model>
+  extends ComplexGenerics<Model, List<Model>>
+  extends ComplexGenerics2<Model[]>
     Model[] doSomth()    <-- current
 """
 
 
-        toString(GenericsResolver.resolve(Root).method(Lvl2Base1.getMethod("doSomth4", Object, int))) == """interface Root 
-  extends Base1<Model> 
-    extends Lvl2Base1<Model> 
+        toString(GenericsResolver.resolve(Root).method(Lvl2Base1.getMethod("doSomth4", Object, int))) == """interface Root
+  extends Base1<Model>
+    extends Lvl2Base1<Model>
       void doSomth4(Model, int)    <-- current
-  extends Base2<Model, OtherModel> 
-    extends Lvl2Base2<Model> 
-    extends Lvl2Base3<Model> 
-  extends ComplexGenerics<Model, List<Model>> 
-  extends ComplexGenerics2<Model[]> 
+  extends Base2<Model, OtherModel>
+    extends Lvl2Base2<Model>
+    extends Lvl2Base3<Model>
+  extends ComplexGenerics<Model, List<Model>>
+  extends ComplexGenerics2<Model[]>
 """
     }
 
@@ -68,14 +68,14 @@ class ContextToStringTest extends Specification {
 
         def context = GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('htarget'))
         expect:
-        toString(context) == """class HInner (inner to Owner<String>)  resolved in context of Root    <-- current
-  extends PInner<String> (inner to Owner<String>)
+        toString(context) == """class Owner<String>.HInner  resolved in context of Root    <-- current
+  extends Owner<String>.PInner<String>
 """
-        toString(context.type(InnerTypesTest.Owner.PInner)) == """class HInner (inner to Owner<String>)  resolved in context of Root
-  extends PInner<String> (inner to Owner<String>)    <-- current
+        toString(context.type(InnerTypesTest.Owner.PInner)) == """class Owner<String>.HInner  resolved in context of Root
+  extends Owner<String>.PInner<String>    <-- current
 """
 
-        toString(GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('ptarget'))) == """class PInner<Integer> (inner to Owner<String>)  resolved in context of Root    <-- current
+        toString(GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('ptarget'))) == """class Owner<String>.PInner<Integer>  resolved in context of Root    <-- current
 """
     }
 

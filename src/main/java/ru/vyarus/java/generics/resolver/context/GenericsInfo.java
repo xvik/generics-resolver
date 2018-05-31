@@ -86,6 +86,35 @@ public class GenericsInfo {
     }
 
     /**
+     * Search class in current hierarchy, containing declaration type. Used to find appropriate context
+     * when generic could be correctly resolved (knowing generic declaration type).
+     * <p>
+     * There are to situations: either class is directly in hierarchy or it is outer class for some class
+     * in hierarchy (in this case inner class is correct context).
+     *
+     * @param declarationType generic declaration class
+     * @return required context class or null if impossible to resolve in current hierarchy
+     */
+    public Class<?> findContextByDeclarationType(final Class<?> declarationType) {
+        Class<?> res = null;
+        final Set<Class<?>> composingTypes = types.keySet();
+        if (composingTypes.contains(declarationType)) {
+            res = declarationType;
+        } else {
+            for (Class type : composingTypes) {
+                // try to find matching context by outer class (generic may belong to outer class
+                // for one of context classes)
+                final Class<?> outer = (Class) TypeUtils.getOuter(type);
+                if (declarationType.equals(outer)) {
+                    res = type;
+                    break;
+                }
+            }
+        }
+        return res;
+    }
+
+    /**
      * @return current hierarchy with resolved generics
      * @see #toStringHierarchy(TypeWriter) for customized output
      */
@@ -174,9 +203,9 @@ public class GenericsInfo {
                             final String shift) {
             final String inner = owner != null
                     ? String.format(
-                    "(inner to %s)", toStringWithGenerics(owner, ownerGenerics))
+                    "%s.", toStringWithGenerics(owner, ownerGenerics))
                     : "";
-            return String.format("%s %s", toStringWithGenerics(type, generics), inner);
+            return String.format("%s%s", inner, toStringWithGenerics(type, generics));
         }
     }
 }

@@ -1,12 +1,14 @@
 package ru.vyarus.java.generics.resolver.context;
 
+import ru.vyarus.java.generics.resolver.error.WrongGenericsContextException;
 import ru.vyarus.java.generics.resolver.util.GenericInfoUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import ru.vyarus.java.generics.resolver.util.TypeUtils;
+import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,6 +26,7 @@ public class TypeGenericsContext extends GenericsContext {
      * Current hierarchy position marker (for toString).
      */
     public static final String CURRENT_POSITION_MARKER = "    <-- current";
+    private static final PrintableGenericsMap PRINTABLE_GENERICS = new PrintableGenericsMap();
 
     protected Class<?> ownerType;
     protected Map<String, Type> ownerGenerics;
@@ -89,29 +92,42 @@ public class TypeGenericsContext extends GenericsContext {
      *     }
      * }}</pre>.
      * <p>
-     * NOTE: this is not all generics of owner type, but visible generics. For example, some owner generics
-     * may be hidden by the same generic name used in inner type:
-     * <pre>{@code class Owner<T> {
+     * NOTE: contains only owner type generics, not hidden by inner class generics. For example:
+     * <pre>{@code class Owner<T, K> {
      *      // hides outer generic
      *     class Inner<T> {}
-     *
-     *     class InnerMethod {
-     *          // outer generic not visible inside method
-     *          <T> T get() {}
-     *     }
      * }}</pre>
+     * Here {@code ownerGenericsMap() == ["K": Object]} because owner generic "T" is overridden by inner class
+     * declaration.
+     * <p>
+     * In method or constructor contexts, context specific generics may also override owner generics
+     * (e.g. {@code <T> T method();}), but still all reachable by class owner generics wll be returned.
+     * This is done for consistency: no matter what context, method will return the same map. The only exception
+     * is {@link #visibleGenericsMap()} which return only actually visible generics from current context
+     * (class, method or constructor).
      *
-     * @return owner type generics if context type is inner class or empty map if not inner class or
+     * @return reachable owner type generics if context type is inner class or empty map if not inner class or
      * outer type does not contains generics
      * @see #ownerClass()
      */
     public Map<String, Type> ownerGenericsMap() {
-        return new LinkedHashMap<String, Type>(ownerGenerics);
+        return ownerGenerics.isEmpty()
+                ? Collections.<String, Type>emptyMap() : new LinkedHashMap<String, Type>(ownerGenerics);
     }
 
     @Override
     public String toString() {
         return genericsInfo.toStringHierarchy(new TypeContextWriter());
+    }
+
+    @Override
+    public GenericDeclarationScope getGenericsScope() {
+        return GenericDeclarationScope.CLASS;
+    }
+
+    @Override
+    public GenericDeclaration getGenericsSource() {
+        return currentClass();
     }
 
     // --------------------------------------------------------------------- navigation impl
@@ -124,19 +140,29 @@ public class TypeGenericsContext extends GenericsContext {
     @Override
     public MethodGenericsContext method(final Method method) {
         final GenericsContext context = chooseContext(method.getDeclaringClass(),
-                "Method '" + method.getName() + "'");
+                String.format("Method '%s'", TypeToStringUtils.toStringMethod(method, PRINTABLE_GENERICS)));
         return new MethodGenericsContext(context.genericsInfo, method, root);
     }
 
     @Override
+    public ConstructorGenericsContext constructor(final Constructor constructor) {
+        final GenericsContext context = chooseContext(constructor.getDeclaringClass(),
+                String.format("Constructor '%s'",
+                        TypeToStringUtils.toStringConstructor(constructor, PRINTABLE_GENERICS)));
+        return new ConstructorGenericsContext(context.genericsInfo, constructor, root);
+    }
+
+    @Override
     public TypeGenericsContext inlyingType(final Type type) {
-        final Class target = resolveClass(type);
+        // check type compatibility
+        final GenericsContext root = chooseContext(type);
+        final Class target = root.resolveClass(type);
         final GenericsInfo generics;
 
-        if (target.getTypeParameters().length > 0 || couldRequireKnownOuterGenerics(type)) {
+        if (target.getTypeParameters().length > 0 || couldRequireKnownOuterGenerics(root, type)) {
             // resolve class hierarchy in context (non cachable context)
             // can't be primitive here
-            generics = GenericInfoUtils.create(this, type, genericsInfo.getIgnoredTypes());
+            generics = GenericInfoUtils.create(root, type, genericsInfo.getIgnoredTypes());
         } else {
             // class without generics - use cachable context
             generics = GenericsInfoFactory.create(
@@ -144,25 +170,27 @@ public class TypeGenericsContext extends GenericsContext {
                     TypeUtils.wrapPrimitive(target), genericsInfo.getIgnoredTypes());
         }
 
-        return new TypeGenericsContext(generics, target, this);
+        return new TypeGenericsContext(generics, target, root);
     }
 
     @Override
     public TypeGenericsContext inlyingTypeAs(final Type type, final Class<?> asType) {
-        final Class target = resolveClass(type);
+        // check type compatibility
+        final GenericsContext root = chooseContext(type);
+        final Class target = root.resolveClass(type);
         final GenericsInfo generics;
         if (target.getTypeParameters().length > 0
-                || couldRequireKnownOuterGenerics(type) || couldRequireKnownOuterGenerics(asType)) {
+                || couldRequireKnownOuterGenerics(root, type) || couldRequireKnownOuterGenerics(root, asType)) {
             // resolve class hierarchy in context and from higher type (non cachable context)
             // can't be primitive
-            generics = GenericInfoUtils.create(this, type, asType, genericsInfo.getIgnoredTypes());
+            generics = GenericInfoUtils.create(root, type, asType, genericsInfo.getIgnoredTypes());
         } else {
             // class without generics - use cachable context
             generics = GenericsInfoFactory.create(
                     // always build hierarchy for non primitive type
                     TypeUtils.wrapPrimitive(asType), genericsInfo.getIgnoredTypes());
         }
-        return new TypeGenericsContext(generics, asType, this);
+        return new TypeGenericsContext(generics, asType, root);
     }
 
     @Override
@@ -175,6 +203,43 @@ public class TypeGenericsContext extends GenericsContext {
                     msgPrefix + " declaration type %s is not present in hierarchy of %s",
                     target.getSimpleName(), genericsInfo.getRootClass().getSimpleName()), ex);
         }
+    }
+
+    @Override
+    protected GenericsContext chooseContext(final Type type) {
+        if (!(type instanceof Class)) {
+            // find variable, incompatible with current context
+            final TypeVariable var = GenericsUtils
+                    .findIncompatibleVariable(type, currentType, getGenericsScope(), getGenericsSource());
+            if (var != null) {
+                final GenericDeclarationScope scope = GenericDeclarationScope.from(var.getGenericDeclaration());
+                // scope == null only for currently impossible cases, but new sources may appear
+                if (scope != null) {
+                    final Class<?> target = genericsInfo
+                            .findContextByDeclarationType(GenericsUtils.getDeclarationClass(var));
+
+                    // found correct context in hierarchy - switching
+                    if (target != null) {
+                        final GenericsContext context;
+                        switch (scope) {
+                            case METHOD:
+                                context = method((Method) var.getGenericDeclaration());
+                                break;
+                            case CONSTRUCTOR:
+                                context = constructor((Constructor) var.getGenericDeclaration());
+                                break;
+                            default:
+                                context = type(target);
+                                break;
+                        }
+                        return context;
+                    }
+                }
+                // can't switch - notify incompatible context
+                throw new WrongGenericsContextException(type, var, currentType, genericsInfo);
+            }
+        }
+        return this;
     }
 
     // ---------------------------------------------------------------------  / navigation impl
@@ -210,13 +275,14 @@ public class TypeGenericsContext extends GenericsContext {
      * Inner class could use outer class generics, and if outer class is known (in current hierarchy),
      * we can assume to use it's generics (correct for most cases, but may be corner cases).
      *
+     * @param root correct context for type resolution
      * @param type type to check
      * @return true if type is inner and outer class is present in current hierarchy
      */
-    private boolean couldRequireKnownOuterGenerics(final Type type) {
+    private boolean couldRequireKnownOuterGenerics(final GenericsContext root, final Type type) {
         final Type outer = TypeUtils.getOuter(type);
         // inner class may use generics of the root class
-        return outer != null && genericsInfo.getComposingTypes().contains(resolveClass(outer));
+        return outer != null && genericsInfo.getComposingTypes().contains(root.resolveClass(outer));
     }
 
     /**

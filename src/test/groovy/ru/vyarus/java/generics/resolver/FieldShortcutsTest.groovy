@@ -1,7 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
-import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import spock.lang.Specification
 
@@ -31,10 +30,9 @@ class FieldShortcutsTest extends Specification {
         def field = Root.getField("field")
 
         when: "resolve type on wrong class"
-        context.resolveClass(field.getGenericType())
-        then: 'err'
-        def ex = thrown(UnknownGenericException)
-        ex.genericName == "T"
+        def res = context.resolveClass(field.getGenericType())
+        then: 'context auto switched'
+        res == List
     }
 
     def "Check not in hierarchy"() {

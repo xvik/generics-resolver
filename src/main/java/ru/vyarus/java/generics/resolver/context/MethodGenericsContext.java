@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver.context;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
+import java.lang.reflect.GenericDeclaration;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -24,13 +25,13 @@ import java.util.*;
 @SuppressWarnings("PMD.PreserveStackTrace")
 public class MethodGenericsContext extends TypeGenericsContext {
 
-    private final Method method;
+    private final Method meth;
     private Map<String, Type> methodGenerics;
     private Map<String, Type> allGenerics;
 
     public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method, final GenericsContext root) {
         super(genericsInfo, method.getDeclaringClass(), root);
-        this.method = method;
+        this.meth = method;
         initGenerics();
     }
 
@@ -38,25 +39,27 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return current context method
      */
     public Method currentMethod() {
-        return method;
+        return meth;
     }
 
     /**
      * {@code <T extends Serializable> T method();}.
-     * <pre>{@code context.method(B.getMethod('method')).methodGenericTypes() == [Class<Serializable>]}</pre>
+     * <pre>{@code context.method(A.getMethod('method')).methodGenericTypes() == [Class<Serializable>]}</pre>
      *
      * @return current method generics types
      */
     public List<Type> methodGenericTypes() {
-        return new ArrayList<Type>(methodGenerics.values());
+        return methodGenerics.isEmpty()
+                ? Collections.<Type>emptyList() : new ArrayList<Type>(methodGenerics.values());
     }
 
     /**
      * <pre>{@code class A<E> {
      *     <T, K extends E> K method(T arg);
      * }
-     * class B extends A<Serializable>}</pre>
-     * <pre>{@code context.method(A.getMethod("method", Object.class)).methodGenericsMap() ==
+     * class B extends A<Serializable> {}
+     * }</pre>
+     * <pre>{@code context.method(A.class.getMethod("method", Object.class)).methodGenericsMap() ==
      *          ["T": Object.class, "K": Serializable.class]}</pre>
      * For method generics it's impossible to know actual type (available only in time of method call),
      * so generics resolved as upper bound.
@@ -64,7 +67,8 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return map of current method generics (runtime mapping of generic name to actual type)
      */
     public Map<String, Type> methodGenericsMap() {
-        return new LinkedHashMap<String, Type>(methodGenerics);
+        return methodGenerics.isEmpty()
+                ? Collections.<String, Type>emptyMap() : new LinkedHashMap<String, Type>(methodGenerics);
     }
 
     /**
@@ -80,7 +84,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @see #resolveClass(java.lang.reflect.Type)
      */
     public Class<?> resolveReturnClass() {
-        return GenericsUtils.getReturnClass(method, contextGenerics());
+        return GenericsUtils.getReturnClass(meth, contextGenerics());
     }
 
     /**
@@ -90,14 +94,14 @@ public class MethodGenericsContext extends TypeGenericsContext {
      *     void doSmth(T a, Integer b);
      * }}</pre>
      * Resolving parameters in context of root class:
-     * {@code type(A.class).resolveParameters(B.class.getMethod("doSmth", Object.class)) ==
+     * {@code method(B.class.getMethod("doSmth", Object.class, Integer.class)).resolveParameters() ==
      * [Long.class, Integer.class]}
      *
      * @return resolved method parameters or empty list if method doesn't contain parameters
      * @see #resolveParametersTypes()
      */
     public List<Class<?>> resolveParameters() {
-        return GenericsUtils.getMethodParameters(method, contextGenerics());
+        return GenericsUtils.resolveClasses(meth.getGenericParameterTypes(), contextGenerics());
     }
 
     /**
@@ -107,13 +111,13 @@ public class MethodGenericsContext extends TypeGenericsContext {
      *     void doSmth(List<T> a);
      * }}</pre>
      * Resolving parameters types in context of root class:
-     * {@code type(B.class).resolveParameters(B.class.getMethod("doSmth", List.class)) == [List<Long>]}
+     * {@code method(B.class.getMethod("doSmth", List.class)).resolveParametersTypes() == [List<Long>]}
      *
      * @return resolved method parameters types or empty list if method doesn't contain parameters
      * @see #resolveParameters()
      */
     public List<Type> resolveParametersTypes() {
-        return GenericsUtils.getMethodParametersTypes(method, contextGenerics());
+        return Arrays.asList(GenericsUtils.resolveTypeVariables(meth.getGenericParameterTypes(), contextGenerics()));
     }
 
     /**
@@ -123,7 +127,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      */
     public Type resolveParameterType(final int pos) {
         checkParameter(pos);
-        return resolveType(method.getGenericParameterTypes()[pos]);
+        return resolveType(meth.getGenericParameterTypes()[pos]);
     }
 
     /**
@@ -133,7 +137,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * }
      * class C extends A<String> {}}</pre>
      * Build generics context for parameter type (to continue analyzing parameter type fields):
-     * {@code (context of C).type(A.class).method(A.class.getMethod("getSmth", B.class)).parameterType(0)
+     * {@code (context of C).method(A.class.getMethod("getSmth", B.class)).parameterType(0)
      * == generics context of B<String>}
      * <p>
      * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
@@ -146,7 +150,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      */
     public TypeGenericsContext parameterType(final int pos) {
         checkParameter(pos);
-        return inlyingType(method.getGenericParameterTypes()[pos]);
+        return inlyingType(meth.getGenericParameterTypes()[pos]);
     }
 
     /**
@@ -159,11 +163,12 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @param pos    parameter position (from 0)
      * @param asType required target type to build generics context for (must include declared type as base class)
      * @return generics context of requested type with known parameter generics
+     * @throws IllegalArgumentException if parameter index is incorrect
      * @see #inlyingTypeAs(Type, Class)
      */
     public TypeGenericsContext parameterTypeAs(final int pos, final Class<?> asType) {
         checkParameter(pos);
-        return inlyingTypeAs(method.getGenericParameterTypes()[pos], asType);
+        return inlyingTypeAs(meth.getGenericParameterTypes()[pos], asType);
     }
 
     /**
@@ -178,7 +183,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return resolved generic classes or empty list if type does not use generics
      */
     public List<Class<?>> resolveReturnTypeGenerics() {
-        return GenericsUtils.resolveGenericsOf(method.getGenericReturnType(), contextGenerics());
+        return GenericsUtils.resolveGenericsOf(meth.getGenericReturnType(), contextGenerics());
     }
 
     /**
@@ -202,7 +207,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return method return type with resolved generic variables
      */
     public Type resolveReturnType() {
-        return resolveType(method.getGenericReturnType());
+        return resolveType(meth.getGenericReturnType());
     }
 
     /**
@@ -221,7 +226,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @see #inlyingType(Type)
      */
     public TypeGenericsContext returnType() {
-        return inlyingType(method.getGenericReturnType());
+        return inlyingType(meth.getGenericReturnType());
     }
 
     /**
@@ -236,14 +241,14 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @see #inlyingTypeAs(Type, Class)
      */
     public TypeGenericsContext returnTypeAs(final Class<?> asType) {
-        return inlyingTypeAs(method.getGenericReturnType(), asType);
+        return inlyingTypeAs(meth.getGenericReturnType(), asType);
     }
 
     /**
      * @return method declaration string with actual types instead of generic variables
      */
     public String toStringMethod() {
-        return TypeToStringUtils.toStringMethod(method, contextGenerics());
+        return TypeToStringUtils.toStringMethod(meth, contextGenerics());
     }
 
     @Override
@@ -252,12 +257,28 @@ public class MethodGenericsContext extends TypeGenericsContext {
     }
 
     @Override
+    public GenericDeclarationScope getGenericsScope() {
+        return GenericDeclarationScope.METHOD;
+    }
+
+    @Override
+    public GenericDeclaration getGenericsSource() {
+        return currentMethod();
+    }
+
+    @Override
+    public MethodGenericsContext method(final Method method) {
+        // optimization
+        return method == currentMethod() ? this : super.method(method);
+    }
+
+    @Override
     protected Map<String, Type> contextGenerics() {
         return allGenerics;
     }
 
     private void initGenerics() {
-        final TypeVariable<Method>[] methodGenerics = method.getTypeParameters();
+        final TypeVariable<Method>[] methodGenerics = meth.getTypeParameters();
         final boolean hasMethodGenerics = methodGenerics.length > 0;
         this.methodGenerics = hasMethodGenerics
                 ? new LinkedHashMap<String, Type>() : Collections.<String, Type>emptyMap();
@@ -268,17 +289,18 @@ public class MethodGenericsContext extends TypeGenericsContext {
             final Class<?> value = resolveClass(generic.getBounds()[0]);
             this.methodGenerics.put(generic.getName(), value);
             this.allGenerics.put(generic.getName(), value);
-            // method generic could override outer generic name (making it invisible)
-            ownerGenerics.remove(generic.getName());
+
+            // method generics may override class or owner class generics, but
+            // genericsMap() and ownerGenericsMap() should return the same in all cases for consistency
         }
     }
 
     private void checkParameter(final int pos) {
-        final Type[] genericParams = method.getGenericParameterTypes();
+        final Type[] genericParams = meth.getGenericParameterTypes();
         if (pos < 0 || pos >= genericParams.length) {
             throw new IllegalArgumentException(String.format(
                     "Can't request parameter %s of method '%s' (%s) because it have only %s parameters",
-                    pos, method.getName(), currentClass().getSimpleName(), genericParams.length));
+                    pos, toStringMethod(), currentClass().getSimpleName(), genericParams.length));
         }
     }
 

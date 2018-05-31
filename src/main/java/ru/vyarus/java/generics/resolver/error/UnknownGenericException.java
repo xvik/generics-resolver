@@ -1,10 +1,6 @@
 package ru.vyarus.java.generics.resolver.error;
 
-import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
-import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.TypeVariable;
+import java.lang.reflect.GenericDeclaration;
 
 /**
  * Thrown during type resolution when found generic name is not declared.
@@ -20,30 +16,32 @@ import java.lang.reflect.TypeVariable;
  * @author Vyacheslav Rusakov
  * @since 25.06.2015
  */
-public class UnknownGenericException extends GenericsException {
+public class UnknownGenericException extends GenericSourceException {
 
     private final String genericName;
-    private final Object genericSource;
+    private final GenericDeclaration genericSource;
     private final Class<?> contextType;
 
     /**
-     * @param genericName generic name
+     * @param genericName   generic name
+     * @param genericSource generic declaration source (may be null if unknown)
      */
-    public UnknownGenericException(final String genericName, final Object genericSource) {
+    public UnknownGenericException(final String genericName, final GenericDeclaration genericSource) {
         this(null, genericName, genericSource);
     }
 
     /**
-     * @param contextType context type (may be null)
-     * @param genericName generic name
+     * @param contextType   context type (may be null)
+     * @param genericName   generic name
+     * @param genericSource generic declaration source (may be null if unknown)
      */
     public UnknownGenericException(final Class<?> contextType,
-                                   final String genericName, final Object genericSource) {
+                                   final String genericName, final GenericDeclaration genericSource) {
         this(contextType, genericName, genericSource, null);
     }
 
     private UnknownGenericException(final Class<?> contextType,
-                                    final String genericName, final Object genericSource,
+                                    final String genericName, final GenericDeclaration genericSource,
                                     final Throwable cause) {
         super(String.format("Generic '%s'%s is not declared %s",
                 genericName, formatSource(genericSource),
@@ -53,23 +51,17 @@ public class UnknownGenericException extends GenericsException {
         this.genericSource = genericSource;
     }
 
-    /**
-     * @return generic name
-     */
+    @Override
     public String getGenericName() {
         return genericName;
     }
 
-    /**
-     * @return generic declaration source if available or null
-     */
-    public Object getGenericSource() {
+    @Override
+    public GenericDeclaration getGenericSource() {
         return genericSource;
     }
 
-    /**
-     * @return context type where generic wasn't declared or null if type is unknown
-     */
+    @Override
     public Class<?> getContextType() {
         return contextType;
     }
@@ -87,36 +79,5 @@ public class UnknownGenericException extends GenericsException {
             throw new IllegalStateException("Context type can't be changed");
         }
         return sameType ? this : new UnknownGenericException(type, genericName, genericSource, this);
-    }
-
-    private static String formatSource(final Object source) {
-        final String res;
-        if (source != null) {
-            final StringBuilder place = new StringBuilder();
-            if (source instanceof Class) {
-                place.append(TypeToStringUtils.toStringWithNamedGenerics((Class) source));
-            } else if (source instanceof Method) {
-                final Method method = (Method) source;
-                place.append(method.getDeclaringClass().getSimpleName()).append('#');
-                // append method generic declaration
-                if (method.getTypeParameters().length > 0) {
-                    place.append('<');
-                    boolean first = true;
-                    for (TypeVariable variable : method.getTypeParameters()) {
-                        place.append(!first ? ", " : "").append(variable.getName());
-                        first = false;
-                    }
-                    place.append("> ");
-                }
-                place.append(TypeToStringUtils.toStringMethod(method, new PrintableGenericsMap()));
-            }
-            // ignoring case of constructor generic (as not useful)
-
-            res = place.length() == 0 ? "" : " (defined on " + place + ")";
-        } else {
-            // unknown source
-            res = "";
-        }
-        return res;
     }
 }
