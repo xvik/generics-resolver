@@ -41,6 +41,13 @@ class GenericsInfoFactoryTest extends Specification {
         info.getTypeGenerics(BeanBase) == ['T': Model]
         info.getTypeGenerics(Lvl2BeanBase) == ['I': Model]
         info.getTypeGenerics(Lvl2Base1) == ['I': Model]
+
+        when: "check duplicate resolution"
+        def one = GenericsInfoFactory.create(BeanRoot)
+        def two = GenericsInfoFactory.create(BeanRoot)
+        then: "second resolution is cached"
+        GenericsInfoFactory.cacheEnabled
+        one == two
     }
 
     def "Check array generic resolution"() {

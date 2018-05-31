@@ -74,5 +74,8 @@ class CacheTest extends Specification {
         GenericsResolver.resolve(Root)
         then:
         cache.isEmpty()
+
+       cleanup:
+       System.setProperty(GenericsInfoFactory.CACHE_PROPERTY, "true")
     }
 }

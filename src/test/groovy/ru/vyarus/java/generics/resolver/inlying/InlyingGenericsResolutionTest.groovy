@@ -23,6 +23,7 @@ class InlyingGenericsResolutionTest extends Specification {
         def res = context.fieldType(DeclarationType.getDeclaredField("one"))
         then:
         res.generic("T") == Integer
+        res.inlying
         res.rootContext().currentClass() == DeclarationType.class
 
         when: "field context with interface"

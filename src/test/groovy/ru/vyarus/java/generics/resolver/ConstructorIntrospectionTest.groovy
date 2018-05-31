@@ -45,5 +45,11 @@ class ConstructorIntrospectionTest extends Specification {
         context.toStringConstructor() == "ConstructorGenerics(Comparable)"
         context.getGenericsScope() == GenericDeclarationScope.CONSTRUCTOR
         context.getGenericsSource() == ctor
+
+        when: "access wrong parameter"
+        context.resolveParameterType(5)
+        then:
+        def ex = thrown(IllegalArgumentException)
+        ex.message == "Can't request parameter 5 of constructor 'ConstructorGenerics(Comparable)' because it have only 1 parameters"
     }
 }

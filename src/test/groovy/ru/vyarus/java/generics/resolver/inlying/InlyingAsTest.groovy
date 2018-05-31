@@ -19,6 +19,7 @@ class InlyingAsTest extends Specification {
         when: "field context"
         def res = context.fieldTypeAs(DeclarationType.getDeclaredField("one"), SubTypeExt)
         then:
+        res.inlying
         res.generic("K") == Integer.class
         res.type(SubType).generic("T") == Integer
         res.rootContext().currentClass() == DeclarationType
