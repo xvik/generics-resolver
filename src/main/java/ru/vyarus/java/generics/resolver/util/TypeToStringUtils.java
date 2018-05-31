@@ -21,6 +21,13 @@ public final class TypeToStringUtils {
     }
 
     /**
+     * Prints type as string. E.g. {@code toStringType(ParameterizedType(List, String), [:]) == "List<String>"},
+     * {@code toStringType(WildcardType(String), [:]) == "? extends String" }.
+     * <p>
+     * If {@link ParameterizedType} is inner class and contains information about outer generics, it will be printed
+     * as {@code Outer<Generics>.Inner<Generics>} in order to indicate all available information.
+     * In other cases outer class is not indicated.
+     *
      * @param type     type to convert to string
      * @param generics type class generics type
      * @return string representation of provided type
@@ -132,7 +139,7 @@ public final class TypeToStringUtils {
         if (outer != null) {
             // known outer generics will be contained, but in case of name clash (invisible outer generics)
             // use raw object)
-            res.append(toStringType(outer, new IgnoreGenericsMap(generics)));
+            res.append(toStringType(outer, new IgnoreGenericsMap(generics))).append('.');
         }
         res.append(toStringType(parametrized.getRawType(), generics));
         final Type[] args = parametrized.getActualTypeArguments();

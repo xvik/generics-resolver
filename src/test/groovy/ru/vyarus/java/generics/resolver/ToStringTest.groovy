@@ -2,6 +2,8 @@ package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
+import ru.vyarus.java.generics.resolver.support.Model
 import ru.vyarus.java.generics.resolver.support.tostring.Base
 import ru.vyarus.java.generics.resolver.support.tostring.GenerifiedInterface
 import ru.vyarus.java.generics.resolver.support.tostring.TSBase
@@ -34,6 +36,13 @@ class ToStringTest extends Specification {
         GenericsContext context = GenericsResolver.resolve(Base).type(GenerifiedInterface)
         then: "everything is ok"
         context.genericsAsString() == ['Integer', 'String[]', 'List<String>', 'List<Set<String>>']
+    }
+
+    def "Parametrized to string"() {
+
+        expect:
+        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, String), [:]) == "Model<String>"
+        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, [String] as Class[], new ParameterizedTypeImpl(List, Long)), [:]) == "List<Long>.Model<String>"
     }
 
     def "Wildcards to string"() {

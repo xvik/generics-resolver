@@ -4,6 +4,8 @@ import ru.vyarus.java.generics.resolver.error.WrongGenericsContextException
 import ru.vyarus.java.generics.resolver.support.ConstructorGenerics
 import spock.lang.Specification
 
+import java.lang.reflect.TypeVariable
+
 /**
  * @author Vyacheslav Rusakov
  * @since 30.05.2018
@@ -24,10 +26,14 @@ class WrongContextTest extends Specification {
         res == Object
 
         when: "generic from class not in hierarchy"
-        context.resolveClass(Other.getDeclaredField("field").getGenericType())
+        def type = Other.getDeclaredField("field").getGenericType()
+        context.resolveClass(type)
         then:
         def ex = thrown(WrongGenericsContextException)
         ex.genericName == "E"
+        ex.type == type
+        ex.genericSource == ((TypeVariable) type).genericDeclaration
+        ex.contextType == Root
         ex.message.replace('\r', '') == "Type E contains generic 'E' (defined on Other<E>) and can't be resolved in context of current class Root. Generic does not belong to any type in current context hierarchy:\n" +
                 "class Root\n" +
                 "  extends Low<String>\n"
@@ -40,10 +46,14 @@ class WrongContextTest extends Specification {
 
         when: "type from ignored class"
         context = GenericsResolver.resolve(Root, Low)
-        context.resolveClass(Low.getDeclaredField("field").getGenericType())
+        type = Low.getDeclaredField("field").getGenericType()
+        context.resolveClass(type)
         then:
         ex = thrown(WrongGenericsContextException)
         ex.genericName == "T"
+        ex.type == type
+        ex.genericSource == ((TypeVariable) type).genericDeclaration
+        ex.contextType == Root
         ex.message.replace('\r', '') == "Type T contains generic 'T' (defined on Low<T>) and can't be resolved in context of current class Root. Generic declaration type Low is ignored in current context hierarchy:\n" +
                 "class Root\n"
 
