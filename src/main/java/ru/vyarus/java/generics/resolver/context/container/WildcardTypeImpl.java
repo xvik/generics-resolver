@@ -46,7 +46,7 @@ public class WildcardTypeImpl implements WildcardType {
 
     /**
      * ? extends Something. If provided then lower bound is empty.
-     * It couldn't have >=2 bounds in real life, but wildcard type is used to store named generic declaration:
+     * It couldn't have &gt;=2 bounds in real life, but wildcard type is used to store named generic declaration:
      * {@code Base<T extends One & Two>} will be saved as impossible wildcard {@code <? extends One & Two>}
      *
      * @return 0, 1 or more bounds.
@@ -82,7 +82,7 @@ public class WildcardTypeImpl implements WildcardType {
     }
 
     /**
-     * ? extends A & B.
+     * ? extends A &amp; B.
      *
      * @param upper upper bounds
      * @return upper bounded wildcard for multiple types

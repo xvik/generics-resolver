@@ -122,7 +122,7 @@ public final class GenericsUtils {
      * In most cases {@link #resolveClass(Type, Map)} could be used instead (for simplicity). This method will
      * only return different result for wildcards inside resolved types (where generics are replaced
      * {@link #resolveTypeVariables(Type, Map)}). Also, in contrast to {@link #resolveClass(Type, Map)},
-     * method will replace primitive types with wrappers (int -> Integer etc.) because this method is used mostly for
+     * method will replace primitive types with wrappers (int -&gt; Integer etc.) because this method is used mostly for
      * comparison logic and avoiding primitives simplifies it.
      * <p>
      * Wildcards are used to store raw resolution of generic declaration {@code T extends Number & Comparable}
