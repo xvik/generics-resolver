@@ -14,10 +14,10 @@ import java.util.Map;
 /**
  * Context object wraps root type hierarchy generics information descriptor and provides utility methods for
  * actual types resolution. This base class contains all type resolution logic (commonly used), whereas type specific
- * methods are added in {@link TypeGenericsContext}, method context {@link MethodGenericsContext} or
+ * methods are added in {@link GenericsContext}, method context {@link MethodGenericsContext} or
  * constructor context {@link ConstructorGenericsContext}.
  * <p>
- * Note that all possible contexts extends from {@link TypeGenericsContext}. {@link AbstractGenericsContext}
+ * Note that all possible contexts extends from {@link GenericsContext}. {@link AbstractGenericsContext}
  * exists only to extract all core generics operations into separate class.
  * <p>
  * Usage: navigate to required type {@code context.type(MyClass.class)} and use utility methods to
@@ -239,7 +239,7 @@ public abstract class AbstractGenericsContext {
      * @return all generics visible from current context
      * @see #genericsMap() for type only generics
      * @see MethodGenericsContext#methodGenericsMap()
-     * @see TypeGenericsContext#ownerGenericsMap()
+     * @see GenericsContext#ownerGenericsMap()
      */
     public Map<String, Type> visibleGenericsMap() {
         return new LinkedHashMap<String, Type>(contextGenerics());
@@ -419,7 +419,7 @@ public abstract class AbstractGenericsContext {
      * @return new context instance specific to requested class or current context if type is the same
      * @throws IllegalArgumentException if requested class not present in root class hierarchy
      */
-    public abstract TypeGenericsContext type(Class<?> type);
+    public abstract GenericsContext type(Class<?> type);
 
     /**
      * Navigates current context to specific method (type context is switched to method declaring class).
@@ -469,7 +469,7 @@ public abstract class AbstractGenericsContext {
      * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      * @see #inlyingType(Type)
      */
-    public TypeGenericsContext fieldType(final Field field) {
+    public GenericsContext fieldType(final Field field) {
         return chooseFieldContext(field).inlyingType(field.getGenericType());
     }
 
@@ -488,7 +488,7 @@ public abstract class AbstractGenericsContext {
      * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      * @see #inlyingTypeAs(Type, Class)
      */
-    public TypeGenericsContext fieldTypeAs(final Field field, final Class<?> asType) {
+    public GenericsContext fieldTypeAs(final Field field, final Class<?> asType) {
         return chooseFieldContext(field).inlyingTypeAs(field.getGenericType(), asType);
     }
 
@@ -514,7 +514,7 @@ public abstract class AbstractGenericsContext {
      * If provided type did not contains generic then cached type resolution will be used (the same as
      * {@code GenericsResolver.resolve(Target.class)} and if generics present then type will be built on each call.
      * <p>
-     * Returned context holds reference to original (root) context: {@link TypeGenericsContext#rootContext()}.
+     * Returned context holds reference to original (root) context: {@link GenericsContext#rootContext()}.
      * <p>
      * Ignored types, used for context creation, are counted (will also be ignored for inlying context building).
      *
@@ -522,7 +522,7 @@ public abstract class AbstractGenericsContext {
      * @return generics context of type (inlying context)
      * @throws WrongGenericsContextException if type contains generics not visible from current class
      */
-    public abstract TypeGenericsContext inlyingType(Type type);
+    public abstract GenericsContext inlyingType(Type type);
 
     /**
      * Build generics context for type extending some generic type in context of current class. This is required
@@ -548,7 +548,7 @@ public abstract class AbstractGenericsContext {
      * @throws WrongGenericsContextException if type contains generics not visible from current class
      * @see #inlyingType(Type)
      */
-    public abstract TypeGenericsContext inlyingTypeAs(Type type, Class<?> asType);
+    public abstract GenericsContext inlyingTypeAs(Type type, Class<?> asType);
 
     /**
      * For example, {@code class Root extends Base<String>} (and we resolve generics from Root):
@@ -602,7 +602,7 @@ public abstract class AbstractGenericsContext {
      * @return correct context for type (may be current context instance)
      * @throws IllegalArgumentException when context can't be switched
      */
-    protected abstract TypeGenericsContext chooseContext(Class target, String msgPrefix);
+    protected abstract GenericsContext chooseContext(Class target, String msgPrefix);
 
     /**
      * Look for generic variables presence inside type and, if found, try to switch to correct context.
@@ -617,9 +617,9 @@ public abstract class AbstractGenericsContext {
      * generics
      * @throws WrongGenericsContextException when it is impossible to resolve type in correct context
      */
-    protected abstract TypeGenericsContext chooseContext(Type type);
+    protected abstract GenericsContext chooseContext(Type type);
 
-    private TypeGenericsContext chooseFieldContext(final Field field) {
+    private GenericsContext chooseFieldContext(final Field field) {
         return chooseContext(field.getDeclaringClass(), "Field '" + field.getName() + "'");
     }
 

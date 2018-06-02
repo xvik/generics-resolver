@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.*
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -19,7 +19,7 @@ class MethodIntrospectionTest extends Specification {
     def "Check methods introspection"() {
 
         when:
-        TypeGenericsContext context = GenericsResolver.resolve(root).type(bean)
+        GenericsContext context = GenericsResolver.resolve(root).type(bean)
         Method doSomth = bean.getMethod("doSomth")
         Method doSomth2 = bean.getMethod("doSomth2")
         Method doSomth3 = bean.getMethod("doSomth3")
@@ -73,7 +73,7 @@ class MethodIntrospectionTest extends Specification {
     def "Check array resolution"() {
 
         when:
-        TypeGenericsContext context = GenericsResolver.resolve(Root).type(ComplexGenerics2)
+        GenericsContext context = GenericsResolver.resolve(Root).type(ComplexGenerics2)
         Method doSomth = ComplexGenerics2.getMethod("doSomth")
         Method doSomth2 = ComplexGenerics2.getMethod("doSomth2")
 

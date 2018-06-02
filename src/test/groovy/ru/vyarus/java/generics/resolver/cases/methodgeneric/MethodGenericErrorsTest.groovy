@@ -4,7 +4,7 @@ import ru.vyarus.java.generics.resolver.GenericsResolver
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.Err
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.MethodGenericCase
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import spock.lang.Specification
 
 /**
@@ -16,7 +16,7 @@ class MethodGenericErrorsTest extends Specification {
     def "Check error on bad type"() {
 
         setup:
-        TypeGenericsContext context = GenericsResolver.resolve(MethodGenericCase)
+        GenericsContext context = GenericsResolver.resolve(MethodGenericCase)
 
         when: "navigating to method from different type"
         context.method(Err.getMethod("errMeth"))

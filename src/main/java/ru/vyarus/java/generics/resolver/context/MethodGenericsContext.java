@@ -23,13 +23,13 @@ import java.util.*;
  * @since 26.06.2015
  */
 @SuppressWarnings("PMD.PreserveStackTrace")
-public class MethodGenericsContext extends TypeGenericsContext {
+public class MethodGenericsContext extends GenericsContext {
 
     private final Method meth;
     private Map<String, Type> methodGenerics;
     private Map<String, Type> allGenerics;
 
-    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method, final TypeGenericsContext root) {
+    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method, final GenericsContext root) {
         super(genericsInfo, method.getDeclaringClass(), root);
         this.meth = method;
         initGenerics();
@@ -148,7 +148,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @throws IllegalArgumentException if parameter index is incorrect
      * @see #inlyingType(Type)
      */
-    public TypeGenericsContext parameterType(final int pos) {
+    public GenericsContext parameterType(final int pos) {
         checkParameter(pos);
         return inlyingType(meth.getGenericParameterTypes()[pos]);
     }
@@ -166,7 +166,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @throws IllegalArgumentException if parameter index is incorrect
      * @see #inlyingTypeAs(Type, Class)
      */
-    public TypeGenericsContext parameterTypeAs(final int pos, final Class<?> asType) {
+    public GenericsContext parameterTypeAs(final int pos, final Class<?> asType) {
         checkParameter(pos);
         return inlyingTypeAs(meth.getGenericParameterTypes()[pos], asType);
     }
@@ -225,7 +225,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return generics context of return type
      * @see #inlyingType(Type)
      */
-    public TypeGenericsContext returnType() {
+    public GenericsContext returnType() {
         return inlyingType(meth.getGenericReturnType());
     }
 
@@ -240,7 +240,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
      * @return generics context of requested type with known return type generics
      * @see #inlyingTypeAs(Type, Class)
      */
-    public TypeGenericsContext returnTypeAs(final Class<?> asType) {
+    public GenericsContext returnTypeAs(final Class<?> asType) {
         return inlyingTypeAs(meth.getGenericReturnType(), asType);
     }
 

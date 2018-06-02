@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.CommonsLangChecks
 import ru.vyarus.java.generics.resolver.util.GenericsTrackingUtils
 import ru.vyarus.java.generics.resolver.util.GenericsUtils
@@ -314,7 +314,7 @@ class CommonsLangsTests<B> extends Specification {
 
     def "Check class resolution"() {
 
-        TypeGenericsContext context = GenericsResolver.resolve(getClass())
+        GenericsContext context = GenericsResolver.resolve(getClass())
         final Type stringParentFieldType = getClass().getDeclaredField("stringParent")
                 .getGenericType();
         final Type integerParentFieldType = getClass().getDeclaredField("integerParent")

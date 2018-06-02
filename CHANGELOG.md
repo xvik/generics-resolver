@@ -8,7 +8,7 @@
     - context.fieldType(Field) - shortcut for fields (guarantee correct base type or error if type not in hierarchy)
     - method(Method).returnType() - shortcut for method return type (guarantee correct base type)
     - method(Method).parameterType(pos) - shortcut for method parameter type (guarantee correct base type)
-    - returned context have reference to root context: TypeGenericsContext.rootContext()
+    - returned context have reference to root context: GenericsContext.rootContext()
 * Inlying context building for sub type: it's like inlying context (knowing type's root generics), but target type is 
     a subtype for current. Very special case, required for instance analysis: useful when not just type declarations, but
     also actual instance is used for analysis:
@@ -82,7 +82,7 @@
     - (breaking) avoid upper bound wildcards (transform <? extends Something\> -> Something) as only type matter at runtime
         affects GenericsUtils.resolveTypeVariables()                                                
 
-Compatibility notes: 
+Compatibility notes:  
 * API did not changed, only new methods were added.
     - removed GenericsUtils.getMethodParameters(method, generics): use instead resolveClasses(method.getGenericParameterTypes(), generics) 
 * NoGenericException was removed: detect generic absence by returned result instead
@@ -90,7 +90,7 @@ Compatibility notes:
     - was moved to different package
     - now it is impossible to resolve generics in incorrect context, so UnknownGenericException is never thrown (when context api used), 
         instead WrongGenericsContextException could be thrown to indicate incompatible hierarchy
-* It is not as important as before to always set correct contextContext: context now automatically switched to resolve generics in correct scope        
+* It is not important anymore to set correct context (.type(..)): context now automatically switched to resolve generics in correct scope        
 * Generics, previously resolved as <? extends Something\>, now become simply <Something\> (as upper wildcard not useful at runtime)  
 
 ### 2.0.1 (2015-12-16)

@@ -23,7 +23,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 29.05.2018
  */
-public class ConstructorGenericsContext extends TypeGenericsContext {
+public class ConstructorGenericsContext extends GenericsContext {
 
     private final Constructor ctor;
     private Map<String, Type> constructorGenerics;
@@ -31,7 +31,7 @@ public class ConstructorGenericsContext extends TypeGenericsContext {
 
     public ConstructorGenericsContext(final GenericsInfo genericsInfo,
                                       final Constructor constructor,
-                                      final TypeGenericsContext root) {
+                                      final GenericsContext root) {
         super(genericsInfo, constructor.getDeclaringClass(), root);
         this.ctor = constructor;
         initGenerics();
@@ -136,7 +136,7 @@ public class ConstructorGenericsContext extends TypeGenericsContext {
      * @throws IllegalArgumentException if parameter index is incorrect
      * @see #inlyingType(Type)
      */
-    public TypeGenericsContext parameterType(final int pos) {
+    public GenericsContext parameterType(final int pos) {
         checkParameter(pos);
         return inlyingType(ctor.getGenericParameterTypes()[pos]);
     }
@@ -154,7 +154,7 @@ public class ConstructorGenericsContext extends TypeGenericsContext {
      * @throws IllegalArgumentException if parameter index is incorrect
      * @see #inlyingTypeAs(Type, Class)
      */
-    public TypeGenericsContext parameterTypeAs(final int pos, final Class<?> asType) {
+    public GenericsContext parameterTypeAs(final int pos, final Class<?> asType) {
         checkParameter(pos);
         return inlyingTypeAs(ctor.getGenericParameterTypes()[pos], asType);
     }

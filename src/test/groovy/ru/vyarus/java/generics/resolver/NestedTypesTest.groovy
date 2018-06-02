@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException
 import ru.vyarus.java.generics.resolver.support.clash.ClashRoot
 import ru.vyarus.java.generics.resolver.support.nestedtype.NestedGenericType
@@ -36,7 +36,7 @@ class NestedTypesTest extends Specification {
     def "Check generic resolution on duplicated interfaces if generic types are the same"() {
 
         when: "resolving generic type"
-        TypeGenericsContext context = GenericsResolver.resolve(SubClass2).type(RootClass)
+        GenericsContext context = GenericsResolver.resolve(SubClass2).type(RootClass)
         then: "correct generic values resolved"
         context.generic("T") == NestedGenericType
 
@@ -81,7 +81,7 @@ class NestedTypesTest extends Specification {
         // NOTE it is possible to track back more then one level, but it's too weird and hard to search problems
 
         when: "resolve 3 contexts"
-        TypeGenericsContext context = GenericsResolver.resolve(Root.class)
+        GenericsContext context = GenericsResolver.resolve(Root.class)
                 .fieldType(Root.getDeclaredField("sub"))
                 .fieldType(Sub.getDeclaredField("inner"))
         then: "generic was not tracked"

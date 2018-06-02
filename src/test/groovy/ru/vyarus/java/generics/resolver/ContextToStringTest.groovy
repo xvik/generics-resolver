@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.ComplexGenerics2
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base3
@@ -79,7 +79,7 @@ class ContextToStringTest extends Specification {
 """
     }
 
-    private toString(TypeGenericsContext context) {
+    private toString(GenericsContext context) {
         return context.toString().replace("\r", "")
     }
 }

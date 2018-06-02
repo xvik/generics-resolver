@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.ConstructorGenerics
 import spock.lang.Specification
 
@@ -113,7 +113,7 @@ class GenericsAccessorsTest extends Specification {
 """
     }
 
-    private toString(TypeGenericsContext context) {
+    private toString(GenericsContext context) {
         return context.toString().replace("\r", "")
     }
 

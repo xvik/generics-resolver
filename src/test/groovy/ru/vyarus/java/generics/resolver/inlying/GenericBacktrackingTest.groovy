@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver.inlying
 
 import ru.vyarus.java.generics.resolver.GenericsResolver
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException
 import ru.vyarus.java.generics.resolver.inlying.support.track.*
 import ru.vyarus.java.generics.resolver.support.Base1
@@ -19,7 +19,7 @@ class GenericBacktrackingTest extends Specification {
     def "Check generics tracking cases"() {
 
         setup: "prepare base type context"
-        TypeGenericsContext context = GenericsResolver.resolve(Source)
+        GenericsContext context = GenericsResolver.resolve(Source)
 
         when: "multiple generics"
         def res = context.fieldTypeAs(Source.getDeclaredField("target"), MultipleGenerics)
@@ -52,7 +52,7 @@ class GenericBacktrackingTest extends Specification {
     def "Complex checks"() {
 
         when: "nested declaration"
-        TypeGenericsContext context = GenericsResolver.resolve(Nested)
+        GenericsContext context = GenericsResolver.resolve(Nested)
         def res = context.fieldTypeAs(Nested.getDeclaredField("target"), Nested)
         then: "one generic tracked"
         res.genericAsString("K") == 'String'

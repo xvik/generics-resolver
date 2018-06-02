@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.*
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashRoot
@@ -27,7 +27,7 @@ class FailTests extends Specification {
     def "No clash on same not parametrized interface"() {
 
         when: "resolving type with duplicate Runnable interface in hierarchy"
-        TypeGenericsContext context = GenericsResolver.resolve(NoClashRoot)
+        GenericsContext context = GenericsResolver.resolve(NoClashRoot)
         then: "context is empty, because no generics info available in hierarchy"
         context.genericsInfo.composingTypes == [NoClashRoot, NoClashSub1, NoClashSub2, Runnable, Callable] as Set
     }

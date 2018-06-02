@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.GenericsResolver;
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext;
+import ru.vyarus.java.generics.resolver.context.GenericsContext;
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException;
@@ -221,7 +221,7 @@ public final class GenericsTrackingUtils {
             } else {
                 // actual class, resolved in root class hierarchy is a subtype of known generic type
                 // building hierarchy for known generic value class and look generics of required subclass
-                final TypeGenericsContext ctx = GenericsResolver.resolve(knownGenericType);
+                final GenericsContext ctx = GenericsResolver.resolve(knownGenericType);
                 knownArguments = GenericInfoUtils.create(ctx, knownGeneric)
                         .getTypeGenerics(exactActualType).values().toArray(new Type[0]);
             }

@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver.inlying
 
 import ru.vyarus.java.generics.resolver.GenericsResolver
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.inlying.support.*
 import spock.lang.Specification
 
@@ -14,7 +14,7 @@ class InlyingAsTest extends Specification {
     def "Check inlying contexts resolution"() {
 
         setup: "prepare base type context"
-        TypeGenericsContext context = GenericsResolver.resolve(RootType)
+        GenericsContext context = GenericsResolver.resolve(RootType)
 
         when: "field context"
         def res = context.fieldTypeAs(DeclarationType.getDeclaredField("one"), SubTypeExt)
@@ -67,7 +67,7 @@ class InlyingAsTest extends Specification {
     def "Check inlying type without generics"() {
 
         setup: "prepare base type context"
-        TypeGenericsContext context = GenericsResolver.resolve(RootType)
+        GenericsContext context = GenericsResolver.resolve(RootType)
 
         when: "field without generics"
         def res = context.fieldTypeAs(RootType.getDeclaredField("nogen"), NoGenericTypeExt)

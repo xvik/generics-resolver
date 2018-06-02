@@ -4,7 +4,7 @@ import ru.vyarus.java.generics.resolver.GenericsResolver
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.MethodGenericCase
 import ru.vyarus.java.generics.resolver.cases.methodgeneric.support.SubMethodGenericCase
 import ru.vyarus.java.generics.resolver.context.MethodGenericsContext
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import spock.lang.Specification
 
 import java.lang.reflect.Method
@@ -94,7 +94,7 @@ class MethodGenericCasesTest extends Specification {
 
         setup:
         Method method = MethodGenericCase.getMethod("test", Class, Object)
-        TypeGenericsContext context = GenericsResolver.resolve(MethodGenericCase)
+        GenericsContext context = GenericsResolver.resolve(MethodGenericCase)
 
         when: 'resolve generic from type with method generic'
         def res = context.resolveGenericOf(method.getGenericParameterTypes()[0])

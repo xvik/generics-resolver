@@ -24,7 +24,7 @@ import java.util.Map;
  * @see #inlyingType(java.lang.reflect.Type)
  * @since 26.06.2015
  */
-public class TypeGenericsContext extends AbstractGenericsContext {
+public class GenericsContext extends AbstractGenericsContext {
 
     /**
      * Current hierarchy position marker (for toString).
@@ -36,14 +36,14 @@ public class TypeGenericsContext extends AbstractGenericsContext {
     protected Map<String, Type> ownerGenerics;
     protected Map<String, Type> allTypeGenerics;
 
-    private final TypeGenericsContext root;
+    private final GenericsContext root;
 
 
-    public TypeGenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
+    public GenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
         this(genericsInfo, type, null);
     }
 
-    public TypeGenericsContext(final GenericsInfo genericsInfo, final Class<?> type, final TypeGenericsContext root) {
+    public GenericsContext(final GenericsInfo genericsInfo, final Class<?> type, final GenericsContext root) {
         super(genericsInfo, type);
         separateOwnerGenerics();
         this.root = root;
@@ -70,7 +70,7 @@ public class TypeGenericsContext extends AbstractGenericsContext {
      * @return root context (of class containing current type) for inlying context or null
      * @see #inlyingType(Type)
      */
-    public TypeGenericsContext rootContext() {
+    public GenericsContext rootContext() {
         return root;
     }
 
@@ -137,29 +137,29 @@ public class TypeGenericsContext extends AbstractGenericsContext {
     // --------------------------------------------------------------------- navigation impl
 
     @Override
-    public TypeGenericsContext type(final Class<?> type) {
-        return type == currentType ? this : new TypeGenericsContext(genericsInfo, type, root);
+    public GenericsContext type(final Class<?> type) {
+        return type == currentType ? this : new GenericsContext(genericsInfo, type, root);
     }
 
     @Override
     public MethodGenericsContext method(final Method method) {
-        final TypeGenericsContext context = chooseContext(method.getDeclaringClass(),
+        final GenericsContext context = chooseContext(method.getDeclaringClass(),
                 String.format("Method '%s'", TypeToStringUtils.toStringMethod(method, PRINTABLE_GENERICS)));
         return new MethodGenericsContext(context.genericsInfo, method, root);
     }
 
     @Override
     public ConstructorGenericsContext constructor(final Constructor constructor) {
-        final TypeGenericsContext context = chooseContext(constructor.getDeclaringClass(),
+        final GenericsContext context = chooseContext(constructor.getDeclaringClass(),
                 String.format("Constructor '%s'",
                         TypeToStringUtils.toStringConstructor(constructor, PRINTABLE_GENERICS)));
         return new ConstructorGenericsContext(context.genericsInfo, constructor, root);
     }
 
     @Override
-    public TypeGenericsContext inlyingType(final Type type) {
+    public GenericsContext inlyingType(final Type type) {
         // check type compatibility
-        final TypeGenericsContext root = chooseContext(type);
+        final GenericsContext root = chooseContext(type);
         final Class target = root.resolveClass(type);
         final GenericsInfo generics;
 
@@ -174,13 +174,13 @@ public class TypeGenericsContext extends AbstractGenericsContext {
                     TypeUtils.wrapPrimitive(target), genericsInfo.getIgnoredTypes());
         }
 
-        return new TypeGenericsContext(generics, target, root);
+        return new GenericsContext(generics, target, root);
     }
 
     @Override
-    public TypeGenericsContext inlyingTypeAs(final Type type, final Class<?> asType) {
+    public GenericsContext inlyingTypeAs(final Type type, final Class<?> asType) {
         // check type compatibility
-        final TypeGenericsContext root = chooseContext(type);
+        final GenericsContext root = chooseContext(type);
         final Class target = root.resolveClass(type);
         final GenericsInfo generics;
         if (target.getTypeParameters().length > 0
@@ -194,11 +194,11 @@ public class TypeGenericsContext extends AbstractGenericsContext {
                     // always build hierarchy for non primitive type
                     TypeUtils.wrapPrimitive(asType), genericsInfo.getIgnoredTypes());
         }
-        return new TypeGenericsContext(generics, asType, root);
+        return new GenericsContext(generics, asType, root);
     }
 
     @Override
-    protected TypeGenericsContext chooseContext(final Class target, final String msgPrefix) {
+    protected GenericsContext chooseContext(final Class target, final String msgPrefix) {
         try {
             // switch context to avoid silly mistakes (will fail if declaring type is not in hierarchy)
             return type(target);
@@ -210,7 +210,7 @@ public class TypeGenericsContext extends AbstractGenericsContext {
     }
 
     @Override
-    protected TypeGenericsContext chooseContext(final Type type) {
+    protected GenericsContext chooseContext(final Type type) {
         if (!(type instanceof Class)) {
             // find variable, incompatible with current context
             final TypeVariable var = GenericsUtils
@@ -224,7 +224,7 @@ public class TypeGenericsContext extends AbstractGenericsContext {
 
                     // found correct context in hierarchy - switching
                     if (target != null) {
-                        final TypeGenericsContext context;
+                        final GenericsContext context;
                         switch (scope) {
                             case METHOD:
                                 context = method((Method) var.getGenericDeclaration());
@@ -283,7 +283,7 @@ public class TypeGenericsContext extends AbstractGenericsContext {
      * @param type type to check
      * @return true if type is inner and outer class is present in current hierarchy
      */
-    private boolean couldRequireKnownOuterGenerics(final TypeGenericsContext root, final Type type) {
+    private boolean couldRequireKnownOuterGenerics(final GenericsContext root, final Type type) {
         final Type outer = TypeUtils.getOuter(type);
         // inner class may use generics of the root class
         return outer != null && genericsInfo.getComposingTypes().contains(root.resolveClass(outer));

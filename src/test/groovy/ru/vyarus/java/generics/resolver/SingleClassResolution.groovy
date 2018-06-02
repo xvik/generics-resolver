@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
+import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.support.brokenhieararchy.BrokenHierarchyInterface
 import spock.lang.Specification
 
@@ -15,7 +15,7 @@ class SingleClassResolution extends Specification {
     def "Check root class generics resolved"() {
 
         when: "resolving single class without hierarchy"
-        TypeGenericsContext context = GenericsResolver.resolve(BrokenHierarchyInterface)
+        GenericsContext context = GenericsResolver.resolve(BrokenHierarchyInterface)
         then: "root generics resolved from bounds"
         context.generic("T") == Callable
         context.generic("K") == Object
