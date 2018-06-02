@@ -22,7 +22,10 @@ class MethodGenericErrorsTest extends Specification {
         context.method(Err.getMethod("errMeth"))
         then: "type incompatible"
         def ex = thrown(IllegalArgumentException)
-        ex.message == "Method 'void errMeth()' declaration type Err is not present in hierarchy of MethodGenericCase"
+        ex.message.replace('\r', '') == """Method 'void errMeth()' declaration type Err is not present in current hierarchy:
+class MethodGenericCase
+  extends SubMethodGenericCase<Cloneable>
+"""
 
         when: "navigating to method from different type"
         def method = MethodGenericCase.getMethod("testSub", Class, Object)

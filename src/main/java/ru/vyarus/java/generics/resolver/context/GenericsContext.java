@@ -143,14 +143,16 @@ public class GenericsContext extends AbstractGenericsContext {
 
     @Override
     public MethodGenericsContext method(final Method method) {
-        final GenericsContext context = chooseContext(method.getDeclaringClass(),
+        // no need for switch, just for more concrete error message
+        final GenericsContext context = switchContext(method.getDeclaringClass(),
                 String.format("Method '%s'", TypeToStringUtils.toStringMethod(method, PRINTABLE_GENERICS)));
         return new MethodGenericsContext(context.genericsInfo, method, root);
     }
 
     @Override
     public ConstructorGenericsContext constructor(final Constructor constructor) {
-        final GenericsContext context = chooseContext(constructor.getDeclaringClass(),
+        // no need for switch, just for more concrete error message
+        final GenericsContext context = switchContext(constructor.getDeclaringClass(),
                 String.format("Constructor '%s'",
                         TypeToStringUtils.toStringConstructor(constructor, PRINTABLE_GENERICS)));
         return new ConstructorGenericsContext(context.genericsInfo, constructor, root);
@@ -198,19 +200,7 @@ public class GenericsContext extends AbstractGenericsContext {
     }
 
     @Override
-    protected GenericsContext chooseContext(final Class target, final String msgPrefix) {
-        try {
-            // switch context to avoid silly mistakes (will fail if declaring type is not in hierarchy)
-            return type(target);
-        } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException(String.format(
-                    msgPrefix + " declaration type %s is not present in hierarchy of %s",
-                    target.getSimpleName(), genericsInfo.getRootClass().getSimpleName()), ex);
-        }
-    }
-
-    @Override
-    protected GenericsContext chooseContext(final Type type) {
+    public GenericsContext chooseContext(final Type type) {
         if (!(type instanceof Class)) {
             // find variable, incompatible with current context
             final TypeVariable var = GenericsUtils
@@ -244,6 +234,18 @@ public class GenericsContext extends AbstractGenericsContext {
             }
         }
         return this;
+    }
+
+    @Override
+    protected GenericsContext switchContext(final Class target, final String msgPrefix) {
+        try {
+            // switch context to avoid silly mistakes (will fail if declaring type is not in hierarchy)
+            return type(target);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(String.format(
+                    msgPrefix + " declaration type %s is not present in current hierarchy:%n%s",
+                    target.getSimpleName(), genericsInfo.toString()), ex);
+        }
     }
 
     // ---------------------------------------------------------------------  / navigation impl

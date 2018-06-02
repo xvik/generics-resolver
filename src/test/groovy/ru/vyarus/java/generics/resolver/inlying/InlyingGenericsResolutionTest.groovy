@@ -54,7 +54,10 @@ class InlyingGenericsResolutionTest extends Specification {
         context.fieldType(Err.getDeclaredField("wrongField"))
         then: "err"
         ex = thrown(IllegalArgumentException)
-        ex.message == "Field 'wrongField' declaration type Err is not present in hierarchy of RootType"
+        ex.message.replace('\r', '') == """Field 'wrongField' declaration type Err is not present in current hierarchy:
+class RootType
+  extends DeclarationType<Integer, String, Double>
+"""
     }
 
     def "Check inlying type without generics"() {

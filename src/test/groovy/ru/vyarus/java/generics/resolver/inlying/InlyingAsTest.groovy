@@ -55,7 +55,10 @@ class InlyingAsTest extends Specification {
         context.fieldTypeAs(Err.getDeclaredField("wrongField"), SubTypeExt)
         then: "err"
         ex = thrown(IllegalArgumentException)
-        ex.message == "Field 'wrongField' declaration type Err is not present in hierarchy of RootType"
+        ex.message.replace('\r', '') == """Field 'wrongField' declaration type Err is not present in current hierarchy:
+class RootType
+  extends DeclarationType<Integer, String, Double>
+"""
 
         when: "incompatible type"
         context.fieldTypeAs(DeclarationType.getDeclaredField("one"), RootType)

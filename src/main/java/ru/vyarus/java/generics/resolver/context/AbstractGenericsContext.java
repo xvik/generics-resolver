@@ -284,7 +284,7 @@ public abstract class AbstractGenericsContext {
      * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      */
     public Class<?> resolveFieldClass(final Field field) {
-        return chooseFieldContext(field).resolveClass(field.getGenericType());
+        return switchContext4field(field).resolveClass(field.getGenericType());
     }
 
     /**
@@ -321,7 +321,7 @@ public abstract class AbstractGenericsContext {
      * @see #resolveFieldClass(Field) for complete example of possible issues
      */
     public List<Class<?>> resolveFieldGenerics(final Field field) {
-        return chooseFieldContext(field).resolveGenericsOf(field.getGenericType());
+        return switchContext4field(field).resolveGenericsOf(field.getGenericType());
     }
 
     /**
@@ -353,7 +353,7 @@ public abstract class AbstractGenericsContext {
      * @see #resolveFieldClass(Field) for complete example of possible issues
      */
     public Class<?> resolveFieldGeneric(final Field field) {
-        return chooseFieldContext(field).resolveGenericOf(field.getGenericType());
+        return switchContext4field(field).resolveGenericOf(field.getGenericType());
     }
 
     /**
@@ -367,7 +367,7 @@ public abstract class AbstractGenericsContext {
      * @throws IllegalArgumentException if field not belongs to any class in hierarchy
      */
     public Type resolveFieldType(final Field field) {
-        return chooseFieldContext(field).resolveType(field.getGenericType());
+        return switchContext4field(field).resolveType(field.getGenericType());
     }
 
     /**
@@ -470,7 +470,7 @@ public abstract class AbstractGenericsContext {
      * @see #inlyingType(Type)
      */
     public GenericsContext fieldType(final Field field) {
-        return chooseFieldContext(field).inlyingType(field.getGenericType());
+        return switchContext4field(field).inlyingType(field.getGenericType());
     }
 
     /**
@@ -489,7 +489,7 @@ public abstract class AbstractGenericsContext {
      * @see #inlyingTypeAs(Type, Class)
      */
     public GenericsContext fieldTypeAs(final Field field, final Class<?> asType) {
-        return chooseFieldContext(field).inlyingTypeAs(field.getGenericType(), asType);
+        return switchContext4field(field).inlyingTypeAs(field.getGenericType(), asType);
     }
 
     /**
@@ -551,6 +551,21 @@ public abstract class AbstractGenericsContext {
     public abstract GenericsContext inlyingTypeAs(Type type, Class<?> asType);
 
     /**
+     * Look for generic variables presence inside type and, if found, try to switch to correct context.
+     * Switching is based on declaration source information, contained inside generic.
+     * <p>
+     * Note that {@link WrongGenericsContextException} used instead of {@link IllegalArgumentException}, as in
+     * other cases, because it is more specific error: type may come from anywhere and it may be not so easy to
+     * track it's correct usage.
+     *
+     * @param type type, possibly containing generic variables
+     * @return correct context for generics resolution inside type or the same context if type does not contains
+     * generics
+     * @throws WrongGenericsContextException when it is impossible to resolve type in correct context
+     */
+    public abstract GenericsContext chooseContext(Type type);
+
+    /**
      * For example, {@code class Root extends Base<String>} (and we resolve generics from Root):
      * {@code context.toStringCurrentClass() == "Root"} and
      * {@code context.type(Base.class).toStringCurrentClass() == "Base<String>"}.
@@ -596,31 +611,20 @@ public abstract class AbstractGenericsContext {
 
     /**
      * Used to switch to appropriate context or fail if type is not found in hierarchy.
+     * <p>
+     * Note that this method may seem useless as correct context is always selected based on type generics,
+     * but method is required to show more specific error (better indicating context).
      *
      * @param target    target type
      * @param msgPrefix error message prefix, identifying place
      * @return correct context for type (may be current context instance)
      * @throws IllegalArgumentException when context can't be switched
+     * @see #chooseContext(Type)
      */
-    protected abstract GenericsContext chooseContext(Class target, String msgPrefix);
+    protected abstract GenericsContext switchContext(Class target, String msgPrefix);
 
-    /**
-     * Look for generic variables presence inside type and, if found, try to switch to correct context.
-     * Switching is based on declaration source information, contained inside generic.
-     * <p>
-     * Note that {@link WrongGenericsContextException} used instead of {@link IllegalArgumentException}, as in
-     * other cases, because it is more specific error: type may come from anywhere and it may be not so easy to
-     * track it's correct usage.
-     *
-     * @param type type, possibly containing generic variables
-     * @return correct context for generics resolution inside type or the same context if type does not contains
-     * generics
-     * @throws WrongGenericsContextException when it is impossible to resolve type in correct context
-     */
-    protected abstract GenericsContext chooseContext(Type type);
-
-    private GenericsContext chooseFieldContext(final Field field) {
-        return chooseContext(field.getDeclaringClass(), "Field '" + field.getName() + "'");
+    private GenericsContext switchContext4field(final Field field) {
+        return switchContext(field.getDeclaringClass(), "Field '" + field.getName() + "'");
     }
 
     private String checkGenericName(final String genericName) {
