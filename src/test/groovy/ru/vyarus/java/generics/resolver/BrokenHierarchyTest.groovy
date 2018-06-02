@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.AbstractGenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.brokenhieararchy.BrokenHierarchyBase
 import ru.vyarus.java.generics.resolver.support.brokenhieararchy.BrokenHierarchyInterface
 import ru.vyarus.java.generics.resolver.support.brokenhieararchy.BrokenHierarchyRoot
@@ -18,7 +19,7 @@ class BrokenHierarchyTest extends Specification {
     def "Check broken hierarchy resolution"() {
 
         when: "resolving class with no generics set"
-        GenericsContext context = GenericsResolver.resolve(BrokenHierarchyRoot).type(BrokenHierarchyBase)
+        TypeGenericsContext context = GenericsResolver.resolve(BrokenHierarchyRoot).type(BrokenHierarchyBase)
         then: "generics resolved just from generic bound"
         context.generic("T") == Callable
         context.generic("K") == Object
@@ -33,7 +34,7 @@ class BrokenHierarchyTest extends Specification {
     def "Check bypass generic case"() {
 
         when: "root class bypass it's own generics"
-        GenericsContext context = GenericsResolver.resolve(BypassGenericRoot).type(BrokenHierarchyBase)
+        AbstractGenericsContext context = GenericsResolver.resolve(BypassGenericRoot).type(BrokenHierarchyBase)
         then: "generic resolved from root generic bound, but generic bound become lower"
         context.generic("T") == Callable
         context.generic("K") == Object

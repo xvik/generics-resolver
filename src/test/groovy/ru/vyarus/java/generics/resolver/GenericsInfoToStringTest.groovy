@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.BeanRoot
 import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.support.array.ArRoot
@@ -73,7 +73,7 @@ class GenericsInfoToStringTest extends Specification {
 """
     }
 
-    private toString(GenericsContext context) {
+    private toString(TypeGenericsContext context) {
         return context.genericsInfo.toString().replace("\r", "")
     }
 }

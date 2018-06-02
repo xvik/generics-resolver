@@ -31,7 +31,7 @@ public class ConstructorGenericsContext extends TypeGenericsContext {
 
     public ConstructorGenericsContext(final GenericsInfo genericsInfo,
                                       final Constructor constructor,
-                                      final GenericsContext root) {
+                                      final TypeGenericsContext root) {
         super(genericsInfo, constructor.getDeclaringClass(), root);
         this.ctor = constructor;
         initGenerics();

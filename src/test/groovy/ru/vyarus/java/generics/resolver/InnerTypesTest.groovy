@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.support.inner.InOwner
@@ -9,7 +8,6 @@ import ru.vyarus.java.generics.resolver.util.TypeUtils
 import spock.lang.Specification
 
 import java.lang.reflect.Type
-
 
 /**
  * @author Vyacheslav Rusakov
@@ -20,7 +18,7 @@ class InnerTypesTest extends Specification {
     def "Check inner class support"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Owner.Inner)
+        TypeGenericsContext context = GenericsResolver.resolve(Owner.Inner)
         def res = context.resolveFieldClass(Owner.Inner.getDeclaredField("field"))
         then:
         res == Object
@@ -29,7 +27,7 @@ class InnerTypesTest extends Specification {
     def "Check parametrized inner support"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Owner.PInner)
+        TypeGenericsContext context = GenericsResolver.resolve(Owner.PInner)
         then:
         context.resolveFieldClass(Owner.PInner.getDeclaredField("field")) == Object
         context.resolveFieldClass(Owner.PInner.getDeclaredField("field2")) == Object
@@ -39,7 +37,7 @@ class InnerTypesTest extends Specification {
     def "Check inlying context for inner type"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Root)
+        TypeGenericsContext context = GenericsResolver.resolve(Root)
         TypeGenericsContext innerContext = context.fieldType(Root.getDeclaredField('target'))
 
         then:
@@ -50,7 +48,7 @@ class InnerTypesTest extends Specification {
     def "Check inlying context for parametrized inner type"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Root)
+        TypeGenericsContext context = GenericsResolver.resolve(Root)
         TypeGenericsContext innerContext = context.fieldType(Root.getDeclaredField('ptarget'))
 
         then:
@@ -62,8 +60,8 @@ class InnerTypesTest extends Specification {
     def "Check inlying context for parametrized inner type with owner type in hierarchy"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Root)
-        GenericsContext innerContext = context.fieldType(Root.getDeclaredField('htarget'))
+        TypeGenericsContext context = GenericsResolver.resolve(Root)
+        TypeGenericsContext innerContext = context.fieldType(Root.getDeclaredField('htarget'))
 
         then:
         innerContext.resolveFieldClass(Owner.PInner.getDeclaredField('field')) == String
@@ -74,7 +72,7 @@ class InnerTypesTest extends Specification {
     def "Check inner subtype"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(InnerExt)
+        TypeGenericsContext context = GenericsResolver.resolve(InnerExt)
 
         then:
         context.resolveFieldClass(InnerExt.getField('field')) == Object
@@ -83,7 +81,7 @@ class InnerTypesTest extends Specification {
     def "Check inner subtype with parameters"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(PInnerExt)
+        TypeGenericsContext context = GenericsResolver.resolve(PInnerExt)
 
         then:
         context.resolveFieldClass(PInnerExt.getField('field')) == Integer
@@ -93,7 +91,7 @@ class InnerTypesTest extends Specification {
     def "Check owner generic used in hierarchy"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Owner.HInner)
+        TypeGenericsContext context = GenericsResolver.resolve(Owner.HInner)
 
         then:
         context.resolveFieldClass(Owner.PInner.getField('field')) == Object
@@ -113,7 +111,7 @@ class InnerTypesTest extends Specification {
     def "Check declaration outer generics support"() {
 
         when: "resolve inner class field"
-        GenericsContext context = GenericsResolver.resolve(InnerFullDeclaration)
+        TypeGenericsContext context = GenericsResolver.resolve(InnerFullDeclaration)
                 .fieldType(InnerFullDeclaration.getDeclaredField("inner"))
         then: "static generic used instead of root hierarchy"
         context.generic('T') == String

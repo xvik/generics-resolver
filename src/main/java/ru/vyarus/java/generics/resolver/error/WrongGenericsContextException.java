@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.error;
 
+import ru.vyarus.java.generics.resolver.context.AbstractGenericsContext;
 import ru.vyarus.java.generics.resolver.context.GenericDeclarationScope;
 import ru.vyarus.java.generics.resolver.context.GenericsInfo;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
@@ -12,7 +13,7 @@ import java.util.Arrays;
 /**
  * Thrown to indicate generics not resolvable under current context class (because generics could use the same names
  * and incorrect context could lead to hard to track errors). Thrown only on methods inside
- * {@link ru.vyarus.java.generics.resolver.context.GenericsContext} where incoming type is explicitly checked
+ * {@link AbstractGenericsContext} where incoming type is explicitly checked
  * for compatibility (to prevent usage errors).
  * <p>
  * Most common reason is trying to resolve type without changing context type (for example, when using

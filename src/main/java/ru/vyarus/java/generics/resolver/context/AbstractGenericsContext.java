@@ -17,8 +17,8 @@ import java.util.Map;
  * methods are added in {@link TypeGenericsContext}, method context {@link MethodGenericsContext} or
  * constructor context {@link ConstructorGenericsContext}.
  * <p>
- * Note that all possible contexts extends from {@link TypeGenericsContext}, but {@link GenericsContext} will fit
- * for the majority of cases (while direct outer class or inlying context-aware logic is not required).
+ * Note that all possible contexts extends from {@link TypeGenericsContext}. {@link AbstractGenericsContext}
+ * exists only to extract all core generics operations into separate class.
  * <p>
  * Usage: navigate to required type {@code context.type(MyClass.class)} and use utility methods to
  * get type's own generics or as helper for methods/fields introspection. To navigate to method context use
@@ -54,13 +54,13 @@ import java.util.Map;
 // huge class size is OK, because it should be the only entry point for api
 @SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace",
         "PMD.TooManyMethods", "PMD.GodClass"})
-public abstract class GenericsContext {
+public abstract class AbstractGenericsContext {
 
     protected final GenericsInfo genericsInfo;
     protected final Class<?> currentType;
     protected final Map<String, Type> typeGenerics;
 
-    public GenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
+    public AbstractGenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
         this.genericsInfo = genericsInfo;
         this.currentType = type;
         // fail on wrong type
@@ -602,7 +602,7 @@ public abstract class GenericsContext {
      * @return correct context for type (may be current context instance)
      * @throws IllegalArgumentException when context can't be switched
      */
-    protected abstract GenericsContext chooseContext(Class target, String msgPrefix);
+    protected abstract TypeGenericsContext chooseContext(Class target, String msgPrefix);
 
     /**
      * Look for generic variables presence inside type and, if found, try to switch to correct context.
@@ -617,9 +617,9 @@ public abstract class GenericsContext {
      * generics
      * @throws WrongGenericsContextException when it is impossible to resolve type in correct context
      */
-    protected abstract GenericsContext chooseContext(Type type);
+    protected abstract TypeGenericsContext chooseContext(Type type);
 
-    private GenericsContext chooseFieldContext(final Field field) {
+    private TypeGenericsContext chooseFieldContext(final Field field) {
         return chooseContext(field.getDeclaringClass(), "Field '" + field.getName() + "'");
     }
 

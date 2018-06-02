@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
@@ -23,7 +22,7 @@ class ToStringTest extends Specification {
     def "Complex to string"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(TSRoot).type(TSBase)
+        TypeGenericsContext context = GenericsResolver.resolve(TSRoot).type(TSBase)
         then:
         context.genericsAsString() == ["Model", "ArrayList<SType<Model, Model[]>>"]
 
@@ -43,7 +42,7 @@ class ToStringTest extends Specification {
     def "Complex to string 2"() {
 
         when: "resolving all types of interface generics"
-        GenericsContext context = GenericsResolver.resolve(Base).type(GenerifiedInterface)
+        TypeGenericsContext context = GenericsResolver.resolve(Base).type(GenerifiedInterface)
         then: "everything is ok"
         context.genericsAsString() == ['Integer', 'String[]', 'List<String>', 'List<Set<String>>']
     }
@@ -58,7 +57,7 @@ class ToStringTest extends Specification {
     def "Wildcards to string"() {
 
         when: "to string wildcard"
-        GenericsContext context= GenericsResolver.resolve(WCRoot).type(WCBase)
+        TypeGenericsContext context = GenericsResolver.resolve(WCRoot).type(WCBase)
         then: "correct"
         context.genericAsString(0) == "Model"
         context.genericAsString(1) == "? super Model"
@@ -69,7 +68,7 @@ class ToStringTest extends Specification {
     def "Inner context to string"() {
 
         when: "reasolve type with outer generics"
-        GenericsContext context = GenericsResolver.resolve(InnerTypesTest.Root)
+        TypeGenericsContext context = GenericsResolver.resolve(InnerTypesTest.Root)
         TypeGenericsContext innerContext = context.fieldType(InnerTypesTest.Root.getDeclaredField('target'))
 
         then: "to string properly selects type generics only"

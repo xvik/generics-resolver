@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.*
 import spock.lang.Specification
 
@@ -14,7 +14,7 @@ class CurrentIntrospectionTest extends Specification {
     def "Check current introspection on interface"() {
 
         when:
-        GenericsContext context = GenericsResolver.resolve(Root).type(ComplexGenerics)
+        TypeGenericsContext context = GenericsResolver.resolve(Root).type(ComplexGenerics)
 
         then:
         context.genericsInfo
@@ -51,7 +51,7 @@ class CurrentIntrospectionTest extends Specification {
     def "Check current introspection on bean"() {
 
         when: "introspecting base class"
-        GenericsContext context = GenericsResolver.resolve(BeanRoot).type(Lvl2BeanBase)
+        TypeGenericsContext context = GenericsResolver.resolve(BeanRoot).type(Lvl2BeanBase)
 
         then:
         context.genericsInfo

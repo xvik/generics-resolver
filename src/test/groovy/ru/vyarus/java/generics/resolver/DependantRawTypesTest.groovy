@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import spock.lang.Specification
 
 /**
@@ -12,7 +12,7 @@ class DependantRawTypesTest extends Specification {
     def "Check dependant raw types"() {
 
         when: "dependant root generics declared"
-        GenericsContext context = GenericsResolver.resolve(SelfPairProperties)
+        TypeGenericsContext context = GenericsResolver.resolve(SelfPairProperties)
 
         then: "correctly resolved"
         context.genericsMap() == ["F": Object, "S": Object]

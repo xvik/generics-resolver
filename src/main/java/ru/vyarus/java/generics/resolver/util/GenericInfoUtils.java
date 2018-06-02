@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver.util;
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext;
 import ru.vyarus.java.generics.resolver.context.GenericsInfo;
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -58,7 +58,7 @@ public final class GenericInfoUtils {
      * @return analyzed type generics info
      */
     public static GenericsInfo create(
-            final GenericsContext context, final Type type, final Class<?>... ignoreClasses) {
+            final TypeGenericsContext context, final Type type, final Class<?>... ignoreClasses) {
         // root generics are required only to properly solve type
         final Map<String, Type> rootGenerics = context.visibleGenericsMap();
         // first step: solve type to replace transitive generics with direct values
@@ -99,7 +99,7 @@ public final class GenericInfoUtils {
      * @param ignoreClasses classes to exclude from hierarchy analysis
      * @return analyzed type generics info
      */
-    public static GenericsInfo create(final GenericsContext context,
+    public static GenericsInfo create(final TypeGenericsContext context,
                                       final Type type,
                                       final Class<?> asType,
                                       final Class<?>... ignoreClasses) {

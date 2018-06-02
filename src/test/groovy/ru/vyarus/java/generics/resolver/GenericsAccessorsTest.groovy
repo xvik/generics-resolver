@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.ConstructorGenerics
 import spock.lang.Specification
 
@@ -44,7 +44,7 @@ class GenericsAccessorsTest extends Specification {
         context = context.method(Outer.Inner.getDeclaredMethod('doSmth2'))
         then:
         context.genericsMap() == ["A": Double, "T": Comparable]
-        context.ownerGenericsMap() == ["B":Integer, "C": Long]
+        context.ownerGenericsMap() == ["B": Integer, "C": Long]
         context.methodGenericsMap() == ["B": Object]
         context.visibleGenericsMap() == ["A": Double, "T": Comparable, "B": Object, "C": Long]
         context.rootContext() != null
@@ -113,7 +113,7 @@ class GenericsAccessorsTest extends Specification {
 """
     }
 
-    private toString(GenericsContext context) {
+    private toString(TypeGenericsContext context) {
         return context.toString().replace("\r", "")
     }
 

@@ -29,7 +29,7 @@ public class MethodGenericsContext extends TypeGenericsContext {
     private Map<String, Type> methodGenerics;
     private Map<String, Type> allGenerics;
 
-    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method, final GenericsContext root) {
+    public MethodGenericsContext(final GenericsInfo genericsInfo, final Method method, final TypeGenericsContext root) {
         super(genericsInfo, method.getDeclaringClass(), root);
         this.meth = method;
         initGenerics();

@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import spock.lang.Specification
 
@@ -13,7 +13,7 @@ class FieldShortcutsTest extends Specification {
     def "Check field shortcuts"() {
 
         setup:
-        GenericsContext context = GenericsResolver.resolve(Root)
+        TypeGenericsContext context = GenericsResolver.resolve(Root)
         def field = Root.getField("field")
 
         expect:
@@ -26,7 +26,7 @@ class FieldShortcutsTest extends Specification {
     def "Check wrong field resolution"() {
 
         setup:
-        GenericsContext context = GenericsResolver.resolve(Root)
+        TypeGenericsContext context = GenericsResolver.resolve(Root)
         def field = Root.getField("field")
 
         when: "resolve type on wrong class"
@@ -38,7 +38,7 @@ class FieldShortcutsTest extends Specification {
     def "Check not in hierarchy"() {
 
         setup:
-        GenericsContext context = GenericsResolver.resolve(Root, Base)
+        TypeGenericsContext context = GenericsResolver.resolve(Root, Base)
         def field = Root.getField("field")
 
         when: 'accessing field of ignored class'

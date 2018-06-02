@@ -1,23 +1,9 @@
 package ru.vyarus.java.generics.resolver.inlying
 
 import ru.vyarus.java.generics.resolver.GenericsResolver
-import ru.vyarus.java.generics.resolver.context.GenericsContext
-import ru.vyarus.java.generics.resolver.inlying.support.track.ArrayLeft
-import ru.vyarus.java.generics.resolver.inlying.support.track.NestedLeft
-import ru.vyarus.java.generics.resolver.inlying.support.track.NestedRight
-import ru.vyarus.java.generics.resolver.inlying.support.track.RootScopeContradiction
-import ru.vyarus.java.generics.resolver.inlying.support.track.RootScopeContradiction2
-import ru.vyarus.java.generics.resolver.inlying.support.track.Source
-import ru.vyarus.java.generics.resolver.inlying.support.track.Nested
-import ru.vyarus.java.generics.resolver.inlying.support.track.ContradictionTrack
-import ru.vyarus.java.generics.resolver.inlying.support.track.MultiTier
-import ru.vyarus.java.generics.resolver.inlying.support.track.MultipleGenerics
-import ru.vyarus.java.generics.resolver.inlying.support.track.NoTrack
-import ru.vyarus.java.generics.resolver.inlying.support.track.Target
-import ru.vyarus.java.generics.resolver.inlying.support.track.Wildcard
-import ru.vyarus.java.generics.resolver.inlying.support.track.WildcardDeclaration
-import ru.vyarus.java.generics.resolver.inlying.support.track.WildcardDeclaration2
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException
+import ru.vyarus.java.generics.resolver.inlying.support.track.*
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.support.Root
@@ -33,7 +19,7 @@ class GenericBacktrackingTest extends Specification {
     def "Check generics tracking cases"() {
 
         setup: "prepare base type context"
-        GenericsContext context = GenericsResolver.resolve(Source)
+        TypeGenericsContext context = GenericsResolver.resolve(Source)
 
         when: "multiple generics"
         def res = context.fieldTypeAs(Source.getDeclaredField("target"), MultipleGenerics)
@@ -66,7 +52,7 @@ class GenericBacktrackingTest extends Specification {
     def "Complex checks"() {
 
         when: "nested declaration"
-        GenericsContext context = GenericsResolver.resolve(Nested)
+        TypeGenericsContext context = GenericsResolver.resolve(Nested)
         def res = context.fieldTypeAs(Nested.getDeclaredField("target"), Nested)
         then: "one generic tracked"
         res.genericAsString("K") == 'String'

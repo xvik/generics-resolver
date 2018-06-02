@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver.inlying
 
 import ru.vyarus.java.generics.resolver.GenericsResolver
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.inlying.support.DeclarationType
 import ru.vyarus.java.generics.resolver.inlying.support.Err
 import ru.vyarus.java.generics.resolver.inlying.support.RootType
@@ -17,7 +17,7 @@ class InlyingGenericsResolutionTest extends Specification {
     def "Check inlying contexts resolution"() {
 
         setup: "prepare base type context"
-        GenericsContext context = GenericsResolver.resolve(RootType)
+        TypeGenericsContext context = GenericsResolver.resolve(RootType)
 
         when: "field context"
         def res = context.fieldType(DeclarationType.getDeclaredField("one"))
@@ -60,7 +60,7 @@ class InlyingGenericsResolutionTest extends Specification {
     def "Check inlying type without generics"() {
 
         setup: "prepare base type context"
-        GenericsContext context = GenericsResolver.resolve(RootType)
+        TypeGenericsContext context = GenericsResolver.resolve(RootType)
 
         when: "field without generics"
         def res = context.fieldType(RootType.getDeclaredField("nogen"))

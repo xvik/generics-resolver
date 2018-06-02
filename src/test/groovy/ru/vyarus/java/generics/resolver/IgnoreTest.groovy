@@ -1,7 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.GenericsResolver
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.BeanBase
 import ru.vyarus.java.generics.resolver.support.BeanRoot
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
@@ -10,7 +9,6 @@ import ru.vyarus.java.generics.resolver.support.clash.ClashRoot
 import spock.lang.Specification
 
 import java.util.concurrent.Callable
-
 
 /**
  * @author Vyacheslav Rusakov 
@@ -21,7 +19,7 @@ class IgnoreTest extends Specification {
     def "Check ignore usage"() {
 
         when: "using ignore to overcome interface clash"
-        GenericsContext context = GenericsResolver.resolve(ClashRoot, Callable)
+        TypeGenericsContext context = GenericsResolver.resolve(ClashRoot, Callable)
         then: "without callable context correctly resolved"
         !context.genericsInfo.composingTypes.contains(Callable)
 

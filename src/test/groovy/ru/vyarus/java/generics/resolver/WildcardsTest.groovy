@@ -1,6 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.context.TypeGenericsContext
 import ru.vyarus.java.generics.resolver.support.Model
 import ru.vyarus.java.generics.resolver.support.wildcard.WCBase
 import ru.vyarus.java.generics.resolver.support.wildcard.WCBaseLvl2
@@ -21,7 +21,7 @@ class WildcardsTest extends Specification {
     def "Check wildcard generics resolution"() {
 
         when: "analyzing hierarchy with wildcards"
-        GenericsContext context = GenericsResolver.resolve(WCRoot).type(WCBase)
+        TypeGenericsContext context = GenericsResolver.resolve(WCRoot).type(WCBase)
         then: "correct generic values resolved"
         context.generic(0) == Model
         context.generic(1) == Object
