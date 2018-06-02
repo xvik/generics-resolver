@@ -274,9 +274,10 @@ public final class GenericsUtils {
      */
     public static Map<String, Type> extractTypeGenerics(final Class<?> type,
                                                         final Map<String, Type> generics) {
-        final boolean hasOwnerGenerics =
-                type.isMemberClass() && type.getTypeParameters().length != generics.size();
-        if (!hasOwnerGenerics) {
+        // assuming generics map always contains correct generics and may include only outer
+        // so if we call it with outer type and outer only generics it will correctly detect it
+        final boolean enoughGenerics = type.getTypeParameters().length == generics.size();
+        if (enoughGenerics) {
             return generics;
         }
         final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
