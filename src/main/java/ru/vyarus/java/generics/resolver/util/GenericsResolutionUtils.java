@@ -28,13 +28,34 @@ public final class GenericsResolutionUtils {
     }
 
     /**
-     * Analyze class hierarchy and resolve actual generic values for all composing types.
+     * Analyze class hierarchy and resolve actual generic values for all composing types. Root type generics
+     * (if present) will be resolved as upper bound from declaration.
+     *
+     * @param type type to resolve generics for
+     * @param ignoreClasses classes to ignore (if required)
+     * @return resolved generics for all types in class hierarchy
+     * @see #resolve(Class, LinkedHashMap, Map, List) for more custom resolution
+     */
+    public static Map<Class<?>, LinkedHashMap<String, Type>> resolve(final Class<?> type,
+                                                                     final Class<?>... ignoreClasses) {
+        return resolve(type,
+                resolveRawGenerics(type),
+                Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap(),
+                Arrays.asList(ignoreClasses));
+    }
+
+    /**
+     * Analyze class hierarchy and resolve actual generic values for all composing types.  Root type
+     * generics must be specified directly.
+     * <p>
+     * If generics are known for some middle type, then they would be used "as is" instead of generics tracked
+     * from root. Also, known generics will be used for lower hierarchy resolution.
      *
      * @param type          class to analyze
-     * @param rootGenerics  resolved root type generics (including owner type generics)
+     * @param rootGenerics  resolved root type generics (including owner type generics); must not be null!
      * @param knownGenerics type generics known before analysis (some middle class generics are known) and
      *                      could contain possible outer generics (types for sure not included in resolving type
-     *                      hierarchy)
+     *                      hierarchy); must not be null, but could be empty map
      * @param ignoreClasses classes to ignore during analysis
      * @return resolved generics for all types in class hierarchy
      */
