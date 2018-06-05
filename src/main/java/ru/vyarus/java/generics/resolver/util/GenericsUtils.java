@@ -18,6 +18,9 @@ import java.util.*;
  */
 @SuppressWarnings("PMD.GodClass")
 public final class GenericsUtils {
+
+    private static final Type[] NO_TYPES = new Type[0];
+
     private GenericsUtils() {
     }
 
@@ -35,6 +38,29 @@ public final class GenericsUtils {
     }
 
     /**
+     * If type is a variable, looks actual variable type, if it contains generics.
+     * Generics could be returned only from {@link ParameterizedType}.
+     * <p>
+     * Note: returned generics may contain variables inside!
+     *
+     * @param type     type to get generics of
+     * @param generics context generics map
+     * @return type generics array or empty array
+     */
+    public static Type[] getGenerics(final Type type, final Map<String, Type> generics) {
+        Type analyzingType = type;
+        if (type instanceof TypeVariable) {
+            // if type is pure generic recovering parametrization
+            analyzingType = declaredGeneric((TypeVariable) type, generics);
+        }
+        if ((analyzingType instanceof ParameterizedType)
+                && ((ParameterizedType) analyzingType).getActualTypeArguments().length > 0) {
+            return ((ParameterizedType) analyzingType).getActualTypeArguments();
+        }
+        return NO_TYPES;
+    }
+
+    /**
      * Called to properly resolve generified type (e.g. generified method return).
      * For example, when calling for {@code List<T>} it will return type of {@code T}.
      *
@@ -44,23 +70,13 @@ public final class GenericsUtils {
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
     public static List<Class<?>> resolveGenericsOf(final Type type, final Map<String, Type> generics) {
-        final List<Class<?>> res = new ArrayList<Class<?>>();
-        Type analyzingType = type;
-        if (type instanceof TypeVariable) {
-            // if type is pure generic recovering parametrization
-            analyzingType = declaredGeneric((TypeVariable) type, generics);
+        final Type[] typeGenerics = getGenerics(type, generics);
+        if (typeGenerics.length == 0) {
+            return Collections.emptyList();
         }
-        if ((analyzingType instanceof ParameterizedType)
-                && ((ParameterizedType) analyzingType).getActualTypeArguments().length > 0) {
-            final Type[] actualTypeArguments = ((ParameterizedType) analyzingType).getActualTypeArguments();
-            for (final Type actual : actualTypeArguments) {
-                if (actual instanceof Class) {
-                    res.add((Class) actual);
-                } else {
-                    // deep generics resolution required
-                    res.add(resolveClass(actual, generics));
-                }
-            }
+        final List<Class<?>> res = new ArrayList<Class<?>>();
+        for (Type gen : typeGenerics) {
+            res.add(resolveClass(gen, generics));
         }
         return res;
     }
@@ -225,6 +241,9 @@ public final class GenericsUtils {
      * @return types without named generics
      */
     public static Type[] resolveTypeVariables(final Type[] types, final Map<String, Type> generics) {
+        if (types.length == 0) {
+            return NO_TYPES;
+        }
         final Type[] resolved = new Type[types.length];
         for (int i = 0; i < types.length; i++) {
             resolved[i] = resolveTypeVariables(types[i], generics);

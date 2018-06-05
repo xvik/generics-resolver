@@ -6,10 +6,7 @@ import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
 import java.lang.reflect.*;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Context object wraps root type hierarchy generics information descriptor and provides utility methods for
@@ -303,6 +300,7 @@ public abstract class AbstractGenericsContext {
      * @param type type to resolve generics
      * @return resolved generic classes or empty list if type does not use generics
      * @throws WrongGenericsContextException if type contains generics not visible from current class
+     * @see #resolveTypeGenerics(Type) if complete types are required
      */
     public List<Class<?>> resolveGenericsOf(final Type type) {
         return GenericsUtils.resolveGenericsOf(type, chooseContext(type).contextGenerics());
@@ -389,6 +387,28 @@ public abstract class AbstractGenericsContext {
      */
     public Type resolveType(final Type type) {
         return GenericsUtils.resolveTypeVariables(type, chooseContext(type).contextGenerics());
+    }
+
+    /**
+     * Returns generics of type with all named variables replaced in types with actual generics. For example,
+     * {@code ParameterizedType Map<String, List<T>>} would become
+     * {@code [Class String, ParameterizedType List<String>]} (assumed generic T is defined as String).
+     * <p>
+     * Useful when complete generic types are required.
+     * <p>
+     * Check if type containing generics, belonging to different context in current hierarchy and
+     * automatically change context to properly resolve generics. Fails when it is impossible to correctly
+     * resolve generics (preventing incorrect usage).
+     *
+     * @param type type to return resolved generics of
+     * @return type generics without variables
+     * @throws WrongGenericsContextException if type contains generics not visible from current class
+     * @see #resolveGenericsOf(Type) if just classes required
+     */
+    public List<Type> resolveTypeGenerics(final Type type) {
+        final Map<String, Type> generics = chooseContext(type).contextGenerics();
+        return Arrays.asList(
+                GenericsUtils.resolveTypeVariables(GenericsUtils.getGenerics(type, generics), generics));
     }
 
     /**
