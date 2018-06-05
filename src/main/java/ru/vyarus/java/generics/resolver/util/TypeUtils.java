@@ -21,7 +21,7 @@ import java.util.Map;
  */
 public final class TypeUtils {
 
-    private static final Map<String, Type> IGNORE_VARS = new IgnoreGenericsMap();
+    private static final Map<String, Type> IGNORE_VARS = IgnoreGenericsMap.getInstance();
 
     @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.AvoidUsingShortType"})
     private static final Map<Class, Class> PRIMITIVES = new HashMap<Class, Class>() {{

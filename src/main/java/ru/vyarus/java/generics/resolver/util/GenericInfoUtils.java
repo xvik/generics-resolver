@@ -2,6 +2,7 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext;
 import ru.vyarus.java.generics.resolver.context.GenericsInfo;
+import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 
 import java.lang.reflect.Type;
 import java.util.*;
@@ -23,8 +24,6 @@ import java.util.*;
 // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
 @SuppressWarnings("PMD.LooseCoupling")
 public final class GenericInfoUtils {
-
-    private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
 
     private GenericInfoUtils() {
     }
@@ -133,7 +132,7 @@ public final class GenericInfoUtils {
         // root type
         typeGenerics = asType.getTypeParameters().length > 0
                 ? GenericsTrackingUtils.track(asType, middleType, typeGenerics)
-                : EMPTY_MAP;
+                : EmptyGenericsMap.getInstance();
 
         typeGenerics = GenericsResolutionUtils
                 .fillOuterGenerics(asType, typeGenerics, knownGenerics.size() > 1

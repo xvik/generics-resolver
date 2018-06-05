@@ -33,5 +33,8 @@ class ContextTypesResolutionTest extends Specification {
         expect: "generics"
         context.resolveTypeGenerics(Lvl2Base1.getMethod("doSomth5").getGenericReturnType()).isEmpty()
         context.resolveTypeGenerics(Lvl2Base1.getMethod("doSomth6").getGenericReturnType()) == [Model, Model]
+
+        and: "when called on raw class"
+        context.resolveTypeGenerics(Lvl2Base1) == [Object]
     }
 }

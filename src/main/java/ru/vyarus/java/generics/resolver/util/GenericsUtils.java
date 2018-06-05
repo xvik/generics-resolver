@@ -39,7 +39,7 @@ public final class GenericsUtils {
 
     /**
      * If type is a variable, looks actual variable type, if it contains generics.
-     * Generics could be returned only from {@link ParameterizedType}.
+     * For {@link ParameterizedType} return actual type parameters, for simple class returns raw class generics.
      * <p>
      * Note: returned generics may contain variables inside!
      *
@@ -48,6 +48,7 @@ public final class GenericsUtils {
      * @return type generics array or empty array
      */
     public static Type[] getGenerics(final Type type, final Map<String, Type> generics) {
+        Type[] res = NO_TYPES;
         Type analyzingType = type;
         if (type instanceof TypeVariable) {
             // if type is pure generic recovering parametrization
@@ -55,14 +56,23 @@ public final class GenericsUtils {
         }
         if ((analyzingType instanceof ParameterizedType)
                 && ((ParameterizedType) analyzingType).getActualTypeArguments().length > 0) {
-            return ((ParameterizedType) analyzingType).getActualTypeArguments();
+            res = ((ParameterizedType) analyzingType).getActualTypeArguments();
+        } else if (type instanceof Class) {
+            // if type is class return raw declaration
+            final Class<?> actual = (Class<?>) analyzingType;
+            if (actual.getTypeParameters().length > 0) {
+                res = GenericsResolutionUtils.resolveDirectRawGenerics(actual)
+                        .values().toArray(new Type[0]);
+            }
         }
-        return NO_TYPES;
+        return res;
     }
 
     /**
      * Called to properly resolve generified type (e.g. generified method return).
      * For example, when calling for {@code List<T>} it will return type of {@code T}.
+     * <p>
+     * If called on class (e.g. List) then return raw generic definition (upper bounds).
      *
      * @param type     type to analyze
      * @param generics root class generics mapping

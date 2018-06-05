@@ -24,7 +24,7 @@ import java.lang.reflect.WildcardType;
  * @since 18.05.2018
  */
 public class AssignabilityTypesVisitor implements TypesVisitor {
-    private final IgnoreGenericsMap ignore = new IgnoreGenericsMap();
+    private static final IgnoreGenericsMap IGNORE = IgnoreGenericsMap.getInstance();
 
     private boolean assignable = true;
 
@@ -34,8 +34,8 @@ public class AssignabilityTypesVisitor implements TypesVisitor {
         // note that right could still be object like ? super String (which upper bound is object)
         if (two != Object.class) {
             // check upper bounds for wildcards (? extends)
-            final Class[] oneBounds = GenericsUtils.resolveUpperBounds(one, ignore);
-            final Class[] twoBounds = GenericsUtils.resolveUpperBounds(two, ignore);
+            final Class[] oneBounds = GenericsUtils.resolveUpperBounds(one, IGNORE);
+            final Class[] twoBounds = GenericsUtils.resolveUpperBounds(two, IGNORE);
             assignable = TypeUtils.isAssignableBounds(oneBounds, twoBounds);
 
             final boolean oneWildcard = one instanceof WildcardType;

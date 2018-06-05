@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver.util;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
+import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
 import java.lang.reflect.ParameterizedType;
@@ -21,7 +22,6 @@ import java.util.*;
 @SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass", "PMD.AvoidLiteralsInIfCondition"})
 public final class GenericsResolutionUtils {
 
-    private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
     private static final String GROOVY_OBJECT = "GroovyObject";
 
     private GenericsResolutionUtils() {
@@ -101,8 +101,7 @@ public final class GenericsResolutionUtils {
 
             final int cnt = genericNames.length;
             for (int i = 0; i < cnt; i++) {
-                final Type resolvedGenericType = GenericsUtils.resolveTypeVariables(genericTypes[i], generics);
-                res.put(genericNames[i].getName(), resolvedGenericType);
+                res.put(genericNames[i].getName(), genericTypes[i]);
             }
         } else {
             res = resolveRawGenerics(GenericsUtils.resolveClass(type, generics));
@@ -118,14 +117,29 @@ public final class GenericsResolutionUtils {
      * If class is inner class, resolve outer class generics (which may be used in class)
      *
      * @param type class to analyze generics for
-     * @return resolved generics or empty map if not generics used
+     * @return resolved generics (including outer class generics) or empty map if not generics used
+     * @see #resolveDirectRawGenerics(Class) to resolve without outer type
      */
     public static LinkedHashMap<String, Type> resolveRawGenerics(final Class<?> type) {
-        final TypeVariable[] declaredGenerics = type.getTypeParameters();
         // inner class can use outer class generics
-        final LinkedHashMap<String, Type> res =
-                fillOuterGenerics(type, new LinkedHashMap<String, Type>(), null);
+        return fillOuterGenerics(type, resolveDirectRawGenerics(type), null);
+    }
 
+    /**
+     * Resolve type generics by declaration (as upper bound). Used for cases when actual generic definition is not
+     * available (so actual generics are unknown). In most cases such generics resolved as Object
+     * (for example, {@code Some<T>}).
+     *
+     * @param type class to analyze generics for
+     * @return resolved generics or empty map if not generics used
+     * @see #resolveRawGenerics(Class) to include outer type generics
+     */
+    public static LinkedHashMap<String, Type> resolveDirectRawGenerics(final Class<?> type) {
+        final TypeVariable[] declaredGenerics = type.getTypeParameters();
+        if (declaredGenerics.length == 0) {
+            return EmptyGenericsMap.getInstance();
+        }
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
         for (TypeVariable variable : declaredGenerics) {
             res.put(variable.getName(), resolveRawGeneric(variable, res));
         }
@@ -233,8 +247,9 @@ public final class GenericsResolutionUtils {
                 outerGenerics.remove(var.getName());
             }
 
-            if (generics.isEmpty()) {
-                // empty generics map almost sure means that passed map is shared empty map which must not be modified
+            if (generics instanceof EmptyGenericsMap) {
+                // if outer map is empty then it was assumed that empty map could be returned
+                // (outerGenerics could be empty map too)
                 res = outerGenerics;
             } else {
                 generics.putAll(outerGenerics);
@@ -316,7 +331,7 @@ public final class GenericsResolutionUtils {
                 types.put(interfaceType, resolveRawGenerics(interfaceType));
             } else if (!GROOVY_OBJECT.equals(interfaceType.getSimpleName())) {
                 // avoid groovy specific interface (all groovy objects implements it)
-                types.put(interfaceType, EMPTY_MAP);
+                types.put(interfaceType, EmptyGenericsMap.getInstance());
             }
             analyzeType(types, interfaceType, knownTypes, ignoreClasses);
         }
@@ -363,6 +378,6 @@ public final class GenericsResolutionUtils {
             // root class didn't declare generics
             res = resolveRawGenerics(parent);
         }
-        return res == null ? EMPTY_MAP : res;
+        return res == null ? EmptyGenericsMap.getInstance() : res;
     }
 }

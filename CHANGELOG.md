@@ -57,6 +57,7 @@
             - resolveFieldType(Field) - field type without generic variables 
             - resolveParameterType(pos) - (method context) parameter type without generic variables 
             - resolveReturnType() - (method context) return type without generic variables
+        - resolveTypeGenerics(Type) = Type[]    
     * Shortcuts for Field's type resolution (with automatic context tracking to avoid silly mistakes):
         - resolveFieldClass(Field) - field class
         - resolveFieldGenerics(Field) - field's class generics (List<Class\>)
@@ -66,7 +67,8 @@
             - toStringCurrentClassDeclaration() - current with resolved generics ("MyClass<Integer>")
             - toStringCurrentClass() - current class with named generics ("MyClass<T>")
             - toStringMethod() - method string with resolved generics ("void do(MyType)")
-            - toStringConstructor() - constructor string with resolved generics ("Some(Long)")                
+            - toStringConstructor() - constructor string with resolved generics ("Some(Long)")
+    * (breaking) resolveGenericsOf() called on class will return upper bounds from generic declaration (previously returns empty map)                        
 * Improved debugging support:
     - Core context could be printed as string (class hierarchy with resolved generics): context.getGenericsInfo().toString()
     - For customized context string rendering: context.getGenericsInfo().toStringHierarchy(TypeWriter) 
@@ -84,7 +86,8 @@
 
 Compatibility notes:  
 * API did not changed, only new methods were added.
-    - removed GenericsUtils.getMethodParameters(method, generics): use instead resolveClasses(method.getGenericParameterTypes(), generics) 
+    - removed GenericsUtils.getMethodParameters(method, generics): use instead resolveClasses(method.getGenericParameterTypes(), generics)
+    - GenericsUtils.resolveGenericsOf() called on Class return upper bounds from generics definition (before was empty result) 
 * NoGenericException was removed: detect generic absence by returned result instead
 * UnknownGenericException: 
     - was moved to different package

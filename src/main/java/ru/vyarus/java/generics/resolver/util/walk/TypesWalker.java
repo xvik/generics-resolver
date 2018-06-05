@@ -42,7 +42,7 @@ import java.util.Map;
  * @since 11.05.2018
  */
 public final class TypesWalker {
-    private static final IgnoreGenericsMap IGNORE_VARS = new IgnoreGenericsMap();
+    private static final IgnoreGenericsMap IGNORE_VARS = IgnoreGenericsMap.getInstance();
 
     private TypesWalker() {
     }

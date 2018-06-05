@@ -6,6 +6,7 @@ import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
+import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
@@ -26,8 +27,6 @@ import java.util.Map;
 @SuppressWarnings("PMD.LooseCoupling")
 public final class GenericsTrackingUtils {
 
-    private static final LinkedHashMap<String, Type> EMPTY_MAP = new LinkedHashMap<String, Type>(0);
-
     private GenericsTrackingUtils() {
     }
 
@@ -46,7 +45,7 @@ public final class GenericsTrackingUtils {
                                                     final Class<?> known,
                                                     final LinkedHashMap<String, Type> knownGenerics) {
         if (type.getTypeParameters().length == 0 || knownGenerics.isEmpty()) {
-            return EMPTY_MAP;
+            return EmptyGenericsMap.getInstance();
         }
 
         try {

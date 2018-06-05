@@ -25,7 +25,7 @@ import java.util.Arrays;
  */
 public class ComparatorTypesVisitor implements TypesVisitor {
 
-    private final IgnoreGenericsMap ignore = new IgnoreGenericsMap();
+    private static final IgnoreGenericsMap IGNORE = IgnoreGenericsMap.getInstance();
 
     private boolean compatible = true;
     private boolean moreSpecific = true;
@@ -35,8 +35,8 @@ public class ComparatorTypesVisitor implements TypesVisitor {
         // when right part is object consider left as more specific: in edge case, Object is more specific then Object
         if (two != Object.class) {
             // check upper bounds for wildcards (? extends A)
-            final Class[] oneBounds = GenericsUtils.resolveUpperBounds(one, ignore);
-            final Class[] twoBounds = GenericsUtils.resolveUpperBounds(two, ignore);
+            final Class[] oneBounds = GenericsUtils.resolveUpperBounds(one, IGNORE);
+            final Class[] twoBounds = GenericsUtils.resolveUpperBounds(two, IGNORE);
 
             final boolean boundsEqual = Arrays.equals(oneBounds, twoBounds);
 
@@ -86,7 +86,7 @@ public class ComparatorTypesVisitor implements TypesVisitor {
         if (!oneWildcard && twoWildcard
                 && ((WildcardType) two).getLowerBounds().length > 0) {
             final Class<?> lowerBound = GenericsUtils
-                    .resolveClass(((WildcardType) two).getLowerBounds()[0], ignore);
+                    .resolveClass(((WildcardType) two).getLowerBounds()[0], IGNORE);
             // if right wildcard declares something meaningful - it's more specific
             return lowerBound == Object.class;
         }

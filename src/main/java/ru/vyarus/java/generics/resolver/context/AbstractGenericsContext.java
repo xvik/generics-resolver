@@ -293,6 +293,8 @@ public abstract class AbstractGenericsContext {
      * Resolving parameters in context of root class:
      * {@code type(B.class).resolveGenericsOf(B.class.getMethod("doSmth").getGenericReturnType()) == [Long.class]}
      * <p>
+     * When called on class, return upper bound from generic declaration.
+     * <p>
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
@@ -393,6 +395,8 @@ public abstract class AbstractGenericsContext {
      * Returns generics of type with all named variables replaced in types with actual generics. For example,
      * {@code ParameterizedType Map<String, List<T>>} would become
      * {@code [Class String, ParameterizedType List<String>]} (assumed generic T is defined as String).
+     * <p>
+     * Note: if type is Class then return raw generics definition (for consistency).
      * <p>
      * Useful when complete generic types are required.
      * <p>
