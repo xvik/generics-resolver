@@ -31,7 +31,7 @@ public final class GenericsResolutionUtils {
      * Analyze class hierarchy and resolve actual generic values for all composing types. Root type generics
      * (if present) will be resolved as upper bound from declaration.
      *
-     * @param type type to resolve generics for
+     * @param type          type to resolve generics for
      * @param ignoreClasses classes to ignore (if required)
      * @return resolved generics for all types in class hierarchy
      * @see #resolve(Class, LinkedHashMap, Map, List) for more custom resolution

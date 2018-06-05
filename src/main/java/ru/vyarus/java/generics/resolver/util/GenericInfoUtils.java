@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver.util;
 
-import ru.vyarus.java.generics.resolver.context.GenericsInfo;
 import ru.vyarus.java.generics.resolver.context.GenericsContext;
+import ru.vyarus.java.generics.resolver.context.GenericsInfo;
 
 import java.lang.reflect.Type;
 import java.util.*;

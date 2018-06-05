@@ -322,6 +322,37 @@ public final class GenericsUtils {
     }
 
     /**
+     * Converts type's known generics collection into generics map, suitable for usage with the api.
+     * <p>
+     * Note that if provided class is inner class then outer class generics will be added to the map to avoid
+     * unknown generics while using api with this map
+     * (see {@link GenericsResolutionUtils#fillOuterGenerics(Type, LinkedHashMap, Map)}).
+     *
+     * @param type     type to build generics map for
+     * @param generics known generics (assumed in correct order)
+     * @return map of type generics
+     * @throws IllegalArgumentException if type's generics count don't match provided list
+     */
+    // LinkedHashMap indicates stored order, important for context
+    @SuppressWarnings("PMD.LooseCoupling")
+    public static LinkedHashMap<String, Type> createGenericsMap(final Class<?> type,
+                                                                final List<? extends Type> generics) {
+        final TypeVariable<? extends Class<?>>[] params = type.getTypeParameters();
+        if (params.length != generics.size()) {
+            throw new IllegalArgumentException(String.format(
+                    "Can't build generics map for %s with %s because of incorrect generics count",
+                    type.getSimpleName(), Arrays.toString(generics.toArray())));
+        }
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        int i = 0;
+        for (TypeVariable var : params) {
+            res.put(var.getName(), generics.get(i++));
+        }
+        // add possible outer class generics to avoid unknown generics
+        return GenericsResolutionUtils.fillOuterGenerics(type, res, null);
+    }
+
+    /**
      * Generics visibility (from inside context class):
      * <ul>
      * <li>Generics declared on class</li>
@@ -330,9 +361,9 @@ public final class GenericsUtils {
      * <li>Method generics (if inside method)</li>
      * </ul>.
      *
-     * @param type    type to check
-     * @param context current context class
-     * @param contextScope current context scope (class, method, constructor)
+     * @param type          type to check
+     * @param context       current context class
+     * @param contextScope  current context scope (class, method, constructor)
      * @param contextSource context source object (required for method and constructor scopes)
      * @return first variable, containing generic not visible from current class or null if no violations
      */
