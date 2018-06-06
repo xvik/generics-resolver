@@ -79,18 +79,14 @@ public abstract class GenericSourceException extends GenericsException {
     }
 
     private static String formatGenerics(final TypeVariable... generics) {
-        if (generics.length > 0) {
-            final StringBuilder res = new StringBuilder(generics.length * 5);
-            res.append('<');
-            boolean first = true;
-            for (TypeVariable variable : generics) {
-                res.append(!first ? ", " : "").append(variable.getName());
-                first = false;
-            }
-            res.append("> ");
-            return res.toString();
-        } else {
-            return "";
+        final StringBuilder res = new StringBuilder(generics.length * 5);
+        res.append('<');
+        boolean first = true;
+        for (TypeVariable variable : generics) {
+            res.append(!first ? ", " : "").append(variable.getName());
+            first = false;
         }
+        res.append("> ");
+        return res.toString();
     }
 }

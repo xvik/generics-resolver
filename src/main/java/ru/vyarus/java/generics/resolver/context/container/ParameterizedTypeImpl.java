@@ -27,6 +27,9 @@ public class ParameterizedTypeImpl implements ParameterizedType {
         this.rawType = rawType;
         this.actualArguments = Arrays.copyOf(actualArguments, actualArguments.length);
         this.ownerType = ownerType;
+        if (rawType == null) {
+            throw new IllegalArgumentException("Null raw type is not allowed");
+        }
     }
 
     @Override
@@ -53,16 +56,16 @@ public class ParameterizedTypeImpl implements ParameterizedType {
             final Type thatOwnerType = that.getOwnerType();
             final Type thatRawType = that.getRawType();
 
-            res = Arrays.equals(actualArguments, thatActualArguments)
-                    && (ownerType != null ? ownerType.equals(thatOwnerType) : thatOwnerType == null)
-                    && (rawType != null ? rawType.equals(thatRawType) : thatRawType == null);
+            res = rawType.equals(thatRawType)
+                    && Arrays.equals(actualArguments, thatActualArguments)
+                    && (ownerType != null ? ownerType.equals(thatOwnerType) : thatOwnerType == null);
         }
         return res;
     }
 
     @Override
     public int hashCode() {
-        int result = rawType != null ? rawType.hashCode() : 0;
+        int result = rawType.hashCode();
         result = 31 * result + Arrays.hashCode(actualArguments);
         result = 31 * result + (ownerType != null ? ownerType.hashCode() : 0);
         return result;

@@ -18,6 +18,9 @@ public class GenericArrayTypeImpl implements GenericArrayType {
 
     public GenericArrayTypeImpl(final Type componentType) {
         this.componentType = componentType;
+        if (componentType == null) {
+            throw new IllegalArgumentException("Null component type is not allowed");
+        }
     }
 
     @Override
@@ -30,14 +33,14 @@ public class GenericArrayTypeImpl implements GenericArrayType {
         boolean res = this == o;
         if (!res && o instanceof GenericArrayType) {
             final Type thatComponentType = ((GenericArrayType) o).getGenericComponentType();
-            res = componentType != null ? componentType.equals(thatComponentType) : thatComponentType == null;
+            res = componentType.equals(thatComponentType);
         }
         return res;
     }
 
     @Override
     public int hashCode() {
-        return componentType != null ? componentType.hashCode() : 0;
+        return componentType.hashCode();
     }
 
     @Override
