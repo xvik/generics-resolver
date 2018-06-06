@@ -85,9 +85,8 @@ public final class TypesWalker {
         } else if (visitor.next(one, two) && oneType != Object.class && twoType != Object.class) {
             // user stop or nowhere to go from object
 
-            // work with arrays
-            if (oneType.isArray() || twoType.isArray()) {
-                // no need to check that both arrays because classes already checked
+            // classes are already checked to be compatible (isCompatible) so either both arrays or both not
+            if (oneType.isArray()) {
                 doWalk(arrayType(one), oneKnownGenerics, arrayType(two), twoKnownGenerics, visitor);
             } else if (oneType.getTypeParameters().length > 0 || twoType.getTypeParameters().length > 0) {
                 // check generics compatibility
@@ -233,15 +232,14 @@ public final class TypesWalker {
         boolean res = true;
         if (type.getLowerBounds().length > 0) {
             // only one super could be used
+            // couldn't be an object here as ? super Object is always replaced to simply Object before comparison
             final Class<?> lower = GenericsUtils.resolveClass(type.getLowerBounds()[0], IGNORE_VARS);
-            // ? extends Object case: assumed to be unknown actual lower bound - always compatible
-            if (lower != Object.class) {
-                // target may only be lower bound's super type (or same type)
-                for (Class<?> target : with) {
-                    if (!target.isAssignableFrom(lower)) {
-                        res = false;
-                        break;
-                    }
+
+            // target may only be lower bound's super type (or same type)
+            for (Class<?> target : with) {
+                if (!target.isAssignableFrom(lower)) {
+                    res = false;
+                    break;
                 }
             }
         }
