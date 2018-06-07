@@ -38,31 +38,8 @@ public class AssignabilityTypesVisitor implements TypesVisitor {
             final Class[] twoBounds = GenericsUtils.resolveUpperBounds(two, IGNORE);
             assignable = TypeUtils.isAssignableBounds(oneBounds, twoBounds);
 
-            final boolean oneWildcard = one instanceof WildcardType;
-            final boolean twoWildcard = two instanceof WildcardType;
-
-            final Type[] oneLow = oneWildcard ? ((WildcardType) one).getLowerBounds() : new Type[0];
-            final Type[] twoLow = twoWildcard ? ((WildcardType) two).getLowerBounds() : new Type[0];
-
             // check lower wildcard bounds assignability (bounds must be assignable)
-            // ? extends Object ignored
-            if (assignable && oneLow.length > 0 && twoLow.length > 0) {
-
-                // for example, ? super Integer is not assignable to ? super BigInteger
-                // (in spite of the fact that they share some types in common)
-                // but ? super Number is assignable to ? super Integer
-                // (types assignability check  for lower bound is inverted - not a mistake below)
-                assignable = TypeUtils.isAssignable(twoLow[0], oneLow[0]);
-            }
-
-            if (assignable && oneLow.length > 0 && twoBounds[0] != Object.class) {
-                // lower bound could not be assigned to anything else (only opposite way is possible)
-                // for example, List<? super String> is not assignable to List<String>, but
-                // List<String> is assignable to List<? super String>
-                // (note that compatibility in last case is checked by TypesWalker itself and so
-                // we can be sure its compatible here)
-                assignable = false;
-            }
+            assignable = assignable && checkLowerBounds(one, two);
         }
         // stop when not assignable types detected
         return assignable;
@@ -75,5 +52,48 @@ public class AssignabilityTypesVisitor implements TypesVisitor {
 
     public boolean isAssignable() {
         return assignable;
+    }
+
+    /**
+     * Check lower bounded wildcard cases. Method is not called if upper bounds are not assignable.
+     * <p>
+     * When left is not lower bound - compatibility will be checked by type walker and when compatible always
+     * assignable. For example, String compatible (and assignable) with ? super String and Integer is not compatible
+     * with ? super Number (and not assignable).
+     * <p>
+     * Wen right is not lower bound, when left is then it will be never assignable. For example,
+     * ? super String is not assignable to String.
+     * <p>
+     * When both lower wildcards: lower bounds must be from one hierarchy and left type should be lower.
+     * For example,  ? super Integer and ? super BigInteger are not assignable in spite of the fact that they
+     * share some common types. ? super Number is more specific then ? super Integer (super inverse meaning).
+     *
+     * @param one first type
+     * @param two second type
+     * @return true when left is assignable to right, false otherwise
+     */
+    private boolean checkLowerBounds(final Type one, final Type two) {
+        final boolean res;
+        // ? super Object is impossible here due to types cleanup in tree walker
+        if (notLowerBounded(one)) {
+            // walker will check compatibility, and compatible type is always assignable to lower bounded wildcard
+            // e.g. Number assignable to ? super Number, but Integer not assignable to ? super Number
+            res = true;
+        } else if (notLowerBounded(two)) {
+            // lower bound could not be assigned to anything else (only opposite way is possible)
+            // for example, List<? super String> is not assignable to List<String>, but
+            // List<String> is assignable to List<? super String> (previous condition)
+            res = false;
+        } else {
+            // left type's bound must be lower: not a mistake! left (super inversion)!
+            res = TypeUtils.isMoreSpecific(
+                    ((WildcardType) two).getLowerBounds()[0],
+                    ((WildcardType) one).getLowerBounds()[0]);
+        }
+        return res;
+    }
+
+    private boolean notLowerBounded(final Type type) {
+        return !(type instanceof WildcardType) || ((WildcardType) type).getLowerBounds().length == 0;
     }
 }

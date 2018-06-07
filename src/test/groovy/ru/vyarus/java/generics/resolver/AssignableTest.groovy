@@ -26,6 +26,7 @@ class AssignableTest extends Specification {
         expect: "wildcards correct"
         TypeUtils.isAssignable(Number, WildcardTypeImpl.lower(Number))
         !TypeUtils.isAssignable(Integer, WildcardTypeImpl.lower(Number))
+        !TypeUtils.isAssignable(WildcardTypeImpl.lower(Number), Integer)
         TypeUtils.isAssignable(WildcardTypeImpl.upper(Number, Comparable), Number)
         !TypeUtils.isAssignable(WildcardTypeImpl.upper(Number, Comparable), Integer)
         !TypeUtils.isAssignable(Number, WildcardTypeImpl.upper(Number, Comparable))

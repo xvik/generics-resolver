@@ -34,23 +34,20 @@ public class ComparatorTypesVisitor implements TypesVisitor {
     public boolean next(final Type one, final Type two) {
         // when right part is object consider left as more specific: in edge case, Object is more specific then Object
         if (two != Object.class) {
-            // check upper bounds for wildcards (? extends A)
+            // upper bounds: single element for most case and only for repackaged type declarations
+            // (? extends A & B) could be more types
             final Class[] oneBounds = GenericsUtils.resolveUpperBounds(one, IGNORE);
             final Class[] twoBounds = GenericsUtils.resolveUpperBounds(two, IGNORE);
 
             final boolean boundsEqual = Arrays.equals(oneBounds, twoBounds);
 
-            if (boundsEqual) {
-                // for equal upper bounds wildcard's lower bound could be important e.g Object and ? super String
-                // (last is more specific, while it's upper bound is Object too)
-                moreSpecific = compareRightLowerBound(one, two);
-            } else {
+            if (!boundsEqual) {
                 // direct comparison for non equal objects
                 // edge case: Object on the left could not be more specific
                 moreSpecific = oneBounds[0] != Object.class && TypeUtils.isAssignableBounds(oneBounds, twoBounds);
             }
 
-            // case when upper bounds are not set (Object - Object)
+            // check lower bounds when upper bounds are equal (checked above)
             moreSpecific = moreSpecific && compareLowerBounds(one, two);
 
             // no need to go further if context types are not equal (specificity is already obvious)
@@ -79,37 +76,44 @@ public class ComparatorTypesVisitor implements TypesVisitor {
         return compatible;
     }
 
-    private boolean compareRightLowerBound(final Type one, final Type two) {
-        final boolean oneWildcard = one instanceof WildcardType;
-        final boolean twoWildcard = two instanceof WildcardType;
-
-        if (!oneWildcard && twoWildcard
-                && ((WildcardType) two).getLowerBounds().length > 0) {
-            final Class<?> lowerBound = GenericsUtils
-                    .resolveClass(((WildcardType) two).getLowerBounds()[0], IGNORE);
-            // if right wildcard declares something meaningful - it's more specific
-            return lowerBound == Object.class;
+    /**
+     * Check lower bounded wildcard cases. Method is not called if upper bounds are not equal.
+     * <p>
+     * If right is not lower wildcard - no matter what left is - it's always more specific.
+     * <p>
+     * If right is lower wildcard and left is simple class then right could be more specific only when left is Object.
+     * Note that in this case left could be not Object as any type is more specific then Object (lower wildcard upper
+     * bound).
+     * <p>
+     * When both lower wildcards: lower bounds must be from one hierarchy and left type should be lower.
+     * For example,  ? super Integer and ? super BigInteger are not assignable in spite of the fact that they
+     * share some common types. ? super Number is more specific then ? super Integer (super inverse meaning).
+     *
+     * @param one first type
+     * @param two second type
+     * @return true when left is more specific, false otherwise
+     */
+    private boolean compareLowerBounds(final Type one, final Type two) {
+        final boolean res;
+        // ? super Object is impossible here due to types cleanup in tree walker
+        if (notLowerBounded(two)) {
+            // ignore possible left lower bound when simple type on the right (not Object - root condition above)
+            res = true;
+        } else if (notLowerBounded(one)) {
+            // special case: left is Object and right is lower bounded wildcard
+            // e.g Object and ? super String (last is more specific, while it's upper bound is Object too)
+            // otherwise, any non Object is more specific
+            res = one != Object.class;
+        } else {
+            // left type's bound must be lower: not a mistake! left (super inversion)!
+            res = TypeUtils.isMoreSpecific(
+                    ((WildcardType) two).getLowerBounds()[0],
+                    ((WildcardType) one).getLowerBounds()[0]);
         }
-        return true;
+        return res;
     }
 
-    private boolean compareLowerBounds(final Type one, final Type two) {
-        final boolean oneWildcard = one instanceof WildcardType;
-        final boolean twoWildcard = two instanceof WildcardType;
-
-        if (oneWildcard && twoWildcard) {
-            final Type[] oneLow = ((WildcardType) one).getLowerBounds();
-            final Type[] twoLow = ((WildcardType) two).getLowerBounds();
-            // if both wildcards with lower bounds then more specific type contain lower type
-            // e.g. ? super Number is more specific then ? super Integer
-            if (oneLow.length > 0 && twoLow.length > 0 && twoLow[0] != Object.class) {
-                // for example, ? super Integer and ? super BigInteger are not assignable
-                // (in spite of the fact that they share some common types)
-                // but ? super Number and ? super Integer are assignable
-                // (types specificity check is inverted - not a mistake below)
-                return TypeUtils.isMoreSpecific(twoLow[0], oneLow[0]);
-            }
-        }
-        return true;
+    private boolean notLowerBounded(final Type type) {
+        return !(type instanceof WildcardType) || ((WildcardType) type).getLowerBounds().length == 0;
     }
 }
