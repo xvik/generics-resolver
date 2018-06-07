@@ -6,6 +6,7 @@ import ru.vyarus.java.generics.resolver.support.*
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashRoot
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub1
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub2
+import ru.vyarus.java.generics.resolver.util.GenericsUtils
 import spock.lang.Specification
 
 import java.util.concurrent.Callable
@@ -46,5 +47,16 @@ class FailTests extends Specification {
         def res = GenericsResolver.resolve(Root).resolveType(Lvl2Base1.getMethod("doSomth2").getGenericReturnType())
         then: "fail"
         res == Model
+    }
+
+    def "Check unknown generic with utility"() {
+
+        when: "resolving with missed generic"
+        GenericsUtils.resolveTypeVariables(Lvl2Base1.getMethod("doSomth2").getGenericReturnType(), [:])
+        then:
+        def ex = thrown(UnknownGenericException)
+        ex.message == "Generic 'I' (defined on Lvl2Base1<I>) is not declared "
+        ex.genericName == "I"
+        ex.genericSource != null
     }
 }
