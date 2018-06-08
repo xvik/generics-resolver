@@ -27,6 +27,9 @@ public final class GenericsUtils {
     /**
      * Called to properly resolve return type of root finder or inherited finder method.
      * Supposed to return enough type info to detect return type (collection, array or plain object).
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link TypeUtils#wrapPrimitive(Class)} to box possible primitive, if required.
      *
      * @param method   method to analyze
      * @param generics generics resolution map for method class (will be null for root)
@@ -94,6 +97,9 @@ public final class GenericsUtils {
     /**
      * Resolves top class for provided type (for example, for generified classes like {@code List<T>} it
      * returns base type List).
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link TypeUtils#wrapPrimitive(Class)} to box possible primitive, if required.
      *
      * @param type     type to resolve
      * @param generics root class generics mapping
@@ -131,6 +137,9 @@ public final class GenericsUtils {
 
     /**
      * Resolve classes of provided types.
+     * <p>
+     * Note: may return primitives because it might be important to differentiate actual value.
+     * Use {@link TypeUtils#wrapPrimitive(Class)} to box possible primitive, if required.
      *
      * @param types    types to resolve
      * @param generics type generics

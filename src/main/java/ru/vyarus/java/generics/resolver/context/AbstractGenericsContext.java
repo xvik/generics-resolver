@@ -261,6 +261,10 @@ public abstract class AbstractGenericsContext {
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
      *
      * @param type type to resolve class
      * @return resolved type class
@@ -275,6 +279,10 @@ public abstract class AbstractGenericsContext {
      * Use for more informative error message on incorrect usage.
      * <p>
      * Automatically choose correct context or fail if field does not belong to current hierarchy.
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
      *
      * @param field field to resolve type
      * @return resolved type class

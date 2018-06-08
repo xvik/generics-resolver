@@ -79,6 +79,10 @@ public class MethodGenericsContext extends GenericsContext {
      * }}</pre>
      * Resolving return type in type of root class:
      * {@code type(B.class).resolveReturnClass(B.class.getMethod("doSmth")) == Long.class}
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
      *
      * @return resolved return class of method (generic resolved or, in case of simple class, returned as is)
      * @see #resolveClass(java.lang.reflect.Type)
@@ -96,6 +100,10 @@ public class MethodGenericsContext extends GenericsContext {
      * Resolving parameters in context of root class:
      * {@code method(B.class.getMethod("doSmth", Object.class, Integer.class)).resolveParameters() ==
      * [Long.class, Integer.class]}
+     * <p>
+     * Note: may return primitives because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitives,
+     * if required.
      *
      * @return resolved method parameters or empty list if method doesn't contain parameters
      * @see #resolveParametersTypes()

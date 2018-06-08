@@ -83,6 +83,10 @@ public class ConstructorGenericsContext extends GenericsContext {
      * Resolving parameters in context of root class:
      * {@code constructor(B.class.getConstructor(Object.class)).resolveParameters() ==
      * [Long.class, Integer.class]}
+     * <p>
+     * Note: may return primitives because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
      *
      * @return resolved constructor parameters or empty list if constructor doesn't contain parameters
      * @see #resolveParametersTypes()
