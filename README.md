@@ -36,10 +36,10 @@ methodContext.resolveParameters() == [Long.class]
 Features:
 * Resolves generics for hierarchies of any depth (all subclasses and interfaces on any level)
 * Supports 
-    - composite generics (e.g. Smth<T, K extends List<T>>)
-    - method generics (<T> T getSmth())
-    - constructor generics (<T> Some(T arg))
-    - outer class generics (Outer<T>.Inner)
+    - composite generics (e.g. `Smth<T, K extends List<T>>`)
+    - method generics (`<T> T getSmth()`)
+    - constructor generics (`<T> Some(T arg)`)
+    - outer class generics (`Outer<T>.Inner`)
 * Context api completely prevents incorrect generics resolution (by doing automatic context switching)
 * Sub contexts: build context from Type in current context to properly solve root generics  
 * Generics backtracking: track higher type generics from some known middle type 
@@ -232,7 +232,7 @@ Type[] sanitizedGenerics = GenericsUtils
             .resolveTypeVariables(typeGenerics, generics); 
 ``` 
 
-Note: Generics map (generics) of host type could be taken form host type's generics context (context.visibleGenericsMap()) 
+Note: Generics map (generics) of host type could be taken form host type's generics context (`context.visibleGenericsMap()`) 
 or manually (see generics map direct resolution example below).
 
 For example, if original type was `Map<String, List<T>>` then sanitizedGenerics will be
@@ -573,7 +573,7 @@ void extractConfigPaths(Map<String, Object> paths,
 
 Pay attention to: `context.fieldTypeAs(field, value.getClass())`. 
 Class `Conf` declares field as `Base<String> sub`, but actually there might be
-more specific type (as we have object instance, we know exact type for sure (value.getClass() == Specific.class)):
+more specific type (as we have object instance, we know exact type for sure (`value.getClass() == Specific.class`)):
 
 ```java
 class Specific<T, K> extends Base<K> {
@@ -710,7 +710,7 @@ context.visibleGenericsMap() == ["A": Boolean, "T": String, "B": Integer, "C": L
 // class Outer<Object, Integer, Long>.Inner<Boolean, String>  resolved in context of Root    <-- current
 ```
 
-NOTE: here was an assumption that as Root context contains Outer class (outer for Inner), then inner class was created inside it
+NOTE: here was an assumption that as Root context contains `Outer` class (outer for `Inner`), then inner class was created inside it
 and so root generics could be used. It is not always the case, but in most cases inner class is used inside of outer.
 
 Different case, when outer class generics are explicitly declared:
@@ -856,7 +856,7 @@ context.genericsAsString() == ["Integer", "Long"]
 ```
 
 Returns string representation of generic types, which may be used for logging or reporting.
-If generic value is parameterizable type then string will include it too: "List<String>".
+If generic value is parameterizable type then string will include it too: `"List<String>"`.
 
 See api for all supported methods.
 
