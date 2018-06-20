@@ -60,6 +60,15 @@ Compatible with Java 6 and above.
 
 [2.0.1 version documentation](https://github.com/xvik/generics-resolver/tree/2.0.1)
 
+##### Alternatives
+
+For simple cases (e.g. to resolve class/interface generic value), look, maybe you already 
+have required tool in the classpath (and it will be enough):
+  
+* Guava [TypeToken](https://github.com/google/guava/wiki/ReflectionExplained#typetoken)
+* Spring [GenericTypeResolver](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/GenericTypeResolver.html)
+* Commons-lang3 [TypeUtils](https://commons.apache.org/proper/commons-lang/apidocs/org/apache/commons/lang3/reflect/TypeUtils.html) 
+
 ### Setup
 
 Releases are published to [bintray jcenter](https://bintray.com/bintray/jcenter) and maven central. 
