@@ -12,7 +12,6 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -69,20 +68,11 @@ public final class GenericsTrackingUtils {
      * @throws IllegalStateException when resolved generic of known type contradict with known generic value
      *                               (type can't be casted to known type)
      */
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     private static LinkedHashMap<String, Type> trackGenerics(final Class<?> type,
                                                              final Class<?> known,
                                                              final LinkedHashMap<String, Type> knownGenerics) {
-        // leave type variables to track where would they go
-        final LinkedHashMap<String, Type> rootGenerics = new LinkedHashMap<String, Type>();
-        for (TypeVariable var : type.getTypeParameters()) {
-            // special variables type, known by resolver (no exceptions for unknown generics will be thrown)
-            rootGenerics.put(var.getName(), new ExplicitTypeVariable(var));
-        }
-        final Map<Class<?>, LinkedHashMap<String, Type>> generics = GenericsResolutionUtils.resolve(type,
-                rootGenerics,
-                Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap(),
-                Collections.<Class<?>>emptyList());
+        final Map<Class<?>, LinkedHashMap<String, Type>> generics = GenericsResolutionUtils
+                .resolveWithRootVariables(type, null);
 
         // trace back generics (what we can)
         final Map<String, Type> tracedRootGenerics = new HashMap<String, Type>();

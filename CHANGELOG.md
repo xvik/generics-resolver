@@ -1,3 +1,5 @@
+* Added GenericsResolutionUtils.resolveWithRootVariables: generics resolution preserving root type variables
+
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support
 * Add inlying contexts support: generics context building for type "inside" of known hierarchy (field, method parameter etc): 
