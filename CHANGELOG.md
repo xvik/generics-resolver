@@ -1,4 +1,9 @@
 * Added GenericsResolutionUtils.resolveWithRootVariables: generics resolution preserving root type variables
+* GenericsUtils
+    - Add matchVariables method to find variables in type based on some known type
+    - Add resolveAllTypeVariables to resolve not just TypeVariable but also ExplicitTypeVariable declarations
+    - Add preserveVariables which replaces TypeVariable in type into ExplicitType variable (to use types as templates) 
+    - findVariables also counts ExplicitTypeVariable
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support

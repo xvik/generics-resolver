@@ -6,6 +6,9 @@ import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
+import ru.vyarus.java.generics.resolver.util.walk.MatchVariablesVisitor;
+import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -216,13 +219,37 @@ public final class GenericsUtils {
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      */
     public static Type resolveTypeVariables(final Type type, final Map<String, Type> generics) {
+        return resolveTypeVariables(type, generics, false);
+    }
+
+    /**
+     * Shortcut for {@link #resolveTypeVariables(Type, Map)} to process multiple types at once.
+     *
+     * @param types    types to replace named generics in
+     * @param generics known generics
+     * @return types without named generics
+     */
+    public static Type[] resolveTypeVariables(final Type[] types, final Map<String, Type> generics) {
+        if (types.length == 0) {
+            return NO_TYPES;
+        }
+        final Type[] resolved = new Type[types.length];
+        for (int i = 0; i < types.length; i++) {
+            resolved[i] = resolveTypeVariables(types[i], generics);
+        }
+        return resolved;
+    }
+
+    private static Type resolveTypeVariables(final Type type,
+                                             final Map<String, Type> generics,
+                                             final boolean allVariables) {
         Type resolvedGenericType = null;
         if (type instanceof TypeVariable) {
             // simple named generics resolved to target types
             resolvedGenericType = declaredGeneric((TypeVariable) type, generics);
         } else if (type instanceof ExplicitTypeVariable) {
             // special type used to preserve named generic (and differentiate from type variable)
-            resolvedGenericType = type;
+            resolvedGenericType = declaredGeneric((ExplicitTypeVariable) type, generics, allVariables);
         } else if (type instanceof Class) {
             resolvedGenericType = type;
         } else if (type instanceof ParameterizedType) {
@@ -253,21 +280,18 @@ public final class GenericsUtils {
     }
 
     /**
-     * Shortcut for {@link #resolveTypeVariables(Type, Map)} to process multiple types at once.
+     * The same as {@link #resolveTypeVariables(Type, Map)}, except it also process {@link ExplicitTypeVariable}
+     * variables. Useful for special cases when variables tracking is used. For example, type resolved
+     * with variables as a template and then used to create dynamic types (according to context parametrization).
      *
-     * @param types    types to replace named generics in
-     * @param generics known generics
-     * @return types without named generics
+     * @param type     type to resolve
+     * @param generics root class generics mapping and {@link ExplicitTypeVariable} variable values.
+     * @return resolved type
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see #preserveVariables(Type)
      */
-    public static Type[] resolveTypeVariables(final Type[] types, final Map<String, Type> generics) {
-        if (types.length == 0) {
-            return NO_TYPES;
-        }
-        final Type[] resolved = new Type[types.length];
-        for (int i = 0; i < types.length; i++) {
-            resolved[i] = resolveTypeVariables(types[i], generics);
-        }
-        return resolved;
+    public static Type resolveAllTypeVariables(final Type type, final Map<String, Type> generics) {
+        return resolveTypeVariables(type, generics, true);
     }
 
     /**
@@ -391,6 +415,35 @@ public final class GenericsUtils {
     }
 
     /**
+     * Match explicit variables ({@link ExplicitTypeVariable}) in type with provided type. For example, suppose
+     * you have type {@code List<E>} (with {@link ExplicitTypeVariable} as E variable) and
+     * real type {@code List<String>}. This method will match variable E to String from real type.
+     *
+     * @param template type with variables
+     * @param real     type to compare and resolve variables from
+     * @return map of resolved variables or empty map
+     * @throws IllegalArgumentException when provided types are nto compatible
+     * @see GenericsResolutionUtils#resolveWithRootVariables(Class, List) for variables preserving in types
+     */
+    public static Map<TypeVariable, Type> matchVariables(final Type template, final Type real) {
+        final MatchVariablesVisitor visitor = new MatchVariablesVisitor();
+        TypesWalker.walk(template, real, visitor);
+        if (visitor.isHierarchyError()) {
+            throw new IllegalArgumentException(String.format(
+                    "Template type %s variables can't be matched from type %s because they "
+                            + "are not compatible",
+                    TypeToStringUtils.toStringType(template, IgnoreGenericsMap.getInstance()),
+                    TypeToStringUtils.toStringType(real, IgnoreGenericsMap.getInstance())));
+        }
+        final Map<TypeVariable, Type> res = visitor.getMatched();
+        // to be sure that right type does not contain variables
+        for (Map.Entry<TypeVariable, Type> entry : res.entrySet()) {
+            entry.setValue(resolveAllTypeVariables(entry.getValue(), visitor.getMatchedMap()));
+        }
+        return res;
+    }
+
+    /**
      * Generics visibility (from inside context class):
      * <ul>
      * <li>Generics declared on class</li>
@@ -429,8 +482,34 @@ public final class GenericsUtils {
     }
 
     /**
+     * Replace all {@link TypeVariable} into {@link ExplicitTypeVariable} to preserve variables.
+     * This may be required because in many places type variables are resolved into raw declaration bound.
+     * For example, useful for {@link TypesWalker} api.
+     *
+     * @param type type possibly containing variables
+     * @return same type if it doesn't contain variables or type with all {@link TypeVariable} replaced by
+     * {@link ExplicitTypeVariable}
+     * @see #resolveAllTypeVariables(Type, Map) to replace explicit varaibles
+     */
+    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+    public static Type preserveVariables(final Type type) {
+        final List<TypeVariable> vars = findVariables(type);
+        if (vars.isEmpty()) {
+            return type;
+        }
+        final Map<String, Type> preservation = new HashMap<String, Type>();
+        for (TypeVariable var : vars) {
+            preservation.put(var.getName(), new ExplicitTypeVariable(var));
+        }
+        // replace TypeVariable to ExplicitTypeVariable
+        return resolveTypeVariables(type, preservation);
+    }
+
+    /**
      * Searches for generic variable declarations in type. May be used for scope checks.
      * For example, in {@code List<T>} it will find "T", in {@code Some<Long, T, List<K>} "T" and "K".
+     * <p>
+     * Also detects preserved variables {@link ExplicitTypeVariable} (used for tracking).
      *
      * @param type type to analyze.
      * @return list of generic variables inside type or empty list
@@ -448,6 +527,8 @@ public final class GenericsUtils {
         // note ExplicitTypeVariable is not checked as it's considered as known type
         if (type instanceof TypeVariable) {
             found.add((TypeVariable) type);
+        } else if (type instanceof ExplicitTypeVariable) {
+            found.add(((ExplicitTypeVariable) type).getDeclarationSource());
         } else if (type instanceof ParameterizedType) {
             final ParameterizedType parametrizedType = (ParameterizedType) type;
             if (parametrizedType.getOwnerType() != null) {
@@ -480,5 +561,11 @@ public final class GenericsUtils {
             throw new UnknownGenericException(name, generic.getGenericDeclaration());
         }
         return result;
+    }
+
+    private static Type declaredGeneric(final ExplicitTypeVariable generic,
+                                        final Map<String, Type> declarations,
+                                        final boolean resolve) {
+        return resolve ? declaredGeneric(generic.getDeclarationSource(), declarations) : generic;
     }
 }

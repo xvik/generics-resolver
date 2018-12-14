@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
+import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable
 import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
@@ -26,5 +27,6 @@ class VariablesSearchTest extends Specification {
         GenericsUtils.findVariables(WildcardTypeImpl.upper(E)) == [E]
         GenericsUtils.findVariables(WildcardTypeImpl.lower(E)) == [E]
         GenericsUtils.findVariables(new GenericArrayTypeImpl(E)) == [E]
+        GenericsUtils.findVariables(new ExplicitTypeVariable(E)) == [E]
     }
 }

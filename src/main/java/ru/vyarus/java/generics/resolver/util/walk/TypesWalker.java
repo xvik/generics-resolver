@@ -37,6 +37,10 @@ import java.util.Map;
  * <p>
  * When one of types is primitive then wrapper class used instead (e.g. Integer instead of int) to simplify
  * visitor logic.
+ * <p>
+ * NOTE: all variables in type ({@link java.lang.reflect.TypeVariable}) will be replaced in types into
+ * lower bound. If you need to preserve variables (e.g. to match variable), make them explicit with
+ * {@link GenericsUtils#preserveVariables(Type)}.
  *
  * @author Vyacheslav Rusakov
  * @since 11.05.2018
