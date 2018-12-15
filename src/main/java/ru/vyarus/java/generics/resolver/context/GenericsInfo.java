@@ -132,15 +132,15 @@ public class GenericsInfo {
      */
     public String toStringHierarchy(final TypeWriter typeWriter) {
         final StringBuilder res = new StringBuilder(types.size() * 50);
-        toStringHierarchy(root, "", "", res, typeWriter);
+        writeHierarchy(root, "", "", res, typeWriter);
         return res.toString();
     }
 
-    private void toStringHierarchy(final Class<?> type,
-                                   final String shift,
-                                   final String prefix,
-                                   final StringBuilder res,
-                                   final TypeWriter typeWriter) {
+    private void writeHierarchy(final Class<?> type,
+                                final String shift,
+                                final String prefix,
+                                final StringBuilder res,
+                                final TypeWriter typeWriter) {
         final LinkedHashMap<String, Type> generics = types.get(type);
         final Map<String, Type> ownerGenerics = GenericsUtils.extractOwnerGenerics(type, generics);
         final Map<String, Type> typeGenerics = GenericsUtils.extractTypeGenerics(type, generics);
@@ -151,12 +151,12 @@ public class GenericsInfo {
         final Class<?> superclass = type.getSuperclass();
         // not ignored (or not last)
         if (types.containsKey(superclass)) {
-            toStringHierarchy(superclass, shift + SHIFT_MARKER, EXTENDS_MARKER, res, typeWriter);
+            writeHierarchy(superclass, shift + SHIFT_MARKER, EXTENDS_MARKER, res, typeWriter);
         }
         for (Class<?> iface : type.getInterfaces()) {
             // not ignored
             if (types.containsKey(iface)) {
-                toStringHierarchy(iface, shift + SHIFT_MARKER,
+                writeHierarchy(iface, shift + SHIFT_MARKER,
                         type.isInterface() ? EXTENDS_MARKER : IMPLEMENTS_MARKER, res, typeWriter);
             }
         }
