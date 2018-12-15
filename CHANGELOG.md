@@ -1,4 +1,5 @@
 * Add TypeVariableUtils for working with type templates (with preserved variables)
+* Add TypeLiteral utility class to simplify complex types declaration (by analogy with guice's class)
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support

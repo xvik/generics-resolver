@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
+import ru.vyarus.java.generics.resolver.util.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
 
@@ -20,6 +21,12 @@ class MatchVariablesTest extends Specification {
         then: "ok"
         res.size() == 1
         res.values()[0] == String.class
+
+        when: "matching direct var"
+        res = match(Lvl2Base1.getMethod("doSomth3").getGenericReturnType(), new TypeLiteral<List<String>>(){}.getType())
+        then: "ok"
+        res.size() == 1
+        res.values()[0] == String.class
     }
 
     def "Check incompatible match"() {
@@ -29,6 +36,12 @@ class MatchVariablesTest extends Specification {
         then: "incompatible"
         def ex = thrown(IllegalArgumentException)
         ex.message == "Type List<I> variables can't be matched from type String because they are not compatible"
+
+        when: "matching var"
+        match(Lvl2Base1.getMethod("doSomth3").getGenericReturnType(), new TypeLiteral<Map<String, Object>>(){}.getType())
+        then: "incompatible"
+        ex = thrown(IllegalArgumentException)
+        ex.message == "Type List<I> variables can't be matched from type Map<String, Object> because they are not compatible"
     }
 
     private Map<TypeVariable, Type> match(Type src, Type compare) {

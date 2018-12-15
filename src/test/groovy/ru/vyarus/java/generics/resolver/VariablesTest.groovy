@@ -5,7 +5,6 @@ import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.util.GenericsUtils
-import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
 
@@ -16,7 +15,7 @@ import java.lang.reflect.TypeVariable
  * @author Vyacheslav Rusakov
  * @since 15.12.2018
  */
-class VariablesTest extends Specification{
+class VariablesTest extends Specification {
 
     def "Check root variables resolution"() {
 
@@ -34,9 +33,9 @@ class VariablesTest extends Specification{
         res == String
 
         when: "type contain variables"
-        res =  TypeVariableUtils.preserveVariables(Lvl2Base1.getMethod("doSomth3").getGenericReturnType())
+        res = TypeVariableUtils.preserveVariables(Lvl2Base1.getMethod("doSomth3").getGenericReturnType())
         then: "variable replaced"
-        ((ParameterizedType)res).actualTypeArguments[0] instanceof ExplicitTypeVariable
+        ((ParameterizedType) res).actualTypeArguments[0] instanceof ExplicitTypeVariable
         res.toString() == "List<I>"
     }
 
@@ -47,7 +46,7 @@ class VariablesTest extends Specification{
         then: "explicit variable preserved"
 
         when: "resolving with missed generic"
-        TypeVariableUtils.resolveAllTypeVariables(new ExplicitTypeVariable((TypeVariable)Lvl2Base1.getMethod("doSomth2").getGenericReturnType()), [:])
+        TypeVariableUtils.resolveAllTypeVariables(new ExplicitTypeVariable((TypeVariable) Lvl2Base1.getMethod("doSomth2").getGenericReturnType()), [:])
         then:
         def ex = thrown(UnknownGenericException)
         ex.message == "Generic 'I' (defined on Lvl2Base1<I>) is not declared "
