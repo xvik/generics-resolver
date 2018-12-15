@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
-import ru.vyarus.java.generics.resolver.util.GenericsUtils
+import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
 
 import java.lang.reflect.Type
@@ -22,7 +22,16 @@ class MatchVariablesTest extends Specification {
         res.values()[0] == String.class
     }
 
+    def "Check incompatible match"() {
+
+        when: "matching var"
+        match(Lvl2Base1.getMethod("doSomth3").getGenericReturnType(), String.class)
+        then: "incompatible"
+        def ex = thrown(IllegalArgumentException)
+        ex.message == "Type List<I> variables can't be matched from type String because they are not compatible"
+    }
+
     private Map<TypeVariable, Type> match(Type src, Type compare) {
-        GenericsUtils.matchVariables(GenericsUtils.preserveVariables(src), compare)
+        TypeVariableUtils.matchVariables(TypeVariableUtils.preserveVariables(src), compare)
     }
 }

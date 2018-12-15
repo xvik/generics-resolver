@@ -1,7 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
-import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.*
 import ru.vyarus.java.generics.resolver.support.noclash.NoClashRoot
@@ -10,7 +9,6 @@ import ru.vyarus.java.generics.resolver.support.noclash.NoClashSub2
 import ru.vyarus.java.generics.resolver.util.GenericsUtils
 import spock.lang.Specification
 
-import java.lang.reflect.TypeVariable
 import java.util.concurrent.Callable
 
 /**
@@ -55,21 +53,6 @@ class FailTests extends Specification {
 
         when: "resolving with missed generic"
         GenericsUtils.resolveTypeVariables(Lvl2Base1.getMethod("doSomth2").getGenericReturnType(), [:])
-        then:
-        def ex = thrown(UnknownGenericException)
-        ex.message == "Generic 'I' (defined on Lvl2Base1<I>) is not declared "
-        ex.genericName == "I"
-        ex.genericSource != null
-    }
-
-    def "Check unknown explicit generic with utility"() {
-
-        when: "resolve explicit variable normally"
-        GenericsUtils.resolveTypeVariables(new ExplicitTypeVariable((TypeVariable)Lvl2Base1.getMethod("doSomth2").getGenericReturnType()), [:])
-        then: "explicit variable preserved"
-        
-        when: "resolving with missed generic"
-        GenericsUtils.resolveAllTypeVariables(new ExplicitTypeVariable((TypeVariable)Lvl2Base1.getMethod("doSomth2").getGenericReturnType()), [:])
         then:
         def ex = thrown(UnknownGenericException)
         ex.message == "Generic 'I' (defined on Lvl2Base1<I>) is not declared "

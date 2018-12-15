@@ -6,9 +6,6 @@ import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
-import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
-import ru.vyarus.java.generics.resolver.util.walk.MatchVariablesVisitor;
-import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -205,7 +202,8 @@ public final class GenericsUtils {
      * <p>
      * Special handling for {@link ExplicitTypeVariable} - this kind of type variable is not resolved and not
      * throw exception as unknown generic (thought as resolved type). This may be used for cases when type
-     * variable must be preserved (like generics tracking or custom to string).
+     * variable must be preserved (like generics tracking or custom to string). In order to replace such
+     * variables use {@link TypeVariableUtils#resolveAllTypeVariables(Type, Map)}.
      * <p>
      * Note that upper bounded wildcards are flattened to simple type ({@code ? extends Somthing -> Something} as
      * upper bounded wildcards are not useful at runtime. The only exception is wildcard with multiple bounds
@@ -217,6 +215,8 @@ public final class GenericsUtils {
      * @param generics root class generics mapping
      * @return resolved type
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see TypeVariableUtils#resolveAllTypeVariables(Type, Map)
+     * @see #findVariables(Type)
      */
     public static Type resolveTypeVariables(final Type type, final Map<String, Type> generics) {
         return resolveTypeVariables(type, generics, false);
@@ -240,9 +240,11 @@ public final class GenericsUtils {
         return resolved;
     }
 
-    private static Type resolveTypeVariables(final Type type,
-                                             final Map<String, Type> generics,
-                                             final boolean allVariables) {
+    // for TypeVariableUtils access
+    @SuppressWarnings("PMD.AvoidProtectedMethodInFinalClassNotExtending")
+    protected static Type resolveTypeVariables(final Type type,
+                                     final Map<String, Type> generics,
+                                     final boolean allVariables) {
         Type resolvedGenericType = null;
         if (type instanceof TypeVariable) {
             // simple named generics resolved to target types
@@ -277,21 +279,6 @@ public final class GenericsUtils {
             }
         }
         return resolvedGenericType;
-    }
-
-    /**
-     * The same as {@link #resolveTypeVariables(Type, Map)}, except it also process {@link ExplicitTypeVariable}
-     * variables. Useful for special cases when variables tracking is used. For example, type resolved
-     * with variables as a template and then used to create dynamic types (according to context parametrization).
-     *
-     * @param type     type to resolve
-     * @param generics root class generics mapping and {@link ExplicitTypeVariable} variable values.
-     * @return resolved type
-     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
-     * @see #preserveVariables(Type)
-     */
-    public static Type resolveAllTypeVariables(final Type type, final Map<String, Type> generics) {
-        return resolveTypeVariables(type, generics, true);
     }
 
     /**
@@ -415,35 +402,6 @@ public final class GenericsUtils {
     }
 
     /**
-     * Match explicit variables ({@link ExplicitTypeVariable}) in type with provided type. For example, suppose
-     * you have type {@code List<E>} (with {@link ExplicitTypeVariable} as E variable) and
-     * real type {@code List<String>}. This method will match variable E to String from real type.
-     *
-     * @param template type with variables
-     * @param real     type to compare and resolve variables from
-     * @return map of resolved variables or empty map
-     * @throws IllegalArgumentException when provided types are nto compatible
-     * @see GenericsResolutionUtils#resolveWithRootVariables(Class, List) for variables preserving in types
-     */
-    public static Map<TypeVariable, Type> matchVariables(final Type template, final Type real) {
-        final MatchVariablesVisitor visitor = new MatchVariablesVisitor();
-        TypesWalker.walk(template, real, visitor);
-        if (visitor.isHierarchyError()) {
-            throw new IllegalArgumentException(String.format(
-                    "Template type %s variables can't be matched from type %s because they "
-                            + "are not compatible",
-                    TypeToStringUtils.toStringType(template, IgnoreGenericsMap.getInstance()),
-                    TypeToStringUtils.toStringType(real, IgnoreGenericsMap.getInstance())));
-        }
-        final Map<TypeVariable, Type> res = visitor.getMatched();
-        // to be sure that right type does not contain variables
-        for (Map.Entry<TypeVariable, Type> entry : res.entrySet()) {
-            entry.setValue(resolveAllTypeVariables(entry.getValue(), visitor.getMatchedMap()));
-        }
-        return res;
-    }
-
-    /**
      * Generics visibility (from inside context class):
      * <ul>
      * <li>Generics declared on class</li>
@@ -479,30 +437,6 @@ public final class GenericsUtils {
             }
         }
         return res;
-    }
-
-    /**
-     * Replace all {@link TypeVariable} into {@link ExplicitTypeVariable} to preserve variables.
-     * This may be required because in many places type variables are resolved into raw declaration bound.
-     * For example, useful for {@link TypesWalker} api.
-     *
-     * @param type type possibly containing variables
-     * @return same type if it doesn't contain variables or type with all {@link TypeVariable} replaced by
-     * {@link ExplicitTypeVariable}
-     * @see #resolveAllTypeVariables(Type, Map) to replace explicit varaibles
-     */
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-    public static Type preserveVariables(final Type type) {
-        final List<TypeVariable> vars = findVariables(type);
-        if (vars.isEmpty()) {
-            return type;
-        }
-        final Map<String, Type> preservation = new HashMap<String, Type>();
-        for (TypeVariable var : vars) {
-            preservation.put(var.getName(), new ExplicitTypeVariable(var));
-        }
-        // replace TypeVariable to ExplicitTypeVariable
-        return resolveTypeVariables(type, preservation);
     }
 
     /**

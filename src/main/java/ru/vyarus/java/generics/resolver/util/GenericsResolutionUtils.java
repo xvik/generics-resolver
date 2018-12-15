@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver.util;
 
-import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
@@ -74,33 +73,6 @@ public final class GenericsResolutionUtils {
             throw new GenericsResolutionException(type, rootGenerics, knownGenerics, ex);
         }
         return generics;
-    }
-
-    /**
-     * Used when it is important to track when root type generics will go. For example:
-     * {@code  class Root<T> implements Base<List<T>>}. When resolution applied, unknown root type T
-     * will be replaced with special type {@link ExplicitTypeVariable}, which does not cause exceptions on type
-     * resolution, but allows to preserve root type variables. After resolution actual types could be constructed
-     * depending on root type parametrization (dynamic calculation).
-     *
-     * @param type          class to analyze
-     * @param ignoreClasses classes to ignore during analysis
-     * @return resolved generics for all types in class hierarchy with root variables preserved
-     */
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
-    public static Map<Class<?>, LinkedHashMap<String, Type>> resolveWithRootVariables(
-            final Class<?> type,
-            final List<Class<?>> ignoreClasses) {
-        // leave type variables to track where would they go
-        final LinkedHashMap<String, Type> rootGenerics = new LinkedHashMap<String, Type>();
-        for (TypeVariable var : type.getTypeParameters()) {
-            // special variables type, known by resolver (no exceptions for unknown generics will be thrown)
-            rootGenerics.put(var.getName(), new ExplicitTypeVariable(var));
-        }
-        return GenericsResolutionUtils.resolve(type,
-                rootGenerics,
-                Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap(),
-                ignoreClasses == null ? Collections.<Class<?>>emptyList() : ignoreClasses);
     }
 
     /**
