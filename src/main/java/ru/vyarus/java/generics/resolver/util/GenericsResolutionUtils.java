@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver.util;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
@@ -129,6 +130,9 @@ public final class GenericsResolutionUtils {
      * Resolve type generics by declaration (as upper bound). Used for cases when actual generic definition is not
      * available (so actual generics are unknown). In most cases such generics resolved as Object
      * (for example, {@code Some<T>}).
+     * <p>
+     * IMPORTANT: this method does not count possible outer class generics! Use
+     * {@link #resolveRawGeneric(TypeVariable, LinkedHashMap)} as universal resolution method
      *
      * @param type class to analyze generics for
      * @return resolved generics or empty map if not generics used
@@ -140,8 +144,24 @@ public final class GenericsResolutionUtils {
             return EmptyGenericsMap.getInstance();
         }
         final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final List<TypeVariable> failed = new ArrayList<TypeVariable>();
+        // variables in declaration could be dependant and in any direction (e.g. <A extends List<B>, B>)
+        // so assuming correct order at first, but if we face any error - order vars and resolve correctly
+        // (it's better to avoid ordering by default as its required quite rarely)
         for (TypeVariable variable : declaredGenerics) {
-            res.put(variable.getName(), resolveRawGeneric(variable, res));
+            try {
+                res.put(variable.getName(), resolveRawGeneric(variable, res));
+            } catch (UnknownGenericException ex) {
+                // preserve order without resolution
+                res.put(variable.getName(), null);
+                failed.add(variable);
+            }
+        }
+        if (!failed.isEmpty()) {
+            for (TypeVariable variable : GenericsUtils.orderVariablesForResolution(failed)) {
+                // replacing nulls in map
+                res.put(variable.getName(), resolveRawGeneric(variable, res));
+            }
         }
         return res;
     }

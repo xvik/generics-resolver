@@ -87,16 +87,25 @@ public final class GenericsTrackingUtils {
                     genericName, actualType, knownGenericType, type, known, knownGenerics);
         }
 
-        // finally apply correct generics order
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
-        for (TypeVariable gen : type.getTypeParameters()) {
+        trackDependentVariables(type, tracedRootGenerics);
+
+        // resolve all generics in correct resolution order
+        final Map<String, Type> tmpTypes = new HashMap<String, Type>(tracedRootGenerics);
+        for (TypeVariable gen : GenericsUtils.orderVariablesForResolution(type.getTypeParameters())) {
             final String name = gen.getName();
-            res.put(name, tracedRootGenerics.containsKey(name)
+            final Type value = tracedRootGenerics.containsKey(name)
                     ? tracedRootGenerics.get(name)
                     // transform to wildcard to preserve possible multiple bounds declaration
                     // (it will be flatten to Object if single bound declared)
                     : GenericsUtils.resolveTypeVariables(gen.getBounds().length > 1
-                    ? WildcardTypeImpl.upper(gen.getBounds()) : gen.getBounds()[0], res));
+                    ? WildcardTypeImpl.upper(gen.getBounds()) : gen.getBounds()[0], tmpTypes);
+            tmpTypes.put(name, value);
+        }
+
+        // finally apply correct generics order
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        for (TypeVariable gen : type.getTypeParameters()) {
+            res.put(gen.getName(), tmpTypes.get(gen.getName()));
         }
         return res;
     }
@@ -241,5 +250,73 @@ public final class GenericsTrackingUtils {
                     genericName, TypeToStringUtils.toStringWithNamedGenerics(known), root.getSimpleName()),
                     knownType, actualType);
         }
+    }
+
+    /**
+     * Look if traced generics declarations contains other generics and so they could be resolved too.
+     * For example, in {@code class Root<P, K extends List<P>> extends Base<K>} knowing K we can recover P.
+     * <p>
+     * All additionally resolved generic variables will be directly added to provided traces list.
+     *
+     * @param type               type generics were tracked for
+     * @param tracedRootGenerics tracked generics
+     */
+    private static void trackDependentVariables(final Class<?> type,
+                                                final Map<String, Type> tracedRootGenerics) {
+        final TypeVariable<? extends Class<?>>[] typeParameters = type.getTypeParameters();
+        if (tracedRootGenerics.isEmpty() || typeParameters.length == tracedRootGenerics.size()) {
+            return;
+        }
+        final Map<String, TypeVariable> varsIndex = new HashMap<String, TypeVariable>();
+        for (TypeVariable var : typeParameters) {
+            varsIndex.put(var.getName(), var);
+        }
+
+        // find dependent generics - add to tracked - repeat with found only (cycle)
+        final Map<String, Type> toCheck = new HashMap<String, Type>(tracedRootGenerics);
+        final Map<String, Type> found = new HashMap<String, Type>();
+        while (!toCheck.isEmpty()) {
+            for (Map.Entry<String, Type> entry : toCheck.entrySet()) {
+                found.putAll(
+                        matchVariables(varsIndex.get(entry.getKey()), entry.getValue(), tracedRootGenerics));
+            }
+
+            // repeat cycle with newly found generics
+            toCheck.clear();
+            toCheck.putAll(found);
+            found.clear();
+        }
+    }
+
+    private static Map<String, Type> matchVariables(final TypeVariable declared,
+                                                    final Type known,
+                                                    final Map<String, Type> tracedRootGenerics) {
+        final Map<String, Type> res = new HashMap<String, Type>();
+
+        // lookup variable declaration for variables (e.g. T extends List<K>)
+        for (Type decl : declared.getBounds()) {
+            // the case: A extends B: when we know A we can't tell anything about B!
+            if (decl instanceof TypeVariable) {
+                continue;
+            }
+            final Map<String, Type> match = TypeVariableUtils.matchVariableNames(
+                    TypeVariableUtils.preserveVariables(decl), known);
+
+            // check if found match is more specific then already resolved
+            for (Map.Entry<String, Type> matchEntry : match.entrySet()) {
+                final String name = matchEntry.getKey();
+                final Type value = matchEntry.getValue();
+                if (tracedRootGenerics.containsKey(name)) {
+                    final Type stored = tracedRootGenerics.get(name);
+                    if (!TypeUtils.isMoreSpecific(value, stored)) {
+                        // do nothing with type
+                        continue;
+                    }
+                }
+                tracedRootGenerics.put(name, value);
+                res.put(name, value);
+            }
+        }
+        return res;
     }
 }

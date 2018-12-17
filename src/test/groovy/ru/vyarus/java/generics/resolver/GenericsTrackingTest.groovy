@@ -24,6 +24,7 @@ class GenericsTrackingTest extends Specification {
         Wild     | String                                  | ["U": Object, "P": String]
         Multiple | String                                  | ["U": WildcardTypeImpl.upper(Number, Comparable), "P": String]
         Arr      | String[]                                | ["U": String]
+        Reversed | new ParameterizedTypeImpl(List, String) | ["A": String, "B": new ParameterizedTypeImpl(List, String)]
     }
 
     static class Known<T> {}
@@ -37,4 +38,6 @@ class GenericsTrackingTest extends Specification {
     static class Multiple<U extends Number & Comparable, P> extends Known<P> {}
 
     static class Arr<U> extends Known<U[]> {}
+
+    static class Reversed<A, B extends List<A>> extends Known<B> {}
 }

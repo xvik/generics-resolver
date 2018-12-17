@@ -72,6 +72,11 @@ public final class TypeVariableUtils {
      * Match explicit variables ({@link ExplicitTypeVariable}) in type with provided type. For example, suppose
      * you have type {@code List<E>} (with {@link ExplicitTypeVariable} as E variable) and
      * real type {@code List<String>}. This method will match variable E to String from real type.
+     * <p>
+     * WARNING: if provided template type will contain {@link TypeVariable} - they would not be detected!
+     * Because method resolve all variables to it's raw declaration. Use {@link #preserveVariables(Type)} in order
+     * to replace variables before matching. It is not dont automatically to avoid redundant calls (this api
+     * considered as low level api).
      *
      * @param template type with variables
      * @param real     type to compare and resolve variables from
@@ -94,6 +99,27 @@ public final class TypeVariableUtils {
         // to be sure that right type does not contain variables
         for (Map.Entry<TypeVariable, Type> entry : res.entrySet()) {
             entry.setValue(resolveAllTypeVariables(entry.getValue(), visitor.getMatchedMap()));
+        }
+        return res;
+    }
+
+    /**
+     * Shortcut for {@link #matchVariables(Type, Type)} which return map of variable names instaed of raw
+     * variable objects.
+     *
+     * @param template type with variables
+     * @param real     type to compare and resolve variables from
+     * @return map of resolved variables or empty map
+     * @throws IllegalArgumentException when provided types are nto compatible
+     */
+    public static Map<String, Type> matchVariableNames(final Type template, final Type real) {
+        final Map<TypeVariable, Type> match = matchVariables(template, real);
+        if (match.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        final Map<String, Type> res = new HashMap<String, Type>();
+        for (Map.Entry<TypeVariable, Type> entry : match.entrySet()) {
+            res.put(entry.getKey().getName(), entry.getValue());
         }
         return res;
     }

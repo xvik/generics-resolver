@@ -1,5 +1,10 @@
 * Add TypeVariableUtils for working with type templates (with preserved variables)
 * Add TypeLiteral utility class to simplify complex types declaration (by analogy with guice's class)
+* GenericUtils
+    - Add orderVariablesForResolution method for ordering type variable declarations
+    - findVariables now finds preserved variables (ExplicitTypeVariable) too  
+* Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
+* Fix reversed generic variables declaration support (#3)       
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support
