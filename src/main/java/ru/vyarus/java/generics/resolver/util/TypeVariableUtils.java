@@ -20,7 +20,7 @@ import java.util.*;
  * <p>
  * There are two ways to replace types:
  * <ul>
- * <li>Use {@link #trackRootVariables(Class, List)} to preserve root class generics (useful for type
+ * <li>Use {@link #trackRootVariables(Class)} to preserve root class generics (useful for type
  * tracking)</li>
  * <li>Use {@link #preserveVariables(Type)} to replace all variables in type into {@link ExplicitTypeVariable}</li>
  * </ul>
@@ -66,6 +66,17 @@ public final class TypeVariableUtils {
                 rootGenerics,
                 Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap(),
                 ignoreClasses == null ? Collections.<Class<?>>emptyList() : ignoreClasses);
+    }
+
+
+    /**
+     * Shortcut for {@link #trackRootVariables(Class, List)} to simplify usage without ignore classes.
+     *
+     * @param type class to analyze
+     * @return resolved generics for all types in class hierarchy with root variables preserved
+     */
+    public static Map<Class<?>, LinkedHashMap<String, Type>> trackRootVariables(final Class type) {
+        return trackRootVariables(type, null);
     }
 
     /**

@@ -71,8 +71,7 @@ public final class GenericsTrackingUtils {
     private static LinkedHashMap<String, Type> trackGenerics(final Class<?> type,
                                                              final Class<?> known,
                                                              final LinkedHashMap<String, Type> knownGenerics) {
-        final Map<Class<?>, LinkedHashMap<String, Type>> generics = TypeVariableUtils
-                .trackRootVariables(type, null);
+        final Map<Class<?>, LinkedHashMap<String, Type>> generics = TypeVariableUtils.trackRootVariables(type);
 
         // trace back generics (what we can)
         final Map<String, Type> tracedRootGenerics = new HashMap<String, Type>();

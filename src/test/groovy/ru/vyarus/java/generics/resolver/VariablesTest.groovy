@@ -20,7 +20,7 @@ class VariablesTest extends Specification {
     def "Check root variables resolution"() {
 
         when: "resolve type preserving root generics"
-        def res = TypeVariableUtils.trackRootVariables(Base1, null)
+        def res = TypeVariableUtils.trackRootVariables(Base1)
         then: "root variable preserved"
         res[Lvl2Base1]['I'] instanceof ExplicitTypeVariable
     }
