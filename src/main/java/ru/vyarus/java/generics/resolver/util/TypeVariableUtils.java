@@ -152,6 +152,31 @@ public final class TypeVariableUtils {
     }
 
     /**
+     * In contrast to {@link #resolveAllTypeVariables(Type, Map)} which replace generics in type according to
+     * generics map, this method replace variables with their upper bound. For example, variable defined as
+     * {@code class Root<T extends String>} and for type {@code List<T>} result will be {@code List<String>}
+     * (variable T replaced by upper bound - String).
+     *
+     * @param type type to replace variables into.
+     * @return type with all variables resolved as upper bound
+     */
+    public static Type resolveAllTypeVariables(final Type type) {
+        final List<TypeVariable> vars = GenericsUtils.findVariables(type);
+        if (vars.isEmpty()) {
+            // no variables in type - nothing to replace
+            return type;
+        }
+
+        final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
+        // important to resolve vars in correct order
+        for (TypeVariable var : GenericsUtils.orderVariablesForResolution(vars)) {
+            generics.put(var.getName(), GenericsResolutionUtils.resolveRawGeneric(var, generics));
+        }
+        // finally resolve variables with pre-computed upper bounds
+        return resolveAllTypeVariables(type, generics);
+    }
+
+    /**
      * Replace all {@link TypeVariable} into {@link ExplicitTypeVariable} to preserve variables.
      * This may be required because in many places type variables are resolved into raw declaration bound.
      * For example, useful for {@link TypesWalker} api.

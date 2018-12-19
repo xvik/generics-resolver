@@ -5,10 +5,12 @@ import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.util.GenericsUtils
+import ru.vyarus.java.generics.resolver.util.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
 
 import java.lang.reflect.ParameterizedType
+import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
 
 /**
@@ -52,5 +54,36 @@ class VariablesTest extends Specification {
         ex.message == "Generic 'I' (defined on Lvl2Base1<I>) is not declared "
         ex.genericName == "I"
         ex.genericSource != null
+    }
+
+    def "Check direct variables resolution as upper bounds"() {
+
+        when: "resolving type with variable"
+        def res = TypeVariableUtils.resolveAllTypeVariables(Lvl2Base1.getMethod("doSomth2").getGenericReturnType())
+        then:
+        res == Object
+
+        when: "resolving type with variable"
+        res = TypeVariableUtils.resolveAllTypeVariables(Lvl2Base1.getMethod("doSomth3").getGenericReturnType())
+        then:
+        res.toString() == "List<Object>"
+
+        when: "resolving type with variable"
+        res = TypeVariableUtils.resolveAllTypeVariables(BoundedRoot.getType())
+        then:
+        res.toString() == "List<String>"
+
+        when: "type withou variables"
+        def type = String
+        res = TypeVariableUtils.resolveAllTypeVariables(type)
+        then:
+        res == type
+    }
+
+    static class BoundedRoot<T extends String> {
+
+        static Type getType() {
+            return new TypeLiteral<List<T>>(){}.getType()
+        }
     }
 }
