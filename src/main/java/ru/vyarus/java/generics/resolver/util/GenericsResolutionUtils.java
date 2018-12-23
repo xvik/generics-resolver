@@ -35,12 +35,57 @@ public final class GenericsResolutionUtils {
      * @param type          type to resolve generics for
      * @param ignoreClasses classes to ignore (if required)
      * @return resolved generics for all types in class hierarchy
-     * @see #resolve(Class, LinkedHashMap, Map, List) for more custom resolution
+     * @see #resolve(Class, LinkedHashMap, Class[]) if you have known root generics
+     * @see #resolve(Class, LinkedHashMap, Map, List) if you have known generics for middle types
      */
     public static Map<Class<?>, LinkedHashMap<String, Type>> resolve(final Class<?> type,
                                                                      final Class<?>... ignoreClasses) {
+        return resolve(type, resolveRawGenerics(type), ignoreClasses);
+    }
+
+    /**
+     * Resolve hierarchy of provided type. It makes sense only for {@link ParameterizedType} as only this type
+     * could hold class generics. Parameter preserved to be {@link Type} for more universal usage
+     * (to avoid instanceof checks), execution for simple {@link Class} is completely equal to
+     * {@link #resolve(Class, Class[])} method call (original method preserved for api compatibility).
+     * <p>
+     * When provided type is not {@link ParameterizedType}, root class generics will be resolved
+     * as upper bounds (the same as in {@link #resolve(Class, Class[])}).
+     * <p>
+     * IMPORTANT: If provided type contain variables ({@link TypeVariable}), they will be replaced by
+     * {@link Object} (not upper bound!). Perform variables processing manually before calling this method
+     * in order to get more precise results (e.g. with {@link TypeVariableUtils#resolveAllTypeVariables(Type)}).
+     * <p>
+     * You can also use {@link TypeLiteral} for dynamic type declarations (tracking cases):
+     * {@code GenericsResolutionUtils.resolve(new TypeLiteral<MyClass<String, Boolean>(){}.getType())}.
+     *
+     * @param type          type to resolve generics for
+     * @param ignoreClasses classes to ignore (if required)
+     * @return resolved generics for all types in class hierarchy
+     * @see #resolve(Class, LinkedHashMap, Class[]) if you have known root generics
+     * @see #resolve(Class, LinkedHashMap, Map, List) if you have known generics for middle types
+     */
+    public static Map<Class<?>, LinkedHashMap<String, Type>> resolve(final Type type,
+                                                                     final Class<?>... ignoreClasses) {
+        return resolve(GenericsUtils.resolveClass(type, IgnoreGenericsMap.getInstance()),
+                resolveGenerics(type, IgnoreGenericsMap.getInstance()), ignoreClasses);
+    }
+
+    /**
+     * Analyze class hierarchy and resolve actual generic values for all composing types. Root type generics
+     * are known.
+     *
+     * @param type          type to resolve generics for
+     * @param rootGenerics  resolved root type generics (including owner type generics); must not be null!
+     * @param ignoreClasses classes to ignore (if required
+     * @return resolved generics for all types in class hierarchy
+     */
+    public static Map<Class<?>, LinkedHashMap<String, Type>> resolve(
+            final Class<?> type,
+            final LinkedHashMap<String, Type> rootGenerics,
+            final Class<?>... ignoreClasses) {
         return resolve(type,
-                resolveRawGenerics(type),
+                rootGenerics,
                 Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap(),
                 Arrays.asList(ignoreClasses));
     }

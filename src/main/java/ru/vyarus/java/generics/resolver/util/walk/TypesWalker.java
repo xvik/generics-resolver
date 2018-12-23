@@ -8,8 +8,6 @@ import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -272,9 +270,7 @@ public final class TypesWalker {
             // resolve upper class hierarchy to get lower type generics
             res = GenericsResolutionUtils.resolve(upperClass,
                     // use lower generics for upper type resolution, because of possibly known owner type generics
-                    GenericsResolutionUtils.resolveGenerics(upperType, lowerKnownGenerics),
-                    Collections.<Class<?>, LinkedHashMap<String, Type>>emptyMap(),
-                    Collections.<Class<?>>emptyList())
+                    GenericsResolutionUtils.resolveGenerics(upperType, lowerKnownGenerics))
                     .get(lowerClass);
         }
         return res;

@@ -1,9 +1,11 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.support.Base1
+import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.support.Model
 import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils
+import ru.vyarus.java.generics.resolver.util.TypeLiteral
 import spock.lang.Specification
 
 
@@ -30,5 +32,14 @@ class GenericsResolutionTest extends Specification {
         res = GenericsResolutionUtils.resolve(Root, Base1)
         then:
         res[Base1] == null
+    }
+
+    def "Check resolution from type (universal api)"() {
+
+        when: "resolving parameterized type"
+        def res = GenericsResolutionUtils.resolve(new TypeLiteral<Base1<Boolean>>(){}.getType())
+        then:
+        res.size() == 2
+        res[Lvl2Base1] == ["I": Boolean]
     }
 }
