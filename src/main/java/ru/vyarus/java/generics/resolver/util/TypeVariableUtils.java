@@ -136,6 +136,20 @@ public final class TypeVariableUtils {
     }
 
     /**
+     * The same as {@link GenericsUtils#resolveTypeVariables(Type[], Map)}, except it also process
+     * {@link ExplicitTypeVariable} variables. Useful for special cases when variables tracking is used.
+     * For example, type resolved with variables as a template and then used to create dynamic types
+     * (according to context parametrization).
+     *
+     * @param types    types to resolve
+     * @param generics root class generics mapping and {@link ExplicitTypeVariable} variable values.
+     * @return types without variables
+     */
+    public static Type[] resolveAllTypeVariables(final Type[] types, final Map<String, Type> generics) {
+        return GenericsUtils.resolveTypeVariables(types, generics, true);
+    }
+
+    /**
      * The same as {@link GenericsUtils#resolveTypeVariables(Type, Map)}, except it also process
      * {@link ExplicitTypeVariable} variables. Useful for special cases when variables tracking is used.
      * For example, type resolved with variables as a template and then used to create dynamic types

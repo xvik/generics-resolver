@@ -73,17 +73,67 @@ class VariablesTest extends Specification {
         then:
         res.toString() == "List<String>"
 
-        when: "type withou variables"
+        when: "type without variables"
         def type = String
         res = TypeVariableUtils.resolveAllTypeVariables(type)
         then:
         res == type
+
+        when: "array with variable resolution"
+        res = TypeVariableUtils.resolveAllTypeVariables(BoundedRoot.getArrayType())
+        then:
+        res.toString() == "String[]"
+
+        when: "wildcard with variable resolution"
+        res = TypeVariableUtils.resolveAllTypeVariables(BoundedRoot.getWildcardType())
+        then:
+        res == String
     }
 
-    static class BoundedRoot<T extends String> {
+    def "Check preserved variables resolution"() {
+
+        when: "resolving type with variable"
+        def res = TypeVariableUtils.resolveAllTypeVariables(TypeVariableUtils.preserveVariables(BoundedRoot.getType()))
+        then:
+        res.toString() == "List<String>"
+
+        when: "array with variable resolution"
+        res = TypeVariableUtils.resolveAllTypeVariables(TypeVariableUtils.preserveVariables(BoundedRoot.getArrayType()))
+        then:
+        res.toString() == "String[]"
+
+        when: "wildcard with variable resolution"
+        res = TypeVariableUtils.resolveAllTypeVariables(TypeVariableUtils.preserveVariables(BoundedRoot.getWildcardType()))
+        then:
+        res == String
+    }
+
+    def "Check array of preserved vars resolution"() {
+
+        when: "resolving array of types"
+        def res = TypeVariableUtils.resolveAllTypeVariables([
+                TypeVariableUtils.preserveVariables(BoundedRoot.getType()),
+                TypeVariableUtils.preserveVariables(BoundedRoot.getArrayType()),
+                TypeVariableUtils.preserveVariables(BoundedRoot.getWildcardType())
+        ] as Type[], ["T": String, "K": String])
+        then:
+        res[0].toString() == "List<String>"
+        res[1].toString() == "String[]"
+        res[2] == String
+    }
+
+    static class BoundedRoot<T extends String, K extends T> {
 
         static Type getType() {
-            return new TypeLiteral<List<T>>(){}.getType()
+            return new TypeLiteral<List<T>>() {}.getType()
+        }
+
+        static Type getArrayType() {
+            return new TypeLiteral<T[]>() {}.getType()
+        }
+
+        static Type getWildcardType() {
+            return new TypeLiteral<K>() {}.getType()
         }
     }
 }

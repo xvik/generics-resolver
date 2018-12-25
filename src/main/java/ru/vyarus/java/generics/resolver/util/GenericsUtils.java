@@ -228,57 +228,68 @@ public final class GenericsUtils {
      * @param types    types to replace named generics in
      * @param generics known generics
      * @return types without named generics
+     * @see TypeVariableUtils#resolveAllTypeVariables(Type[], Map)
      */
     public static Type[] resolveTypeVariables(final Type[] types, final Map<String, Type> generics) {
-        if (types.length == 0) {
-            return NO_TYPES;
-        }
-        final Type[] resolved = new Type[types.length];
-        for (int i = 0; i < types.length; i++) {
-            resolved[i] = resolveTypeVariables(types[i], generics);
-        }
-        return resolved;
+        return resolveTypeVariables(types, generics, false);
     }
 
     // for TypeVariableUtils access
     @SuppressWarnings("PMD.AvoidProtectedMethodInFinalClassNotExtending")
     protected static Type resolveTypeVariables(final Type type,
                                                final Map<String, Type> generics,
-                                               final boolean allVariables) {
+                                               final boolean countPreservedVariables) {
         Type resolvedGenericType = null;
         if (type instanceof TypeVariable) {
             // simple named generics resolved to target types
             resolvedGenericType = declaredGeneric((TypeVariable) type, generics);
         } else if (type instanceof ExplicitTypeVariable) {
             // special type used to preserve named generic (and differentiate from type variable)
-            resolvedGenericType = declaredGeneric((ExplicitTypeVariable) type, generics, allVariables);
+            resolvedGenericType = declaredGeneric((ExplicitTypeVariable) type, generics, countPreservedVariables);
         } else if (type instanceof Class) {
             resolvedGenericType = type;
         } else if (type instanceof ParameterizedType) {
             final ParameterizedType parametrizedType = (ParameterizedType) type;
             resolvedGenericType = new ParameterizedTypeImpl(parametrizedType.getRawType(),
-                    resolveTypeVariables(parametrizedType.getActualTypeArguments(), generics),
+                    resolveTypeVariables(parametrizedType.getActualTypeArguments(), generics, countPreservedVariables),
                     parametrizedType.getOwnerType());
         } else if (type instanceof GenericArrayType) {
             final GenericArrayType arrayType = (GenericArrayType) type;
             resolvedGenericType = new GenericArrayTypeImpl(resolveTypeVariables(
-                    arrayType.getGenericComponentType(), generics));
+                    arrayType.getGenericComponentType(), generics, countPreservedVariables));
         } else if (type instanceof WildcardType) {
             final WildcardType wildcard = (WildcardType) type;
             if (wildcard.getLowerBounds().length > 0) {
                 // only one lower bound could be (? super A)
-                final Type lowerBound = resolveTypeVariables(wildcard.getLowerBounds(), generics)[0];
+                final Type lowerBound = resolveTypeVariables(
+                        wildcard.getLowerBounds(), generics, countPreservedVariables)[0];
                 // flatten <? super Object> to Object
                 resolvedGenericType = lowerBound == Object.class
                         ? Object.class : WildcardTypeImpl.lower(lowerBound);
             } else {
                 // could be multiple upper bounds because of named generic bounds repackage (T extends A & B)
-                final Type[] upperBounds = resolveTypeVariables(wildcard.getUpperBounds(), generics);
+                final Type[] upperBounds = resolveTypeVariables(
+                        wildcard.getUpperBounds(), generics, countPreservedVariables);
                 // flatten <? extends Object> (<?>) to Object and <? extends Something> to Something
                 resolvedGenericType = upperBounds.length == 1 ? upperBounds[0] : WildcardTypeImpl.upper(upperBounds);
             }
         }
         return resolvedGenericType;
+    }
+
+    // for TypeVariableUtils access
+    @SuppressWarnings("PMD.AvoidProtectedMethodInFinalClassNotExtending")
+    protected static Type[] resolveTypeVariables(final Type[] types,
+                                                 final Map<String, Type> generics,
+                                                 final boolean countPreservedVariables) {
+        if (types.length == 0) {
+            return NO_TYPES;
+        }
+        final Type[] resolved = new Type[types.length];
+        for (int i = 0; i < types.length; i++) {
+            resolved[i] = resolveTypeVariables(types[i], generics, countPreservedVariables);
+        }
+        return resolved;
     }
 
     /**
@@ -519,9 +530,9 @@ public final class GenericsUtils {
     private static void findVariables(final Type type, final List<TypeVariable> found) {
         // note ExplicitTypeVariable is not checked as it's considered as known type
         if (type instanceof TypeVariable) {
-            found.add((TypeVariable) type);
+            recordVariable((TypeVariable) type, found);
         } else if (type instanceof ExplicitTypeVariable) {
-            found.add(((ExplicitTypeVariable) type).getDeclarationSource());
+            recordVariable(((ExplicitTypeVariable) type).getDeclarationSource(), found);
         } else if (type instanceof ParameterizedType) {
             final ParameterizedType parametrizedType = (ParameterizedType) type;
             if (parametrizedType.getOwnerType() != null) {
@@ -543,6 +554,17 @@ public final class GenericsUtils {
                 for (Type par : wildcard.getUpperBounds()) {
                     findVariables(par, found);
                 }
+            }
+        }
+    }
+
+    // variables could also contain variables, e.g. <T, K extends List<T>>
+    private static void recordVariable(final TypeVariable var, final List<TypeVariable> found) {
+        // prevent cycles
+        if (!found.contains(var)) {
+            found.add(var);
+            for (Type type : var.getBounds()) {
+                findVariables(type, found);
             }
         }
     }

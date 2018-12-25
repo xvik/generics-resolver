@@ -23,7 +23,7 @@ class VariablesSearchTest extends Specification {
         GenericsUtils.findVariables(Object) == []
         GenericsUtils.findVariables(new ParameterizedTypeImpl(List, E)) == [E]
         GenericsUtils.findVariables(new ParameterizedTypeImpl(List, [] as Type[], E)) == [E]
-        GenericsUtils.findVariables(new ParameterizedTypeImpl(List, [E] as Type[], E)) == [E, E]
+        GenericsUtils.findVariables(new ParameterizedTypeImpl(List, [E] as Type[], E)) == [E]
         GenericsUtils.findVariables(WildcardTypeImpl.upper(E)) == [E]
         GenericsUtils.findVariables(WildcardTypeImpl.lower(E)) == [E]
         GenericsUtils.findVariables(new GenericArrayTypeImpl(E)) == [E]

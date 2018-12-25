@@ -2,7 +2,8 @@
 * Add TypeLiteral utility class to simplify complex types declaration (by analogy with guice's class)
 * GenericUtils
     - Add orderVariablesForResolution method for ordering type variable declarations
-    - findVariables now finds preserved variables (ExplicitTypeVariable) too  
+    - findVariables now finds preserved variables (ExplicitTypeVariable) too
+    - Fix findVariables to search for variables in variable declarations and avoid duplicate variables
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
 * Fix reversed generic variables declaration support (#3)
 * TypeResolutionUtils
