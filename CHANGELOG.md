@@ -6,6 +6,7 @@
     - Fix findVariables to search for variables in variable declarations and avoid duplicate variables
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
 * Fix reversed generic variables declaration support (#3)
+* Fix TypesWalker: processing should not continue after incompatible types detection
 * TypeResolutionUtils
     - Add shortcut resolve(Class, LinkedHashMap<String, Type>, Class...) for resolution with known root generics
     - Add resolve(Type, Class...) to support resolution from ParameterizedType (and to be used as universal resolution method)      

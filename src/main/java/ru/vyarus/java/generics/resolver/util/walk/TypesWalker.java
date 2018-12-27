@@ -74,32 +74,36 @@ public final class TypesWalker {
                 GenericsUtils.resolveTypeVariables(two, twoKnownGenerics), twoKnownGenerics, visitor);
     }
 
-    private static void doWalk(final Type one, final Map<String, Type> oneKnownGenerics,
+    private static boolean doWalk(final Type one, final Map<String, Type> oneKnownGenerics,
                                final Type two, final Map<String, Type> twoKnownGenerics,
                                final TypesVisitor visitor) {
+        boolean canContinue = true;
         // avoid primitives to simplify comparisons
         final Class<?> oneType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClass(one, IGNORE_VARS));
         final Class<?> twoType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClass(two, IGNORE_VARS));
 
         // direct compatibility
         if (!isCompatible(one, two)) {
+            // this point must stop future processing
             visitor.incompatibleHierarchy(one, two);
+            canContinue = false;
         } else if (visitor.next(one, two) && oneType != Object.class && twoType != Object.class) {
             // user stop or nowhere to go from object
 
             // classes are already checked to be compatible (isCompatible) so either both arrays or both not
             if (oneType.isArray()) {
-                doWalk(arrayType(one), oneKnownGenerics, arrayType(two), twoKnownGenerics, visitor);
+                canContinue = doWalk(arrayType(one), oneKnownGenerics, arrayType(two), twoKnownGenerics, visitor);
             } else if (oneType.getTypeParameters().length > 0 || twoType.getTypeParameters().length > 0) {
                 // check generics compatibility
-                visitGenerics(one, oneType, oneKnownGenerics, two, twoType, twoKnownGenerics, visitor);
+                canContinue = visitGenerics(one, oneType, oneKnownGenerics, two, twoType, twoKnownGenerics, visitor);
             }
         }
+        return canContinue;
     }
 
     @SuppressWarnings({"checkstyle:NPathComplexity", "checkstyle:CyclomaticComplexity",
             "PMD.NPathComplexity", "PMD.CyclomaticComplexity"})
-    private static void visitGenerics(final Type one, final Class<?> oneType,
+    private static boolean visitGenerics(final Type one, final Class<?> oneType,
                                       final Map<String, Type> oneKnownGenerics,
                                       final Type two, final Class<?> twoType,
                                       final Map<String, Type> twoKnownGenerics,
@@ -132,8 +136,11 @@ public final class TypesWalker {
         for (Map.Entry<String, Type> entry : GenericsUtils
                 .extractTypeGenerics(oneLower ? oneType : twoType, oneGenerics).entrySet()) {
             final String generic = entry.getKey();
-            doWalk(entry.getValue(), oneKnownGenerics, twoGenerics.get(generic), twoKnownGenerics, visitor);
+            if (!doWalk(entry.getValue(), oneKnownGenerics, twoGenerics.get(generic), twoKnownGenerics, visitor)) {
+                return false;
+            }
         }
+        return true;
     }
 
     /**
