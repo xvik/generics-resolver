@@ -6,6 +6,8 @@ import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -16,7 +18,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 17.10.2014
  */
-@SuppressWarnings("PMD.GodClass")
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
 public final class GenericsUtils {
 
     private static final Type[] NO_TYPES = new Type[0];
@@ -95,6 +97,33 @@ public final class GenericsUtils {
     }
 
     /**
+     * Shortcut for {@link #resolveClass(Type, Map)} (called with {@link IgnoreGenericsMap}). Could be used
+     * when class must be resolved ignoring possible variables.
+     * <p>
+     * Note: {@code Object} will be used instead of variable even if it has upper bound declared (e.g.
+     * {@code T extends Serializable}).
+     *
+     * @param type type to resolve
+     * @return resolved class
+     */
+    public static Class<?> resolveClassIgnoringVariables(final Type type) {
+        return resolveClass(type, IgnoreGenericsMap.getInstance());
+    }
+
+    /**
+     * Shortcut for {@link #resolveClass(Type, Map)} (called with {@link EmptyGenericsMap}). Could be used
+     * when provided type does not contain variables. If provided type contain variables, error will be thrown.
+     *
+     * @param type type to resolve
+     * @return resolved class
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see #resolveClassIgnoringVariables(Type) to resolve type ignoring variables
+     */
+    public static Class<?> resolveClass(final Type type) {
+        return resolveClass(type, EmptyGenericsMap.getInstance());
+    }
+
+    /**
      * Resolves top class for provided type (for example, for generified classes like {@code List<T>} it
      * returns base type List).
      * <p>
@@ -105,6 +134,8 @@ public final class GenericsUtils {
      * @param generics root class generics mapping
      * @return resolved class
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see #resolveClass(Type) shortcut for types without variables
+     * @see #resolveClassIgnoringVariables(Type) shortcut to resolve class ignoring passible variables
      */
     public static Class<?> resolveClass(final Type type, final Map<String, Type> generics) {
         final Class<?> res;

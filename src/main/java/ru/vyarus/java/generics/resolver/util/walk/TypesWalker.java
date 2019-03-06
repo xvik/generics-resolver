@@ -79,8 +79,8 @@ public final class TypesWalker {
                                final TypesVisitor visitor) {
         boolean canContinue = true;
         // avoid primitives to simplify comparisons
-        final Class<?> oneType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClass(one, IGNORE_VARS));
-        final Class<?> twoType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClass(two, IGNORE_VARS));
+        final Class<?> oneType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClassIgnoringVariables(one));
+        final Class<?> twoType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClassIgnoringVariables(two));
 
         // direct compatibility
         if (!isCompatible(one, two)) {
@@ -224,8 +224,8 @@ public final class TypesWalker {
         final Type[] oneLower = one.getLowerBounds();
         final Type[] twoLower = two.getLowerBounds();
         if (oneLower.length > 0 && twoLower.length > 0) {
-            res = isCompatible(GenericsUtils.resolveClass(oneLower[0], IGNORE_VARS),
-                    GenericsUtils.resolveClass(twoLower[0], IGNORE_VARS));
+            res = isCompatible(GenericsUtils.resolveClassIgnoringVariables(oneLower[0]),
+                    GenericsUtils.resolveClassIgnoringVariables(twoLower[0]));
         }
         return res;
     }
@@ -242,7 +242,7 @@ public final class TypesWalker {
         if (type.getLowerBounds().length > 0) {
             // only one super could be used
             // couldn't be an object here as ? super Object is always replaced to simply Object before comparison
-            final Class<?> lower = GenericsUtils.resolveClass(type.getLowerBounds()[0], IGNORE_VARS);
+            final Class<?> lower = GenericsUtils.resolveClassIgnoringVariables(type.getLowerBounds()[0]);
 
             // target may only be lower bound's super type (or same type)
             for (Class<?> target : with) {

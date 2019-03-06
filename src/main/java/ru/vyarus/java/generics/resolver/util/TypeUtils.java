@@ -215,7 +215,7 @@ public final class TypeUtils {
         if (type instanceof ParameterizedType) {
             return ((ParameterizedType) type).getOwnerType() != null;
         }
-        final Class<?> actual = GenericsUtils.resolveClass(type, IGNORE_VARS);
+        final Class<?> actual = GenericsUtils.resolveClassIgnoringVariables(type);
         // interface is always static and can't use outer generics
         return !actual.isInterface() && actual.isMemberClass() && !Modifier.isStatic(actual.getModifiers());
     }
@@ -233,7 +233,7 @@ public final class TypeUtils {
             return ((ParameterizedType) type).getOwnerType();
         }
         return isInner(type)
-                ? GenericsUtils.resolveClass(type, IGNORE_VARS).getEnclosingClass()
+                ? GenericsUtils.resolveClassIgnoringVariables(type).getEnclosingClass()
                 : null;
     }
 }

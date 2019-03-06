@@ -67,7 +67,7 @@ public final class GenericsResolutionUtils {
      */
     public static Map<Class<?>, LinkedHashMap<String, Type>> resolve(final Type type,
                                                                      final Class<?>... ignoreClasses) {
-        return resolve(GenericsUtils.resolveClass(type, IgnoreGenericsMap.getInstance()),
+        return resolve(GenericsUtils.resolveClassIgnoringVariables(type),
                 resolveGenerics(type, IgnoreGenericsMap.getInstance()), ignoreClasses);
     }
 

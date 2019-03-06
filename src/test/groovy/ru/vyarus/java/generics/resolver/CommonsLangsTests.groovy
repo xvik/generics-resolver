@@ -343,7 +343,7 @@ class CommonsLangsTests<B> extends Specification {
         List<Type> types = GenericsResolver.resolve(CommonsLangChecks).method(method).resolveParametersTypes()
 
         expect:
-        def clazz = GenericsUtils.resolveClass(types[pos], [:])
+        def clazz = GenericsUtils.resolveClass(types[pos])
         println("${prettyString(types[pos])} | ${prettyString(clazz)} |  $res")
         clazz.isArray() == res
 
