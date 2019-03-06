@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver.util;
 
-import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import ru.vyarus.java.generics.resolver.util.walk.AssignabilityTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.ComparatorTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.CompatibilityTypesVisitor;
@@ -20,8 +19,6 @@ import java.util.Map;
  * @since 13.05.2018
  */
 public final class TypeUtils {
-
-    private static final Map<String, Type> IGNORE_VARS = IgnoreGenericsMap.getInstance();
 
     @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.AvoidUsingShortType"})
     private static final Map<Class, Class> PRIMITIVES = new HashMap<Class, Class>() {{
@@ -80,8 +77,8 @@ public final class TypeUtils {
         if (!visitor.isCompatible()) {
             throw new IllegalArgumentException(String.format(
                     "Type %s can't be compared to %s because they are not compatible",
-                    TypeToStringUtils.toStringType(what, IGNORE_VARS),
-                    TypeToStringUtils.toStringType(comparingTo, IGNORE_VARS)));
+                    TypeToStringUtils.toStringTypeIgnoringVariables(what),
+                    TypeToStringUtils.toStringTypeIgnoringVariables(comparingTo)));
         }
         return visitor.isMoreSpecific();
     }

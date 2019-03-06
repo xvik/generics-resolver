@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver.util;
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
+import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
@@ -21,6 +22,32 @@ public final class TypeToStringUtils {
     }
 
     /**
+     * Shortcut for {@link #toStringType(Type, Map)} (called with {@link IgnoreGenericsMap}). Could be used
+     * when class must be resolved ignoring possible variables.
+     * <p>
+     * Note: {@code Object} will be used instead of variable even if it has upper bound declared (e.g.
+     * {@code T extends Serializable}).
+     *
+     * @param type type type to convert to string
+     * @return string representation of provided type
+     */
+    public static String toStringTypeIgnoringVariables(final Type type) {
+        return toStringType(type, EmptyGenericsMap.getInstance());
+    }
+
+    /**
+     * Shortcut for {@link #toStringType(Type, Map)} (called with {@link EmptyGenericsMap}). Could be used
+     * when provided type does not contain variables. If provided type contain variables, error will be thrown.
+     *
+     * @param type type to convert to string
+     * @return string representation of provided type
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     */
+    public static String toStringType(final Type type) {
+        return toStringType(type, EmptyGenericsMap.getInstance());
+    }
+
+    /**
      * Prints type as string. E.g. {@code toStringType(ParameterizedType(List, String), [:]) == "List<String>"},
      * {@code toStringType(WildcardType(String), [:]) == "? extends String" }.
      * <p>
@@ -33,7 +60,8 @@ public final class TypeToStringUtils {
      * @return string representation of provided type
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
-     * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
+     * @see #toStringTypeIgnoringVariables(Type) shortcut to print Object instead of not known generic
+     * @see #toStringType(Type) shortcut for types without variables
      */
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String toStringType(final Type type, final Map<String, Type> generics) {

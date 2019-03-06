@@ -15,7 +15,7 @@ class TypeLiteralTest extends Specification {
         when: "declare same type"
         def type = new TypeLiteral<List<String>>() {}
         then:
-        TypeToStringUtils.toStringType(type.getType(), IgnoreGenericsMap.getInstance()) == "List<String>"
+        TypeToStringUtils.toStringTypeIgnoringVariables(type.getType()) == "List<String>"
         type.hashCode() > 0
 
         when: "declare the same type"

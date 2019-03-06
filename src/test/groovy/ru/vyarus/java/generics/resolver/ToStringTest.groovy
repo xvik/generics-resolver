@@ -33,7 +33,7 @@ class ToStringTest extends Specification {
     def "Check unknown generics detection"() {
 
         when: "to string type with unknown generics"
-        TypeToStringUtils.toStringType(TSBase.getTypeParameters()[0], [:])
+        TypeToStringUtils.toStringType(TSBase.getTypeParameters()[0])
         then:
         def ex = thrown(UnknownGenericException)
         ex.message == "Generic 'T' (defined on TSBase<T, K>) is not declared "
@@ -50,8 +50,8 @@ class ToStringTest extends Specification {
     def "Parametrized to string"() {
 
         expect:
-        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, String), [:]) == "Model<String>"
-        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, [String] as Class[], new ParameterizedTypeImpl(List, Long)), [:]) == "List<Long>.Model<String>"
+        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, String)) == "Model<String>"
+        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, [String] as Class[], new ParameterizedTypeImpl(List, Long))) == "List<Long>.Model<String>"
     }
 
     def "Wildcards to string"() {

@@ -2,7 +2,6 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
-import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import ru.vyarus.java.generics.resolver.util.walk.MatchVariablesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
 
@@ -103,8 +102,8 @@ public final class TypeVariableUtils {
             throw new IllegalArgumentException(String.format(
                     "Type %s variables can't be matched from type %s because they "
                             + "are not compatible",
-                    TypeToStringUtils.toStringType(template, IgnoreGenericsMap.getInstance()),
-                    TypeToStringUtils.toStringType(real, IgnoreGenericsMap.getInstance())));
+                    TypeToStringUtils.toStringTypeIgnoringVariables(template),
+                    TypeToStringUtils.toStringTypeIgnoringVariables(real)));
         }
         final Map<TypeVariable, Type> res = visitor.getMatched();
         // to be sure that right type does not contain variables

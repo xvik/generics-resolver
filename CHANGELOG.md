@@ -4,9 +4,13 @@
     - Add orderVariablesForResolution method for ordering type variable declarations
     - findVariables now finds preserved variables (ExplicitTypeVariable) too
     - Fix findVariables to search for variables in variable declarations and avoid duplicate variables
-    - Add shortcuts:
+    - Add shortcuts (to simplify common usages):
         - resolveClass(Type) (shortcut for EmptyGenericsMap.getInstance())
         - resolveClassIgnoringVariables(Type) (shortcut for IgnoreGenericsMap.getInstance())
+* TypeToStringUtils
+    - Add shortcuts (to simplify common usages):
+        - toString(Type)
+        - toStringIgnoringVariables(Type)        
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
 * Fix reversed generic variables declaration support (#3)
 * Fix TypesWalker: processing should not continue after incompatible types detection

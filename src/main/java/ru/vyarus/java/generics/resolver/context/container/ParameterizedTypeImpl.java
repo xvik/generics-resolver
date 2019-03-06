@@ -5,7 +5,6 @@ import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * Wrapper to hold resolved parametrization.
@@ -73,6 +72,6 @@ public class ParameterizedTypeImpl implements ParameterizedType {
 
     @Override
     public String toString() {
-        return TypeToStringUtils.toStringType(this, Collections.<String, Type>emptyMap());
+        return TypeToStringUtils.toStringType(this);
     }
 }

@@ -4,7 +4,6 @@ import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
-import java.util.Collections;
 
 /**
  * Wrapper to hold resolved array type.
@@ -45,6 +44,6 @@ public class GenericArrayTypeImpl implements GenericArrayType {
 
     @Override
     public String toString() {
-        return TypeToStringUtils.toStringType(this, Collections.<String, Type>emptyMap());
+        return TypeToStringUtils.toStringType(this);
     }
 }

@@ -17,7 +17,7 @@ class FieldShortcutsTest extends Specification {
         def field = Root.getField("field")
 
         expect:
-        TypeToStringUtils.toStringType(context.resolveFieldType(field), [:]) == "List<Integer>"
+        TypeToStringUtils.toStringType(context.resolveFieldType(field)) == "List<Integer>"
         context.resolveFieldClass(field) == List
         context.resolveFieldGenerics(field) == [Integer]
         context.resolveFieldGeneric(field) == Integer
