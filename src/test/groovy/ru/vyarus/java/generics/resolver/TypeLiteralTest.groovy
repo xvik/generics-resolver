@@ -1,9 +1,11 @@
 package ru.vyarus.java.generics.resolver
 
+import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.util.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
-import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap
 import spock.lang.Specification
+
+import java.lang.reflect.ParameterizedType
 
 /**
  * @author Vyacheslav Rusakov
@@ -31,6 +33,21 @@ class TypeLiteralTest extends Specification {
         !type.equals(type3)
         type.hashCode() != type3.hashCode()
         type.toString() != type3.toString()
+    }
+
+    def "Check manual literal declaration"() {
+
+        when: "declare from class"
+        def type = TypeLiteral.from(List)
+        then:
+        type.type == List
+
+        when: "declare from type"
+        type = TypeLiteral.from(new ParameterizedTypeImpl(List, String))
+        then:
+        type.type instanceof ParameterizedType
+        type.type.rawType == List
+        type.type.actualTypeArguments == [String]
     }
 
     def "Check incorrect declaration"() {

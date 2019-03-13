@@ -10,6 +10,8 @@ import java.lang.reflect.Type;
  * <p>
  * Usage: create empty anonymous class to capture type: {@code new TypeLiteral<List<String>>() {}}.
  * Use {@link #getType()} to access captured type.
+ * <p>
+ * In order to construct literal from existing type use {@code TypeLiteral.from(type)}.
  *
  * @param <T> type to declare
  * @author Vyacheslav Rusakov
@@ -22,6 +24,10 @@ public class TypeLiteral<T> {
 
     protected TypeLiteral() {
         type = readDeclaredType();
+    }
+
+    private TypeLiteral(final Type type) {
+        this.type = type;
     }
 
     /**
@@ -44,6 +50,24 @@ public class TypeLiteral<T> {
     @Override
     public boolean equals(final Object obj) {
         return obj instanceof TypeLiteral && ((TypeLiteral) obj).getType().equals(type);
+    }
+
+    /**
+     * @param type type declaration
+     * @param <T>  target type (for easy casting)
+     * @return type literal for provided type
+     */
+    public static <T> TypeLiteral<T> from(final Type type) {
+        return new TypeLiteral<T>(type);
+    }
+
+    /**
+     * @param type class
+     * @param <T>  class type
+     * @return type literal for provided class
+     */
+    public static <T> TypeLiteral<T> from(final Class<T> type) {
+        return new TypeLiteral<T>(type);
     }
 
     private Type readDeclaredType() {
