@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
-import ru.vyarus.java.generics.resolver.util.TypeLiteral
+import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeUtils
 import spock.lang.Specification
 

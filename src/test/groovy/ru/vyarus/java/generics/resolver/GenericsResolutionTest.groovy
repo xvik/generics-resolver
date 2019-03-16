@@ -5,7 +5,7 @@ import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.support.Model
 import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils
-import ru.vyarus.java.generics.resolver.util.TypeLiteral
+import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import spock.lang.Specification
 
 

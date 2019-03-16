@@ -1,5 +1,6 @@
-package ru.vyarus.java.generics.resolver.util;
+package ru.vyarus.java.generics.resolver.util.type;
 
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
 import java.lang.reflect.ParameterizedType;

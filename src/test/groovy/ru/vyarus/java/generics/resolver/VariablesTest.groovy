@@ -5,7 +5,7 @@ import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.util.GenericsUtils
-import ru.vyarus.java.generics.resolver.util.TypeLiteral
+import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
 

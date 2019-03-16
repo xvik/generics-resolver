@@ -4,7 +4,7 @@ import ru.vyarus.java.generics.resolver.GenericsResolver
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils
 import ru.vyarus.java.generics.resolver.util.GenericsTrackingUtils
-import ru.vyarus.java.generics.resolver.util.TypeLiteral
+import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import spock.lang.Specification
 
