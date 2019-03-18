@@ -151,17 +151,7 @@ public final class GenericsUtils {
             final Type[] upperBounds = ((WildcardType) type).getUpperBounds();
             res = resolveClass(upperBounds[0], generics);
         } else {
-            final Class arrayType = resolveClass(((GenericArrayType) type).getGenericComponentType(), generics);
-            try {
-                // returning complete array class with resolved type
-                if (arrayType.isArray()) {
-                    res = Class.forName("[" + arrayType.getName());
-                } else {
-                    res = Class.forName("[L" + arrayType.getName() + ";");
-                }
-            } catch (ClassNotFoundException e) {
-                throw new IllegalStateException("Failed to create array class for " + arrayType.getSimpleName(), e);
-            }
+            res = ArrayTypeUtils.toArrayClass(resolveClass(((GenericArrayType) type).getGenericComponentType(), generics));
         }
         return res;
     }
@@ -526,6 +516,7 @@ public final class GenericsUtils {
                 }
             }
         }
+
         return res;
     }
 
