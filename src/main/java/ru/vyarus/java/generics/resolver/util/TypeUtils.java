@@ -116,18 +116,18 @@ public final class TypeUtils {
     }
 
     /**
-     * Method is useful for wildcards processing. Note that it is impossibel in java to have multiple types in wildcard,
+     * Method is useful for wildcards processing. Note that it is impossible in java to have multiple types in wildcard,
      * but generics resolver use wildcards to store multiple generic bounds from raw resolution
      * ({@code T extends Something & Comparable} stored as wildcard {@code ? extends Something & Comparable}).
      * Use only when exact precision is required, otherwise you can use just first classes from both
      * (first upper bound) as multiple bounds case is quite rare.
      * <p>
-     * Bounds are assignable if one class from left bound is assignable to all types in right bound.
+     * Bounds are assignable if all classes in right bound are assignable from any class in left bound.
      * For example,
      * <ul>
-     * <li>{@code Number & Serializable and Number} assignable</li>
-     * <li>{@code Integer & Serializable and Number & Comparable} assignable</li>
-     * <li>{@code Integer and Number & Serializable} not assignable</li>
+     * <li>{@code Number & SomeInterface and Number} assignable</li>
+     * <li>{@code Integer & SomeInterface and Number & Comparable} assignable</li>
+     * <li>{@code Integer and Number & SomeInterface} not assignable</li>
      * </ul>
      * <p>
      * Object is assumed as unknown type. Object could be assigned to any type and any type could be assigned to
@@ -140,7 +140,7 @@ public final class TypeUtils {
      * @param one first bound
      * @param two second bound
      * @return true if left bound could be assigned to right bound, false otherwise
-     * @see GenericsUtils#resolveUpperBounds(Type, Map) supplement resolution method
+     * @see GenericsUtils#resolveUpperBounds(Type, Map) supplement bound resolution method
      */
     @SuppressWarnings("PMD.UseVarargs")
     public static boolean isAssignableBounds(final Class[] one, final Class[] two) {
@@ -148,22 +148,27 @@ public final class TypeUtils {
             throw new IllegalArgumentException(String.format("Incomplete bounds information: %s %s",
                     Arrays.toString(one), Arrays.toString(two)));
         }
-        for (Class<?> oneType : one) {
-            boolean assignable = true;
-            for (Class<?> twoType : two) {
-                // objects are unknown types - assuming assignable
-                if (oneType != Object.class && twoType != Object.class
-                        && !twoType.isAssignableFrom(oneType)) {
-                    assignable = false;
-                    break;
+        if (one.length == 1 && one[0] == Object.class) {
+            // Object is assignable to anything
+            return true;
+        }
+        for (Class<?> twoType : two) {
+            // everything is assignable to object
+            if (twoType != Object.class) {
+                boolean assignable = false;
+                for (Class<?> oneType : one) {
+                    if (twoType.isAssignableFrom(oneType)) {
+                        assignable = true;
+                        break;
+                    }
+                }
+                // none on left types is assignable to this right type
+                if (!assignable) {
+                    return false;
                 }
             }
-            if (assignable) {
-                // found one type assignable to all right types
-                return true;
-            }
         }
-        return false;
+        return true;
     }
 
     /**

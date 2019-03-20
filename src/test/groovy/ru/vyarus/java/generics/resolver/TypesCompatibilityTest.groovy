@@ -110,15 +110,6 @@ class TypesCompatibilityTest extends Specification {
         TypeUtils.getMoreSpecificType(Base1, Root) == Root
     }
 
-    def "Check incompatible bounds comparison"() {
-
-        when: "bad bound provided"
-        TypeUtils.isAssignableBounds([Class] as Class[], [] as Class[])
-        then:
-        def ex = thrown(IllegalArgumentException)
-        ex.message == "Incomplete bounds information: [class java.lang.Class] []"
-    }
-
     ParameterizedType param(Class root, Type... types) {
         return new ParameterizedTypeImpl(root, types)
     }

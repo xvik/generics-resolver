@@ -1,7 +1,7 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
-import ru.vyarus.java.generics.resolver.support.array.GenericArrayDeclaration
+
+import ru.vyarus.java.generics.resolver.support.array.GenericArrayDeclarations
 import ru.vyarus.java.generics.resolver.util.ArrayTypeUtils
 import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import spock.lang.Specification
@@ -30,7 +30,7 @@ class ArrayTypesTest extends Specification {
         boolean                                      | boolean[]
         List                                         | List[]
         // note: due to groovy bug(?) java type is required, because for groovy generic array is always simple array
-        new TypeLiteral<List<String>>() {}.getType() | new GenericArrayDeclaration().getType()
+        new TypeLiteral<List<String>>() {}.getType() | GenericArrayDeclarations.stringList
         int[]                                        | int[][]
         List[]                                        | List[][]
 
