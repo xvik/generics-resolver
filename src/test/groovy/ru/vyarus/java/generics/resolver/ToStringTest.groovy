@@ -4,6 +4,8 @@ import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.Model
+import ru.vyarus.java.generics.resolver.support.array.ArBaseLvl2
+import ru.vyarus.java.generics.resolver.support.inner.InOwner
 import ru.vyarus.java.generics.resolver.support.tostring.Base
 import ru.vyarus.java.generics.resolver.support.tostring.GenerifiedInterface
 import ru.vyarus.java.generics.resolver.support.tostring.TSBase
@@ -12,7 +14,10 @@ import ru.vyarus.java.generics.resolver.support.wildcard.WCBase
 import ru.vyarus.java.generics.resolver.support.wildcard.WCBaseLvl2
 import ru.vyarus.java.generics.resolver.support.wildcard.WCRoot
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
+import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap
 import spock.lang.Specification
+
+import java.lang.reflect.Type
 
 /**
  * @author Vyacheslav Rusakov 
@@ -81,5 +86,36 @@ class ToStringTest extends Specification {
         then: "to string properly selects type generics only"
         innerContext.toStringCurrentClass() == "PInner<Integer>"
         innerContext.toStringCurrentClassDeclaration() == "PInner<K>"
+    }
+
+    def "Check primitive arrays to string"() {
+
+        expect:
+        TypeToStringUtils.toStringType(int[]) == "int[]"
+    }
+
+    def "Check object generics removal"() {
+
+        expect:
+        TypeToStringUtils.toStringType(type) == res
+        where:
+        type                                                                                               | res
+        new ParameterizedTypeImpl(List, Object)                                                            | "List"
+        new ParameterizedTypeImpl(List, String)                                                            | "List<String>"
+        new ParameterizedTypeImpl(ArBaseLvl2, Object, Object)                                              | "ArBaseLvl2"
+        new ParameterizedTypeImpl(ArBaseLvl2, String, Object)                                              | "ArBaseLvl2<String, Object>"
+        new ParameterizedTypeImpl(InOwner.Inner, [] as Type[], new ParameterizedTypeImpl(InOwner, Object)) | "InOwner.Inner"
+        new ParameterizedTypeImpl(InOwner.Inner, [] as Type[], new ParameterizedTypeImpl(InOwner, String)) | "InOwner<String>.Inner"
+    }
+
+    def "Check to string with generics"() {
+
+        expect:
+        TypeToStringUtils.toStringWithGenerics(type, IgnoreGenericsMap.getInstance()) == res
+        where:
+        type                           | res
+        List                           | "List"
+        ArBaseLvl2                     | "ArBaseLvl2"
+        InOwner.Inner                  | "Inner"
     }
 }

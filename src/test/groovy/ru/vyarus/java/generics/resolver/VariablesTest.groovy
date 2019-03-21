@@ -66,7 +66,7 @@ class VariablesTest extends Specification {
         when: "resolving type with variable"
         res = TypeVariableUtils.resolveAllTypeVariables(Lvl2Base1.getMethod("doSomth3").getGenericReturnType())
         then:
-        res.toString() == "List<Object>"
+        res.toString() == "List"
 
         when: "resolving type with variable"
         res = TypeVariableUtils.resolveAllTypeVariables(BoundedRoot.getType())

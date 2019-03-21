@@ -63,10 +63,10 @@ class GenericsInfoToStringTest extends Specification {
 
         expect:
 
-        toString(GenericsResolver.resolve(InnerTypesTest.Owner.Inner)) == """class Owner<Object>.Inner
+        toString(GenericsResolver.resolve(InnerTypesTest.Owner.Inner)) == """class Owner.Inner
 """
 
-        toString(GenericsResolver.resolve(InnerTypesTest.Owner.PInner)) == """class Owner<Object>.PInner<Object>
+        toString(GenericsResolver.resolve(InnerTypesTest.Owner.PInner)) == """class Owner.PInner
 """
 
         toString(GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('target'))) == """class Owner<String>.Inner

@@ -11,7 +11,10 @@
 * TypeToStringUtils
     - Add shortcuts (to simplify common usages):
         - toString(Type)
-        - toStringIgnoringVariables(Type)    
+        - toStringIgnoringVariables(Type)   
+    - typeToString behaviour change: 
+        - WildcardType prints types with generics nad not just classes as before
+        - ParametrizedType avoid generics part when all are Object (e.g. now "List" instead of "List<Object>")       
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types            

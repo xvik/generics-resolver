@@ -101,14 +101,14 @@ class GenericsAccessorsTest extends Specification {
         when: "constructor"
         context = GenericsResolver.resolve(ConstructorGenerics).constructor(ConstructorGenerics.getConstructor(Object))
         then:
-        toString(context) == """class ConstructorGenerics<Object>
+        toString(context) == """class ConstructorGenerics
   ConstructorGenerics(Object)    <-- current
 """
 
         when: "constructor 2"
         context = context.constructor(ConstructorGenerics.getConstructor(Comparable))
         then:
-        toString(context) == """class ConstructorGenerics<Object>
+        toString(context) == """class ConstructorGenerics
   ConstructorGenerics(Comparable)    <-- current
 """
     }

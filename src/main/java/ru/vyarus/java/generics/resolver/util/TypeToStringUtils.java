@@ -98,6 +98,8 @@ public final class TypeToStringUtils {
     /**
      * Formats class as {@code Class<generics>}. Only actual class generics are rendered.
      * Intended to be used for error reporting.
+     * <p>
+     * Note: if class is inned class, outer class is not printed!
      *
      * @param type     class class to print with generics
      * @param generics known generics map class generics map
@@ -172,7 +174,11 @@ public final class TypeToStringUtils {
         res.append(toStringType(parametrized.getRawType(), generics));
         final Type[] args = parametrized.getActualTypeArguments();
         if (args.length > 0) {
-            res.append('<').append(join(args, generics)).append('>');
+            final String params = join(args, generics);
+            // do not print absent parametrization
+            if (!params.replace(", ", "").replace("Object", "").isEmpty()) {
+                res.append('<').append(params).append('>');
+            }
         }
         return res.toString();
     }
@@ -188,13 +194,12 @@ public final class TypeToStringUtils {
                 if (!first) {
                     bounds.append(" & ");
                 }
-                bounds.append(toStringType(GenericsUtils.resolveClass(type, generics), generics));
+                bounds.append(toStringType(type, generics));
                 first = false;
             }
             res = "? extends " + bounds.toString();
         } else {
-            res = "? super " + toStringType(
-                    GenericsUtils.resolveClass(wildcard.getLowerBounds()[0], generics), generics);
+            res = "? super " + toStringType(wildcard.getLowerBounds()[0], generics);
         }
         return res;
     }

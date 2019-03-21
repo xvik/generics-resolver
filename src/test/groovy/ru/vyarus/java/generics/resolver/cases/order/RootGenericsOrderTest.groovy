@@ -19,31 +19,31 @@ class RootGenericsOrderTest extends Specification {
         when: "reversed order"
         GenericsContext res = GenericsResolver.resolve(MyClass)
         then:
-        TypeToStringUtils.toStringType(res.genericType("T")) == "List<Object>"
+        TypeToStringUtils.toStringType(res.genericType("T")) == "List"
         TypeToStringUtils.toStringType(res.genericType("D")) == "Object"
 
 
         when: "mixed order"
         res = GenericsResolver.resolve(MixedOrderClass)
         then:
-        TypeToStringUtils.toStringType(res.genericType("T")) == "List<Collection<Object>>"
-        TypeToStringUtils.toStringType(res.genericType("D")) == "Collection<Object>"
+        TypeToStringUtils.toStringType(res.genericType("T")) == "List<Collection>"
+        TypeToStringUtils.toStringType(res.genericType("D")) == "Collection"
         TypeToStringUtils.toStringType(res.genericType("P")) == "Object"
 
 
         when: "multiple reversed orders"
         res = GenericsResolver.resolve(MyComplexClass)
         then:
-        TypeToStringUtils.toStringType(res.genericType("T")) == "List<Collection<Object>>"
-        TypeToStringUtils.toStringType(res.genericType("D")) == "Collection<Object>"
+        TypeToStringUtils.toStringType(res.genericType("T")) == "List<Collection>"
+        TypeToStringUtils.toStringType(res.genericType("D")) == "Collection"
         TypeToStringUtils.toStringType(res.genericType("P")) == "Object"
 
 
         when: "hard order mix"
         res = GenericsResolver.resolve(EnormousCase)
         then:
-        TypeToStringUtils.toStringType(res.genericType("T")) == "List<Object>"
-        TypeToStringUtils.toStringType(res.genericType("P")) == "Collection<List<Object>>"
+        TypeToStringUtils.toStringType(res.genericType("T")) == "List"
+        TypeToStringUtils.toStringType(res.genericType("P")) == "Collection<List>"
         TypeToStringUtils.toStringType(res.genericType("K")) == "Object"
     }
 
@@ -53,7 +53,7 @@ class RootGenericsOrderTest extends Specification {
         def res = GenericsResolutionUtils.resolveDirectRawGenerics(MyClass)
         then:
         res.keySet() as List == ["T", "D"] as List
-        TypeToStringUtils.toStringType(res["T"]) == "List<Object>"
+        TypeToStringUtils.toStringType(res["T"]) == "List"
         TypeToStringUtils.toStringType(res["D"]) == "Object"
 
 
@@ -61,8 +61,8 @@ class RootGenericsOrderTest extends Specification {
         res = GenericsResolutionUtils.resolveDirectRawGenerics(MixedOrderClass)
         then:
         res.keySet() as List == ["T", "P", "D"] as List
-        TypeToStringUtils.toStringType(res["T"]) == "List<Collection<Object>>"
-        TypeToStringUtils.toStringType(res["D"]) == "Collection<Object>"
+        TypeToStringUtils.toStringType(res["T"]) == "List<Collection>"
+        TypeToStringUtils.toStringType(res["D"]) == "Collection"
         TypeToStringUtils.toStringType(res["P"]) == "Object"
 
 
@@ -70,8 +70,8 @@ class RootGenericsOrderTest extends Specification {
         res = GenericsResolutionUtils.resolveDirectRawGenerics(MyComplexClass)
         then:
         res.keySet() as List == ["T", "D", "P"] as List
-        TypeToStringUtils.toStringType(res["T"]) == "List<Collection<Object>>"
-        TypeToStringUtils.toStringType(res["D"]) == "Collection<Object>"
+        TypeToStringUtils.toStringType(res["T"]) == "List<Collection>"
+        TypeToStringUtils.toStringType(res["D"]) == "Collection"
         TypeToStringUtils.toStringType(res["P"]) == "Object"
 
 
@@ -79,8 +79,8 @@ class RootGenericsOrderTest extends Specification {
         res = GenericsResolutionUtils.resolveDirectRawGenerics(EnormousCase)
         then:
         res.keySet() as List == ["T", "K", "P"] as List
-        TypeToStringUtils.toStringType(res["T"]) == "List<Object>"
-        TypeToStringUtils.toStringType(res["P"]) == "Collection<List<Object>>"
+        TypeToStringUtils.toStringType(res["T"]) == "List"
+        TypeToStringUtils.toStringType(res["P"]) == "Collection<List>"
         TypeToStringUtils.toStringType(res["K"]) == "Object"
     }
 

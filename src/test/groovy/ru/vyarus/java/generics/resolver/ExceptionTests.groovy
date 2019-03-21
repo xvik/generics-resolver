@@ -88,7 +88,7 @@ class ExceptionTests extends Specification {
         res.getType() == Base1
         res.getRootGenerics()["T"] == Object
         res.getKnownGenerics().isEmpty()
-        res.message == "Failed to analyze hierarchy for Base1<Object>"
+        res.message == "Failed to analyze hierarchy for Base1"
 
         when: "with known middles"
         res = new GenericsResolutionException(Base1,
@@ -98,7 +98,7 @@ class ExceptionTests extends Specification {
         res.getType() == Base1
         res.getRootGenerics()["T"] == Object
         res.getKnownGenerics()[Lvl2Base1]["I"] == String
-        res.message == "Failed to analyze hierarchy for Base1<Object> (with known generics: Lvl2Base1<String>)"
+        res.message == "Failed to analyze hierarchy for Base1 (with known generics: Lvl2Base1<String>)"
     }
 
     def "Check tracking exception"() {
