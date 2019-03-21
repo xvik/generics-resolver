@@ -9,6 +9,19 @@ import spock.lang.Specification
  */
 class TypeBoundsAssignabilityTest extends Specification {
 
+    def "Check type bounds assignability"() {
+
+        expect:
+        TypeUtils.isAssignableBounds(left as Class[], right as Class[]) == res
+        where:
+        left                                     | right                                    | res
+        [String]                                 | [String]                                 | true
+        [String]                                 | [CharSequence]                           | true
+        [CharSequence]                           | [String]                                 | false
+        [Serializable, Comparable, CharSequence] | [Comparable, CharSequence]               | true
+        [Comparable, CharSequence]               | [Serializable, Comparable, CharSequence] | false
+
+    }
 
     def "Check assignable bounds multi-match test"() {
 
