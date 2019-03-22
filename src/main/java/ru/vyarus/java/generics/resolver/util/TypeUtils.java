@@ -1,13 +1,12 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.util.type.CommonTypeFactory;
 import ru.vyarus.java.generics.resolver.util.walk.AssignabilityTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.ComparatorTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.CompatibilityTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
 
-import java.lang.reflect.Modifier;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -148,26 +147,26 @@ public final class TypeUtils {
             throw new IllegalArgumentException(String.format("Incomplete bounds information: %s %s",
                     Arrays.toString(one), Arrays.toString(two)));
         }
-        if (one.length == 1 && one[0] == Object.class) {
-            // Object is assignable to anything
-            return true;
-        }
-        for (Class<?> twoType : two) {
-            // everything is assignable to object
-            if (twoType != Object.class) {
-                boolean assignable = false;
-                for (Class<?> oneType : one) {
-                    if (twoType.isAssignableFrom(oneType)) {
-                        assignable = true;
-                        break;
+        // nothing to do for Object - it's assignable to anything
+        if (!(one.length == 1 && one[0] == Object.class)) {
+            for (Class<?> twoType : two) {
+                // everything is assignable to object
+                if (twoType != Object.class) {
+                    boolean assignable = false;
+                    for (Class<?> oneType : one) {
+                        if (twoType.isAssignableFrom(oneType)) {
+                            assignable = true;
+                            break;
+                        }
                     }
-                }
-                // none on left types is assignable to this right type
-                if (!assignable) {
-                    return false;
+                    // none on left types is assignable to this right type
+                    if (!assignable) {
+                        return false;
+                    }
                 }
             }
         }
+
         return true;
     }
 
@@ -237,5 +236,41 @@ public final class TypeUtils {
         return isInner(type)
                 ? GenericsUtils.resolveClassIgnoringVariables(type).getEnclosingClass()
                 : null;
+    }
+
+    /**
+     * Searching for maximum type to which both types could be downcasted. For example, for {@code Integer}
+     * and {@code Double} common class would be {@code ? extends Number & Comparable<Number>} (because both
+     * {@code Integer} and {@code Double} extend {@code Number} and implement {@code Comparable} and so both types
+     * could be downcasted to this common type).
+     * <p>
+     * Generics are also counted, e.g. common type for {@code List<Double>} and {@code List<Integer>} is
+     * {@code List<Number & Comparable<Number>>}. Generics are tracked on all depths (in order to compute maximally
+     * accurate type).
+     * <p>
+     * Types may be common only in implemented interfaces: e.g. for {@code class One implements Comparable}
+     * and {@code class Two implements Comparable} common type would be {@code Comparable}.
+     * All shared interfaces are returned as wildcard ({@link WildcardType} meaning
+     * {@code ? extends BaseType & IFace1 & Iface2 }).
+     * <p>
+     * Returned type is maximally accurate common type, but if you need only base class without interfaces
+     * (and use interfaces inly if direct base class can't be found) then you can call
+     * {@code CommonTypeFactory.build(one, two, false)} directly.
+     * <p>
+     * Primitives are boxed for comparison (e.g. {@code int -> Integer}) so even for two {@code int} common type
+     * would be {@code Integer}. The exception is primitive arrays: they can't be unboxed (because {@code int[]}
+     * and {@code Integer[]} are not the same) and so the result will be {@code Object} for primitive arrays in
+     * all cases except when types are equal.
+     * <p>
+     * NOTE: returned type will not contain variables ({@link TypeVariable}), even if provided types contain them
+     * (all variables are solved to upper bound). For example, {@code List<T extends Number>} will be counted as
+     * {@code List<Number>} and {@code Set<N>} as {@code Set<Object>}.
+     *
+     * @param one first type
+     * @param two second type
+     * @return maximum class assignable to both types or {@code Object} if classes are incompatible
+     */
+    public static Type getCommonType(final Type one, final Type two) {
+        return CommonTypeFactory.build(one, two, true);
     }
 }

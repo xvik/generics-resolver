@@ -13,7 +13,10 @@ import java.util.Map;
  * @author Vyacheslav Rusakov
  * @since 16.03.2019
  */
-public class ArrayTypeUtils {
+public final class ArrayTypeUtils {
+
+    private static final String ARRAY_TYPE_SIMPLE_PREFIX = "[";
+    private static final String ARRAY_TYPE_OBJECT_PREFIX = "[L";
 
     @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.AvoidUsingShortType"})
     private static final Map<Class, String> PRIMITIVE_ARRAY_LETTER = new HashMap<Class, String>() {{
@@ -81,11 +84,11 @@ public class ArrayTypeUtils {
             final String name = type.getName();
             final String typeName;
             if (type.isArray()) {
-                typeName = ("[" + name);
+                typeName = ARRAY_TYPE_SIMPLE_PREFIX + name;
             } else if (type.isPrimitive()) {
-                typeName = "[" + PRIMITIVE_ARRAY_LETTER.get(type);
+                typeName = ARRAY_TYPE_SIMPLE_PREFIX + PRIMITIVE_ARRAY_LETTER.get(type);
             } else {
-                typeName = "[L" + name + ";";
+                typeName = ARRAY_TYPE_OBJECT_PREFIX + name + ";";
             }
             return (Class<T[]>) Class.forName(typeName);
         } catch (ClassNotFoundException e) {

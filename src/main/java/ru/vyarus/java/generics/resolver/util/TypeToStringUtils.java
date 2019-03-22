@@ -18,6 +18,8 @@ import java.util.Map;
  */
 public final class TypeToStringUtils {
 
+    private static final String COMMA_SEPARATOR = ", ";
+
     private TypeToStringUtils() {
     }
 
@@ -176,7 +178,7 @@ public final class TypeToStringUtils {
         if (args.length > 0) {
             final String params = join(args, generics);
             // do not print absent parametrization
-            if (!params.replace(", ", "").replace("Object", "").isEmpty()) {
+            if (!params.replace(COMMA_SEPARATOR, "").replace("Object", "").isEmpty()) {
                 res.append('<').append(params).append('>');
             }
         }
@@ -217,7 +219,7 @@ public final class TypeToStringUtils {
             boolean first = true;
             for (Type type : args) {
                 if (!first) {
-                    buf.append(", ");
+                    buf.append(COMMA_SEPARATOR);
                 }
                 buf.append(toStringType(type, generics));
                 first = false;

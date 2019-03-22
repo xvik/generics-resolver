@@ -151,7 +151,8 @@ public final class GenericsUtils {
             final Type[] upperBounds = ((WildcardType) type).getUpperBounds();
             res = resolveClass(upperBounds[0], generics);
         } else {
-            res = ArrayTypeUtils.toArrayClass(resolveClass(((GenericArrayType) type).getGenericComponentType(), generics));
+            res = ArrayTypeUtils.toArrayClass(
+                    resolveClass(((GenericArrayType) type).getGenericComponentType(), generics));
         }
         return res;
     }
