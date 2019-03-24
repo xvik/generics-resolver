@@ -20,6 +20,11 @@ class TypeBoundsAssignabilityTest extends Specification {
         [CharSequence]                           | [String]                                 | false
         [Serializable, Comparable, CharSequence] | [Comparable, CharSequence]               | true
         [Comparable, CharSequence]               | [Serializable, Comparable, CharSequence] | false
+        [Object]                                 | [String]                                 | true
+        [String]                                 | [Object]                                 | true
+        [Object[]]                               | [String[]]                               | true
+        [String[]]                               | [Object[]]                               | true
+        [Integer[]]                              | [Number[]]                               | true
 
     }
 

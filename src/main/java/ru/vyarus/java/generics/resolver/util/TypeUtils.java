@@ -148,7 +148,8 @@ public final class TypeUtils {
                     Arrays.toString(one), Arrays.toString(two)));
         }
         // nothing to do for Object - it's assignable to anything
-        if (!(one.length == 1 && one[0] == Object.class)) {
+        if (!(one.length == 1 && (one[0] == Object.class
+                || (ArrayTypeUtils.isArray(one[0]) && ArrayTypeUtils.getArrayComponentType(one[0]) == Object.class)))) {
             for (Class<?> twoType : two) {
                 // everything is assignable to object
                 if (twoType != Object.class) {
