@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * Match {@link ExplicitTypeVariable} in one type with real types from other type.
+ *
  * @author Vyacheslav Rusakov
  * @since 14.12.2018
  */
