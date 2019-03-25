@@ -50,10 +50,9 @@ public class ComparatorTypesVisitor implements TypesVisitor {
             // check lower bounds when upper bounds are equal (checked above)
             moreSpecific = moreSpecific && compareLowerBounds(one, two);
 
-            // no need to go further if context types are not equal (specificity is already obvious)
-            return moreSpecific && boundsEqual;
+            // general specificity might be already obvious, but generics could differ and this must be checked
+            // in order to throw incompatible types
         }
-        // actually nowhere to go as Object on the right (last step)
         return true;
     }
 

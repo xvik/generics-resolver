@@ -17,7 +17,8 @@
         - ParametrizedType avoid generics part when all are Object (e.g. now "List" instead of "List<Object>")       
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
-       to all right types 
+       to all right types
+    - Fix incompatible types detetion in isMoreSpecific() (check was stopped on types with obvious specificity)   
     - Add getCommonTypes(type1, type2): calculates base type assignable for both provided types               
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
 * Fix reversed generic variables declaration support (#3)

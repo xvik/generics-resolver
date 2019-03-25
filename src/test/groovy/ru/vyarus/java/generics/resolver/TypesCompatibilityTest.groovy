@@ -62,6 +62,7 @@ class TypesCompatibilityTest extends Specification {
         Integer                        | upper(Number, Comparable)   | true
         upper(Number, Comparable)      | String                      | false
         String                         | upper(Number, Comparable)   | false
+        param(ArrayList, String)       | param(Iterable, Integer)    | false
     }
 
     def "Check types comparison"() {
@@ -97,11 +98,23 @@ class TypesCompatibilityTest extends Specification {
 
     def "Check type comparison failure"() {
 
-        when: "compare incopatible types"
+        when: "compare incompatible types"
         TypeUtils.isMoreSpecific(String, Integer)
         then: "err"
         def ex = thrown(IllegalArgumentException)
         ex.message == "Type String can't be compared to Integer because they are not compatible"
+
+        when: "incompatible generics on obviously specific types"
+        TypeUtils.isMoreSpecific(param(ArrayList, String), param(Iterable, Integer))
+        then: "err"
+        ex = thrown(IllegalArgumentException)
+        ex.message == "Type ArrayList<String> can't be compared to Iterable<Integer> because they are not compatible"
+
+        when: "incompatible generics on obviously less specific"
+        TypeUtils.isMoreSpecific(param(Iterable, Integer), param(ArrayList, String))
+        then: "err"
+        ex = thrown(IllegalArgumentException)
+        ex.message == "Type Iterable<Integer> can't be compared to ArrayList<String> because they are not compatible"
     }
 
     def "Check specific type resolution"() {

@@ -183,10 +183,10 @@ class CommonsLangsTests<B> extends Specification {
         datType     | disType     | true       | true       | true      // That<String, String> | This<String, String>
         daType      | disType     | false      | false      | false     // The<String, String> | This<String, String>
         uhderType   | disType     | true       | true       | true      // Other<String> | This<String, String>
-        dingType    | disType     | true       | true       | true     // Thing | This<String, String>
+        dingType    | disType     | true       | true       | false     // Thing | This<String, String>
         disType     | dingType    | false      | true       | false      // This<String, String> | Thing
         testerType  | disType     | true       | true       | true      // Tester | This<String, String>
-        tester2Type | disType     | true       | true       | true     // Tester | This<String, String>
+        tester2Type | disType     | true       | true       | false     // Tester | This<String, String>
         disType     | tester2Type | false      | true       | false      // This<String, String> | Tester
         dat2Type    | datType     | true       | true       | true      // That<String, String> | That<String, String>
         datType     | dat2Type    | true       | true       | true      // That<String, String> | That<String, String>
