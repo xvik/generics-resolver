@@ -10,11 +10,14 @@
         - resolveClassIgnoringVariables(Type) (shortcut for IgnoreGenericsMap.getInstance())
 * TypeToStringUtils
     - Add shortcuts (to simplify common usages):
-        - toString(Type)
-        - toStringIgnoringVariables(Type)   
-    - typeToString behaviour change: 
+        - toStringType(Type)
+        - toStringTypeIgnoringVariables(Type)   
+    - toStringType behaviour change: 
         - WildcardType prints types with generics nad not just classes as before
-        - ParametrizedType avoid generics part when all are Object (e.g. now "List" instead of "List<Object>")       
+        - ParametrizedType avoid generics part when all are Object (e.g. now "List" instead of "List<Object>")
+    - Add toStingType + join methods:
+        - toStringTypes(Type[], Map<String, Type>) for comma separated types
+        - toStringTypes(Type[], String, Map<String, Type>) for custom types separator            
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types

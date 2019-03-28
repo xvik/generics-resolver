@@ -116,6 +116,60 @@ public final class TypeToStringUtils {
     }
 
     /**
+     * Shortcut for {@link #toStringTypes(Type[], String, Map)} with comma separator (most commonly used).
+     *
+     * @param types types to convert to string
+     * @param generics generics (common for all types)
+     * @return string with all types divided by comma
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap to print not known generic names
+     * @see ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap to print Object instead of not known generic
+     * @see EmptyGenericsMap for no-generics case (to avoid creating empty map)
+     */
+    public static String toStringTypes(final Type[] types, final Map<String, Type> generics) {
+        return toStringTypes(types, COMMA_SEPARATOR, generics);
+    }
+
+    /**
+     * Calls {@link #toStringType(Type, Map)} for all types and join resulted strings with provided separator.
+     * All types must be either without generics or from the single scope (same class or method) so provided generics
+     * map contains generics for all types.
+     * <p>
+     * Useful for example, to format types in error message.
+     *
+     * @param types     types to convert to string
+     * @param separator separator string
+     * @param generics  generics (common for all types)
+     * @return string with all types divided by separator
+     * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see #toStringTypes(Type[], Map) shortcut for comma - separated types (most useful)
+     */
+    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
+    public static String toStringTypes(final Type[] types,
+                                       final String separator,
+                                       final Map<String, Type> generics) {
+        final String res;
+        if (types.length == 0) {
+            res = "";
+        } else if (types.length == 1) {
+            // only one argument
+            res = toStringType(types[0], generics);
+        } else {
+            final StringBuilder buf = new StringBuilder(types.length * 20);
+            boolean first = true;
+            for (Type type : types) {
+                if (!first) {
+                    buf.append(separator);
+                }
+                buf.append(toStringType(type, generics));
+                first = false;
+            }
+            res = buf.toString();
+        }
+        return res;
+    }
+
+    /**
      * <pre>{@code class B extends A<Long> {}
      * class A<T> {
      *      List<T> get(T one);
@@ -136,7 +190,7 @@ public final class TypeToStringUtils {
         return String.format("%s %s(%s)",
                 toStringType(method.getGenericReturnType(), generics),
                 method.getName(),
-                join(method.getGenericParameterTypes(), generics));
+                toStringTypes(method.getGenericParameterTypes(), generics));
     }
 
     /**
@@ -159,7 +213,7 @@ public final class TypeToStringUtils {
     public static String toStringConstructor(final Constructor constructor, final Map<String, Type> generics) {
         return String.format("%s(%s)",
                 constructor.getDeclaringClass().getSimpleName(),
-                join(constructor.getGenericParameterTypes(), generics));
+                toStringTypes(constructor.getGenericParameterTypes(), generics));
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")
@@ -176,8 +230,8 @@ public final class TypeToStringUtils {
         res.append(toStringType(parametrized.getRawType(), generics));
         final Type[] args = parametrized.getActualTypeArguments();
         if (args.length > 0) {
-            final String params = join(args, generics);
-            // do not print absent parametrization
+            final String params = toStringTypes(args, generics);
+            // do not print absent parametrization (it can't be checked before toString)
             if (!params.replace(COMMA_SEPARATOR, "").replace("Object", "").isEmpty()) {
                 res.append('<').append(params).append('>');
             }
@@ -190,41 +244,9 @@ public final class TypeToStringUtils {
         if (wildcard.getLowerBounds().length == 0) {
             // could be multiple bounds, because of stored named generic bounds (<T extends A & B>)
             // see GenericsResolutionUtils.resolveRawGeneric()
-            final StringBuilder bounds = new StringBuilder(wildcard.getUpperBounds().length * 10);
-            boolean first = true;
-            for (Type type : wildcard.getUpperBounds()) {
-                if (!first) {
-                    bounds.append(" & ");
-                }
-                bounds.append(toStringType(type, generics));
-                first = false;
-            }
-            res = "? extends " + bounds.toString();
+            res = "? extends " + toStringTypes(wildcard.getUpperBounds(), " & ", generics);
         } else {
             res = "? super " + toStringType(wildcard.getLowerBounds()[0], generics);
-        }
-        return res;
-    }
-
-    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
-    private static String join(final Type[] args, final Map<String, Type> generics) {
-        final String res;
-        if (args.length == 0) {
-            res = "";
-        } else if (args.length == 1) {
-            // only one argument
-            res = toStringType(args[0], generics);
-        } else {
-            final StringBuilder buf = new StringBuilder(args.length * 20);
-            boolean first = true;
-            for (Type type : args) {
-                if (!first) {
-                    buf.append(COMMA_SEPARATOR);
-                }
-                buf.append(toStringType(type, generics));
-                first = false;
-            }
-            res = buf.toString();
         }
         return res;
     }

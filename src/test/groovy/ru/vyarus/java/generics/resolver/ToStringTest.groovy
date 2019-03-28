@@ -14,6 +14,7 @@ import ru.vyarus.java.generics.resolver.support.wildcard.WCBase
 import ru.vyarus.java.generics.resolver.support.wildcard.WCBaseLvl2
 import ru.vyarus.java.generics.resolver.support.wildcard.WCRoot
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
+import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap
 import spock.lang.Specification
 
@@ -117,5 +118,14 @@ class ToStringTest extends Specification {
         List                           | "List"
         ArBaseLvl2                     | "ArBaseLvl2"
         InOwner.Inner                  | "Inner"
+    }
+
+    def "Check to string multiple types"() {
+
+        expect:
+        TypeToStringUtils.toStringTypes([String, Integer, new ParameterizedTypeImpl(Set, Double)] as Type[],
+                EmptyGenericsMap.getInstance()) == "String, Integer, Set<Double>"
+        TypeToStringUtils.toStringTypes([String, Integer, new ParameterizedTypeImpl(Set, Double)] as Type[],
+                " & ", EmptyGenericsMap.getInstance()) == "String & Integer & Set<Double>"
     }
 }
