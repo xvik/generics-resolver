@@ -259,7 +259,7 @@ public final class TypesWalker {
         // no need for actual generics because types are completely repackaged at the beginning
         return GenericsUtils.resolveTypeVariables(type instanceof GenericArrayType
                 ? ((GenericArrayType) type).getGenericComponentType()
-                : ((Class) type).getComponentType(), IGNORE_VARS);
+                : (GenericsUtils.resolveClass(type)).getComponentType(), IGNORE_VARS);
     }
 
 
