@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.util.type.CommonTypeFactory;
+import ru.vyarus.java.generics.resolver.util.type.InstanceTypeFactory;
 import ru.vyarus.java.generics.resolver.util.walk.AssignabilityTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.ComparatorTypesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.CompatibilityTypesVisitor;
@@ -12,9 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Generic-agnostic type operations.
+ * Types utilities.
  *
  * @author Vyacheslav Rusakov
+ * @see ArrayTypeUtils for array specific utilities
  * @since 13.05.2018
  */
 public final class TypeUtils {
@@ -273,5 +275,59 @@ public final class TypeUtils {
      */
     public static Type getCommonType(final Type one, final Type two) {
         return CommonTypeFactory.build(one, two, true);
+    }
+
+    /**
+     * Analyze provided instance and return instance type. In the simplest case it would be just
+     * {@code instance.getClass()}, but with class generics resolved by upper bounds. In case of multiple instances
+     * provided, it would be median type (type assignable from all instances).
+     * <p>
+     * The essential part is that returned type would contain original instance(s)
+     * ({@link ru.vyarus.java.generics.resolver.util.type.instance.InstanceType}). So even if all type information
+     * can't be resolved right now from provided instance(s), it could be done later (when some logic, aware
+     * of instance types could detect it and analyze instance further). For example, container types like
+     * {@link java.util.List}: initially only list class could be extracted form list instance, but logic
+     * knowing what list is and so be able to extract instances can further analyze list content and so resolve
+     * list generic type:
+     * <pre>{@code
+     * List listInstance = [12, 13.4] // integer and double
+     * Type type = TypeUtils.getInstanceType(listInstance);      // List<Object>
+     *
+     * // somewhere later where we know how to work with a list
+     * if (List.class.isAssignableFrom(GenericUtils.resolveClass(type))
+     *                                  && type instanceof InstanceType) {
+     *     ParameterizedInstanceType ptype = type.getImprovableType();  // will be the same instance
+     *
+     *     assert ptype.isCompleteType() == false // type not yet completely resolved
+     *
+     *     List containedList = (List) ptype.getInstance()
+     *     Type innerType = TypeUtils.getInstanceType(containedList.toArray()) // ? extends Number & Comparable<Number>
+     *
+     *     // improving list type: type changes form List<Object> to List<Number & Comparable<Number>>
+     *     ptype.improveAccuracy(innerType)
+     *     // note that we changing the original instance type so application will use more complete type in all
+     *     // places where this type were referenced
+     *
+     *     assert ptype.isCompleteType() == true // type considered complete now (completely resolved)
+     * }
+     * }</pre>
+     * <p>
+     * Instance types behave as usual types and so could be used in any api required types. The only difference
+     * is contained instance so logic parts aware for instance types could detect them and use instance for
+     * type improvement.
+     * <p>
+     * Note that returned instance type will contain only not null instances. If all instances are null then
+     * returned type will be simply {@code Object}, because object is assignable to anything (at least
+     * {@link TypeUtils} methods assume that).
+     * <p>
+     * Also, if instance is an array, which does not contain non null instances, then simple array class
+     * is returned (e.g. {@code TypeUtils.getInstanceType(new Integer[0]) == Integer[].class}
+     *
+     * @param instances instances to resolve type from
+     * @return instance type for one instance and median type for multiple instances
+     * @see ru.vyarus.java.generics.resolver.util.type.instance.InstanceType for more info
+     */
+    public static Type getInstanceType(final Object... instances) {
+        return InstanceTypeFactory.build(instances);
     }
 }

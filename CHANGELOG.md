@@ -1,6 +1,10 @@
 * Add ArrayTypeUtils with operations on array types
 * Add TypeVariableUtils for working with type templates (with preserved variables)
 * Add TypeLiteral utility class to simplify complex types declaration (by analogy with guice's class)
+* Add instance types (InstanceType): types resolved from one or more instances and contain original instance inside
+in order to be able to extract more type information on later analysis phase. Types behave like usual types and
+could be used anywhere (it's just convenient way to preserve all potential type information as instance,
+ so logic aware of instance types could extract it). Types created through TypeUtils 
 * GenericUtils
     - Add orderVariablesForResolution method for ordering type variable declarations
     - findVariables now finds preserved variables (ExplicitTypeVariable) too
@@ -22,7 +26,8 @@
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types
     - Fix incompatible types detetion in isMoreSpecific() (check was stopped on types with obvious specificity)   
-    - Add getCommonTypes(type1, type2): calculates base type assignable for both provided types               
+    - Add getCommonTypes(type1, type2): calculates base type assignable for both provided types
+    - Add getInstanceType(...): create instance type for provided instance(s)               
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
 * Fix reversed generic variables declaration support (#3)
 * Fix TypesWalker: processing should not continue after incompatible types detection
