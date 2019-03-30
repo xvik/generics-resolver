@@ -22,7 +22,10 @@ import java.util.List;
  * @see WildcardInstanceType
  * @since 26.03.2019
  */
-public class InstanceTypeFactory {
+public final class InstanceTypeFactory {
+
+    private InstanceTypeFactory() {
+    }
 
     /**
      * Construct {@link ru.vyarus.java.generics.resolver.util.type.instance.InstanceType} for provided instance(s).
@@ -78,7 +81,7 @@ public class InstanceTypeFactory {
         return res;
     }
 
-    private static Type getInstanceType(final Object[] instances) {
+    private static Type getInstanceType(final Object... instances) {
         Type median = null;
 
         for (Object obj : instances) {
@@ -92,18 +95,18 @@ public class InstanceTypeFactory {
         return median;
     }
 
-    private static Type buildArrayType(Type median, final Object[] objects) {
+    private static Type buildArrayType(final Type median, final Object... objects) {
         // search for non empty arrays
         final List<Object[]> arrays = new ArrayList<Object[]>();
         final List<Object> elements = new ArrayList<Object>();
         for (Object object : objects) {
-            Object[] arr = filterNulls((Object[]) object);
+            final Object[] arr = filterNulls((Object[]) object);
             if (arr.length > 0) {
                 arrays.add(arr);
                 Collections.addAll(elements, arr);
             }
         }
-        if (arrays.size() == 0) {
+        if (arrays.isEmpty()) {
             // when no instances available (inside arrays) we can return only class type
             // (nothing interesting in empty arrays instances)
             return median;
@@ -115,7 +118,7 @@ public class InstanceTypeFactory {
         return new GenericArrayInstanceType(componentType, arrays.toArray());
     }
 
-    private static Type buildType(final Type median, final Object[] objects) {
+    private static Type buildType(final Type median, final Object... objects) {
         if (median instanceof WildcardType && ((WildcardType) median).getUpperBounds().length > 1) {
             // using only the first type as instance type and other types will remain as simple correcting types
             // (no type info lost)

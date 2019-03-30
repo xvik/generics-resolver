@@ -25,7 +25,7 @@ import java.util.Iterator;
 public class GenericArrayInstanceType implements GenericArrayType, InstanceType {
 
     private final Object[] instances;
-    private Type componentType;
+    private final Type componentType;
 
     /**
      * Warning: this is container type and it does not perform type integrity checks!
@@ -100,7 +100,9 @@ public class GenericArrayInstanceType implements GenericArrayType, InstanceType 
     @Override
     public String toString() {
         // append first instance hash code to uniquely identify type by contained instance
-        return TypeToStringUtils.toStringType(this) + " (" + Integer.toHexString(getInstance().hashCode())
-                + (hasMultipleInstances() ? ",...(" + instances.length + ")" : "") + ")";
+        return String.format("%s (%s%s)",
+                TypeToStringUtils.toStringType(this),
+                Integer.toHexString(getInstance().hashCode()),
+                hasMultipleInstances() ? ",...(" + instances.length + ")" : "");
     }
 }

@@ -1,7 +1,12 @@
 package ru.vyarus.java.generics.resolver.util.type;
 
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
-import ru.vyarus.java.generics.resolver.util.*;
+import ru.vyarus.java.generics.resolver.util.TypeUtils;
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
+import ru.vyarus.java.generics.resolver.util.GenericsUtils;
+import ru.vyarus.java.generics.resolver.util.ArrayTypeUtils;
+import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
+import ru.vyarus.java.generics.resolver.util.GenericsTrackingUtils;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 
 import java.lang.reflect.ParameterizedType;
@@ -73,8 +78,7 @@ public final class TrackedTypeFactory {
             for (Type sub : ((WildcardType) source).getUpperBounds()) {
                 // use all parameterized types in wildcard
                 if (sub instanceof ParameterizedType) {
-                    ParameterizedType ptype = (ParameterizedType) sub;
-                    selection.add(trackGenerics(target, ptype));
+                    selection.add(trackGenerics(target, (ParameterizedType) sub));
                 }
             }
         } else {
@@ -95,7 +99,7 @@ public final class TrackedTypeFactory {
         final Class<?> middle = GenericsUtils.resolveClass(source);
         LinkedHashMap<String, Type> generics =
                 GenericsResolutionUtils.resolveGenerics(source, EmptyGenericsMap.getInstance());
-        if (target != middle) {
+        if (!target.equals(middle)) {
             // for different types perform tracking
             generics = GenericsTrackingUtils.track(target, middle, generics);
         }
@@ -113,7 +117,7 @@ public final class TrackedTypeFactory {
         for (String key : generics.get(0).keySet()) {
             Type type = null;
             for (Map<String, Type> map : generics) {
-                Type tmp = map.get(key);
+                final Type tmp = map.get(key);
                 if (type == null || TypeUtils.isMoreSpecific(tmp, type)) {
                     type = tmp;
                 }

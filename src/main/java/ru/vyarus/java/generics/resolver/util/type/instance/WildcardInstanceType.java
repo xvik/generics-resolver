@@ -62,7 +62,7 @@ public class WildcardInstanceType implements WildcardType, InstanceType {
         }
 
         this.instances = instances;
-        this.upperBounds = upperBounds;
+        this.upperBounds = Arrays.copyOf(upperBounds, upperBounds.length);
     }
 
     @Override
@@ -110,8 +110,10 @@ public class WildcardInstanceType implements WildcardType, InstanceType {
     @Override
     public String toString() {
         // append first instance hash code to uniquely identify type by contained instance
-        return TypeToStringUtils.toStringType(this) + " (" + Integer.toHexString(getInstance().hashCode())
-                + (hasMultipleInstances() ? ",...(" + instances.length + ")" : "") + ")";
+        return String.format("%s (%s%s)",
+                TypeToStringUtils.toStringType(this),
+                Integer.toHexString(getInstance().hashCode()),
+                hasMultipleInstances() ? ",...(" + instances.length + ")" : "");
     }
 
     @Override

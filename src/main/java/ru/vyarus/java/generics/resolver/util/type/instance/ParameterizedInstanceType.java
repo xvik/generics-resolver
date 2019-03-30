@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util.type.instance;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
@@ -141,7 +142,7 @@ public class ParameterizedInstanceType implements ParameterizedType, InstanceTyp
      * @return true if provided generics are more specific, false otherwise
      * @throws IllegalArgumentException if wrong generics count provided
      */
-    public boolean isMoreSpecificGenerics(Type... arguments) {
+    public boolean isMoreSpecificGenerics(final Type... arguments) {
         if (arguments.length != actualArguments.length) {
             throw new IllegalArgumentException(String.format(
                     "Wrong generics count provided <%s> in compare to current types <%s>",
@@ -160,15 +161,20 @@ public class ParameterizedInstanceType implements ParameterizedType, InstanceTyp
     @Override
     public String toString() {
         // append first instance hash code to uniquely identify type by contained instance
-        return TypeToStringUtils.toStringType(this) + " (" + Integer.toHexString(getInstance().hashCode())
-                + (hasMultipleInstances() ? ",...(" + instances.length + ")" : "") + ")";
+        return String.format("%s (%s%s)",
+                TypeToStringUtils.toStringType(this),
+                Integer.toHexString(getInstance().hashCode()),
+                hasMultipleInstances() ? ",...(" + instances.length + ")" : "");
     }
 
     @Override
+    @SuppressFBWarnings("EQ_CHECK_FOR_OPERAND_NOT_COMPATIBLE_WITH_THIS")
     public boolean equals(final Object o) {
         boolean res = this == o;
         // this type could represent class, but still be parameterized to hold instance
-        res = !res && o instanceof Class && actualArguments.length == 0 && rawType == o;
+        if (o instanceof Class) {
+            res = !res && actualArguments.length == 0 && rawType.equals(o);
+        }
         if (!res && o instanceof ParameterizedType) {
             final ParameterizedType that = (ParameterizedType) o;
             final Type[] thatActualArguments = that.getActualTypeArguments();
@@ -193,7 +199,7 @@ public class ParameterizedInstanceType implements ParameterizedType, InstanceTyp
 
     private void analyze(final Type type) {
         if (type instanceof ParameterizedType) {
-            ParameterizedType ptype = (ParameterizedType) type;
+            final ParameterizedType ptype = (ParameterizedType) type;
             this.rawType = (Class<?>) ptype.getRawType();
             this.actualArguments = ptype.getActualTypeArguments();
             this.ownerType = ptype.getOwnerType();

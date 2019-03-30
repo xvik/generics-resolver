@@ -143,7 +143,7 @@ public final class TypeUtils {
      * @return true if left bound could be assigned to right bound, false otherwise
      * @see GenericsUtils#resolveUpperBounds(Type, Map) supplement bound resolution method
      */
-    @SuppressWarnings("PMD.UseVarargs")
+    @SuppressWarnings({"PMD.UseVarargs", "PMD.CyclomaticComplexity", "checkstyle:CyclomaticComplexity"})
     public static boolean isAssignableBounds(final Class[] one, final Class[] two) {
         if (one.length == 0 || two.length == 0) {
             throw new IllegalArgumentException(String.format("Incomplete bounds information: %s %s",
