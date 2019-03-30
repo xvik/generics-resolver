@@ -128,6 +128,10 @@ public final class GenericsResolutionUtils {
      * <p>
      * If type is not {@link ParameterizedType} and so does not contains actual generics info, resolve
      * generics from type declaration ({@link #resolveRawGenerics(Class)}),
+     * <p>
+     * NOTE: for {@link WildcardType} returned map will contain only first upper bound type generics, resolved
+     * by upper bound (because in many cases it would be impossible to build not contradicting generics map for
+     * wildcard due to same generic names in different types).
      *
      * @param type     type to resolve generics for
      * @param generics generics of context class

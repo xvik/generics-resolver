@@ -8,6 +8,7 @@ import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
+import ru.vyarus.java.generics.resolver.util.type.TrackedTypeFactory;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -24,6 +25,36 @@ public final class GenericsUtils {
     private static final Type[] NO_TYPES = new Type[0];
 
     private GenericsUtils() {
+    }
+
+    /**
+     * Shortcut for {@link GenericsTrackingUtils} to simplify tracking generics from known middle class.
+     * For example, knowing {@code List<String>} we can track generic for {@code ArrayList<T>}.
+     * <p>
+     * In order to start generics resolution known type must be:
+     * <ul>
+     * <li>{@link ParameterizedType} - then parametrization used for tracking</li>
+     * <li>{@link WildcardType} containing {@link ParameterizedType} - then all such types will be tracked
+     * and the most specific generics selected</li>
+     * <li>{@link GenericArrayType} - then component types are compared according to first two rules.</li>
+     * </ul>
+     * In all other cases, type is simply returned as is (no source to track from).
+     * <p>
+     * Target type may be any type (for usage simplicity), but only class declaration will be taken from it
+     * (in order to build {@link ParameterizedType} with tracked generics). If target type
+     * is already {@link ParameterizedType} and contain some generics - they will be used too in order to not
+     * lower declaration specificity. If target class does not have declared generics at all - type is returned back
+     * as is.
+     *
+     * @param type    class to resolve generics for
+     * @param source sub type with known generics
+     * @return {@link ParameterizedType} with tracked generics or original type if no declared generics or known
+     * type is not {@link ParameterizedType}
+     * @throws IllegalArgumentException if type is not assignable to known type.
+     * @see GenericsTrackingUtils#track(Class, Class, LinkedHashMap) for more specific cases
+     */
+    public static Type trackGenerics(final Type type, final Type source) {
+        return TrackedTypeFactory.build(type, source);
     }
 
     /**

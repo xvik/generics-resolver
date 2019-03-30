@@ -39,6 +39,7 @@ public final class GenericsTrackingUtils {
      * @return root class generics (row types were impossible to track)
      * @throws IllegalStateException when resolved generic of known type contradict with known generic value
      *                               (type can't be casted to known type)
+     * @see GenericsUtils#trackGenerics(Type, Type) shortcut for most common case
      */
     public static LinkedHashMap<String, Type> track(final Class<?> type,
                                                     final Class<?> known,

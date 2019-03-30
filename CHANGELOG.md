@@ -12,6 +12,7 @@ could be used anywhere (it's just convenient way to preserve all potential type 
     - Add shortcuts (to simplify common usages):
         - resolveClass(Type) (shortcut for EmptyGenericsMap.getInstance())
         - resolveClassIgnoringVariables(Type) (shortcut for IgnoreGenericsMap.getInstance())
+    - Add trackGenerics() - shortcut for GenericsTrackingUtils for improving type generics by known sub type generics    
 * TypeToStringUtils
     - Add shortcuts (to simplify common usages):
         - toStringType(Type)
