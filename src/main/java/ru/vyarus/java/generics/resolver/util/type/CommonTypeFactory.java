@@ -5,6 +5,7 @@ import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.util.ArrayTypeUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import ru.vyarus.java.generics.resolver.util.TypeUtils;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
@@ -59,6 +60,23 @@ public final class CommonTypeFactory {
         final Type first = cleanupTypeForComparison(one);
         final Type second = cleanupTypeForComparison(two);
 
+        final Type res = buildImpl(first, second, alwaysIncludeInterfaces, new PathsCache());
+        // during resolution wildcard types may be used as temporal placeholders (to prevent cycles)
+        // and after resolution there might be wildcards with only one upper bound
+        // so we need to repackage type to get rid of such wildcards
+        return GenericsUtils.resolveTypeVariables(res, EmptyGenericsMap.getInstance());
+    }
+
+    private static Type buildImpl(final Type first,
+                                  final Type second,
+                                  final boolean alwaysIncludeInterfaces,
+                                  final PathsCache cache) {
+        final Type cached = cache.get(first, second);
+        if (cached != null) {
+            // prevent cycle with a special wrapper type (cleared after complete resolution)
+            return cached;
+        }
+        cache.init(first, second);
         final Type res;
 
         if (TypeUtils.isCompatible(first, second)) {
@@ -67,23 +85,25 @@ public final class CommonTypeFactory {
 
         } else if (ArrayTypeUtils.isArray(first) || ArrayTypeUtils.isArray(second)) {
             // special case for arrays (because of primitive arrays)
-            res = checkArraysCommodity(first, second, alwaysIncludeInterfaces);
+            res = checkArraysCommodity(first, second, alwaysIncludeInterfaces, cache);
 
         } else {
             // another special case for wildcards due to multiple types to compare
             if (first instanceof WildcardType || second instanceof WildcardType) {
                 // searching wildcard type commodity: compare each type from left with each type from right
                 // and return wildcard containing all not Object types.
-                res = resolveWildcardCommodity(first, second, alwaysIncludeInterfaces);
+                res = resolveWildcardCommodity(first, second, alwaysIncludeInterfaces, cache);
 
             } else {
                 // two ordinary not equal types
-                res = resolveCommonType(first, second, alwaysIncludeInterfaces);
+                res = resolveCommonType(first, second, alwaysIncludeInterfaces, cache);
             }
         }
 
+        cache.resolve(first, second, res);
         return res;
     }
+
 
     /**
      * Important step because consequent logic should not fail due to unknown generic. Due to java autoboxing
@@ -110,11 +130,13 @@ public final class CommonTypeFactory {
      * @param first                   first type
      * @param second                  second type
      * @param alwaysIncludeInterfaces always search for common interfaces
+     * @param cache                   resolution types cache
      * @return common type or null if non of types is array
      */
     private static Type checkArraysCommodity(final Type first,
                                              final Type second,
-                                             final boolean alwaysIncludeInterfaces) {
+                                             final boolean alwaysIncludeInterfaces,
+                                             final PathsCache cache) {
         // special case for arrays because of primitive arrays
         final boolean firstArray = ArrayTypeUtils.isArray(first);
         final boolean secondArray = ArrayTypeUtils.isArray(second);
@@ -132,14 +154,12 @@ public final class CommonTypeFactory {
                 // equal arrays case is implicitly checked before (by isCompatible), so these are not equal
                 res = Object.class;
             } else {
-                res = ArrayTypeUtils.toArrayType(build(firstArrayType, secondArrayType, alwaysIncludeInterfaces));
+                res = ArrayTypeUtils.toArrayType(
+                        buildImpl(firstArrayType, secondArrayType, alwaysIncludeInterfaces, cache));
             }
-        } else if (firstArray || secondArray) {
+        } else {
             // array can't share anything with non array
             res = Object.class;
-        } else {
-            // no match
-            res = null;
         }
         return res;
     }
@@ -153,11 +173,13 @@ public final class CommonTypeFactory {
      * @param first                   first type
      * @param second                  second type
      * @param alwaysIncludeInterfaces always search for common interfaces
+     * @param cache                   resolution types cache
      * @return common type or Object if no commodity detected
      */
     private static Type resolveWildcardCommodity(final Type first,
                                                  final Type second,
-                                                 final boolean alwaysIncludeInterfaces) {
+                                                 final boolean alwaysIncludeInterfaces,
+                                                 final PathsCache cache) {
         final List<Type> firstTypes = collectContainedTypes(first);
         final List<Type> secondTypes = collectContainedTypes(second);
 
@@ -165,7 +187,7 @@ public final class CommonTypeFactory {
         // compare each left type with each right and all non Object matches will compose target common type
         for (Type left : firstTypes) {
             for (Type right : secondTypes) {
-                final Type type = build(left, right, alwaysIncludeInterfaces);
+                final Type type = buildImpl(left, right, alwaysIncludeInterfaces, cache);
                 if (type != Object.class) {
                     if (type instanceof WildcardType) {
                         // unwrap wildcard because we actually need only all classes
@@ -238,11 +260,13 @@ public final class CommonTypeFactory {
      * @param first                   first type
      * @param second                  second type
      * @param alwaysIncludeInterfaces always search for common interfaces
+     * @param cache                   resolution types cache
      * @return resolved common type or Object if no commodity found
      */
     private static Type resolveCommonType(final Type first,
                                           final Type second,
-                                          final boolean alwaysIncludeInterfaces) {
+                                          final boolean alwaysIncludeInterfaces,
+                                          final PathsCache cache) {
         // resolve complete hierarchies, preserving all generics
         // (even if types are ParameterizedType it will be counted)
         final Map<Class<?>, LinkedHashMap<String, Type>> firstContext = resolveHierarchy(first);
@@ -268,7 +292,8 @@ public final class CommonTypeFactory {
             }
         }
 
-        return buildResultType(commonRoot, commonContracts, firstContext, secondContext, alwaysIncludeInterfaces);
+        return buildResultType(
+                commonRoot, commonContracts, firstContext, secondContext, alwaysIncludeInterfaces, cache);
     }
 
     /**
@@ -298,26 +323,28 @@ public final class CommonTypeFactory {
      * @param firstContext            first type generics context
      * @param secondContext           second type generics context
      * @param alwaysIncludeInterfaces always search for common interfaces
+     * @param cache                   resolution types cache
      * @return final median type for original types
      */
     private static Type buildResultType(final Class<?> type,
                                         final Set<Class<?>> contracts,
                                         final Map<Class<?>, LinkedHashMap<String, Type>> firstContext,
                                         final Map<Class<?>, LinkedHashMap<String, Type>> secondContext,
-                                        final boolean alwaysIncludeInterfaces) {
+                                        final boolean alwaysIncludeInterfaces,
+                                        final PathsCache cache) {
 
         removeDuplicateContracts(type, contracts);
 
         final List<Type> res = new ArrayList<Type>();
         if (type != Object.class) {
-            res.add(buildCommonType(type, firstContext, secondContext, alwaysIncludeInterfaces));
+            res.add(buildCommonType(type, firstContext, secondContext, alwaysIncludeInterfaces, cache));
         }
 
         // resolve interfaces only for root type resolution or if root class cant be found
         if (alwaysIncludeInterfaces || res.isEmpty()) {
             for (Class<?> iface : contracts) {
                 // simpler resolution for contracts (only class to prevent cycles)
-                res.add(buildCommonType(iface, firstContext, secondContext, false));
+                res.add(buildCommonType(iface, firstContext, secondContext, false, cache));
             }
         }
 
@@ -371,12 +398,14 @@ public final class CommonTypeFactory {
      * @param firstContext            first type generics context
      * @param secondContext           second type generics context
      * @param alwaysIncludeInterfaces always search for common interfaces
+     * @param cache                   resolution types cache
      * @return complete common type
      */
     private static Type buildCommonType(final Class<?> type,
                                         final Map<Class<?>, LinkedHashMap<String, Type>> firstContext,
                                         final Map<Class<?>, LinkedHashMap<String, Type>> secondContext,
-                                        final boolean alwaysIncludeInterfaces) {
+                                        final boolean alwaysIncludeInterfaces,
+                                        final PathsCache cache) {
         final TypeVariable<? extends Class<?>>[] typeParameters = type.getTypeParameters();
         if (typeParameters.length > 0) {
             final Type[] params = new Type[typeParameters.length];
@@ -387,7 +416,7 @@ public final class CommonTypeFactory {
             for (TypeVariable var : typeParameters) {
                 final Type sub1 = firstGenerics.get(var.getName());
                 final Type sub2 = secondGenerics.get(var.getName());
-                final Type paramType = build(sub1, sub2, alwaysIncludeInterfaces);
+                final Type paramType = buildImpl(sub1, sub2, alwaysIncludeInterfaces, cache);
                 if (paramType != Object.class) {
                     notAllObject = true;
                 }
@@ -400,6 +429,124 @@ public final class CommonTypeFactory {
                     : type;
         } else {
             return type;
+        }
+    }
+
+    /**
+     * Internal types resolution cache used to prevent infinite cycles. For example,
+     * {@code Integer extends Number implements Comparable<Integer>} and
+     * {@code String implements Comparable<String>}: without cache it would be an infinite loop
+     * of {@code String} and {@code Integer} resolutions due to {@code Comparable} interface.
+     */
+    private static class PathsCache {
+        private final Map<TypesKey, ResolutionPlaceholder> cache = new HashMap<TypesKey, ResolutionPlaceholder>();
+
+        public Type get(final Type one, final Type two) {
+            return cache.get(key(one, two));
+        }
+
+        /**
+         * Before types commodity resolution, putting empty placeholder into cache to prevent cycles.
+         *
+         * @param one first type
+         * @param two second type
+         */
+        public void init(final Type one, final Type two) {
+            final TypesKey key = key(one, two);
+            if (cache.containsKey(key)) {
+                // resolution logic error
+                throw new IllegalStateException(String.format(
+                        "Cache already contains placeholder for types %s and %s",
+                        TypeToStringUtils.toStringType(one),
+                        TypeToStringUtils.toStringType(two)));
+            }
+            cache.put(key, new ResolutionPlaceholder());
+        }
+
+        /**
+         * Resolve placeholder (in all places it could be possibly used) - delayed typification.
+         *
+         * @param one   first type
+         * @param two   second type
+         * @param value common type
+         */
+        public void resolve(final Type one, final Type two, final Type value) {
+            cache.get(key(one, two)).resolve(value);
+        }
+
+        private TypesKey key(final Type one, final Type two) {
+            return new TypesKey(one, two);
+        }
+    }
+
+    /**
+     * Type pair unification object to use as map key.
+     */
+    private static final class TypesKey {
+        private final Type one;
+        private final Type two;
+
+        private TypesKey(final Type one, final Type two) {
+            this.one = one;
+            this.two = two;
+        }
+
+        @Override
+        public boolean equals(final Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (!(o instanceof TypesKey)) {
+                return false;
+            }
+
+            final TypesKey typePair = (TypesKey) o;
+
+            if (!one.equals(typePair.one)) {
+                return false;
+            }
+            return two.equals(typePair.two);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = one.hashCode();
+            result = 31 * result + two.hashCode();
+            return result;
+        }
+    }
+
+    /**
+     * Type used as placeholder to avoid cycles during resolution. As this will be used only during interfaces
+     * resolution, the result is simplified (for example, when full type is class + interfaces, inside implemented
+     * interfaces there is no need for such accuracy, so only first resolved type could be taken (enough precision)).
+     * <p>
+     * This type is used only inside this factory and never leave it, because
+     * {@link GenericsUtils#resolveTypeVariables(Type, Map)} always replace wildcards with one upper bound with
+     * actual bound. And that's why no equals or hash code is implemented in type - no need.
+     */
+    private static class ResolutionPlaceholder implements WildcardType {
+        private static final Type[] EMPTY = new Type[0];
+
+        private Type[] upperBound;
+
+        public void resolve(final Type bound) {
+            if (upperBound != null) {
+                throw new IllegalArgumentException("Placeholder already resolved");
+            }
+            // reduce accuracy because there is no need ot us as much on lower levels (overcomplicated)
+            this.upperBound = new Type[]{bound instanceof WildcardType
+                    ? ((WildcardType) bound).getUpperBounds()[0] : bound};
+        }
+
+        @Override
+        public Type[] getUpperBounds() {
+            return upperBound == null ? EMPTY : upperBound;
+        }
+
+        @Override
+        public Type[] getLowerBounds() {
+            return new Type[0];
         }
     }
 }

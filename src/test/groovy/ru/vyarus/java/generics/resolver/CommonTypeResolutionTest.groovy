@@ -40,6 +40,7 @@ class CommonTypeResolutionTest extends Specification {
         Double[]                                          | Integer[]                                          | new GenericArrayTypeImpl(WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number)))
         double[]                                      | int[]                                          | Object
         Double[]                                      | int[]                                          | Object
+        Double[]                                      | Double                                          | Object
         GenericArrayDeclarations.doubleList          | GenericArrayDeclarations.integerList     | GenericArrayDeclarations.numberList
         GenericArrayDeclarations.stringList          | GenericArrayDeclarations.stringList      | GenericArrayDeclarations.stringList
 
@@ -50,6 +51,7 @@ class CommonTypeResolutionTest extends Specification {
         WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Double, Comparable, Root2)                 | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number), Base)
         WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Number, Comparable, Root1)                  | WildcardTypeImpl.upper(Number, Comparable, Root1)
         WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Number, Comparable, Root2)                  | WildcardTypeImpl.upper(Number, Comparable, Base)
+        WildcardTypeImpl.upper(Integer, Cloneable)                       | String                                                             | WildcardTypeImpl.upper(Serializable, new ParameterizedTypeImpl(Comparable, Serializable))
 
         WildcardTypeImpl.upper(Root1, Cloneable)                           | WildcardTypeImpl.upper(Base, Comparable)                 | Base
         WildcardTypeImpl.upper(Root1, Cloneable, Comparable)              | WildcardTypeImpl.upper(Base, Comparable)                  | WildcardTypeImpl.upper(Base, Comparable)
