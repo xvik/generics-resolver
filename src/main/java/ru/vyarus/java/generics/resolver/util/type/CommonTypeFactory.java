@@ -534,9 +534,9 @@ public final class CommonTypeFactory {
             if (upperBound != null) {
                 throw new IllegalArgumentException("Placeholder already resolved");
             }
-            // reduce accuracy because there is no need ot us as much on lower levels (overcomplicated)
-            this.upperBound = new Type[]{bound instanceof WildcardType
-                    ? ((WildcardType) bound).getUpperBounds()[0] : bound};
+            // reduce accuracy because otherwise infinite cycles are possible
+            // besides, placeholders may appear only on implemented interfaces and there exact type is not important
+            this.upperBound = new Type[]{GenericsUtils.resolveClass(bound)};
         }
 
         @Override

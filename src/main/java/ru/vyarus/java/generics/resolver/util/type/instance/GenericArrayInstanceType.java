@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util.type.instance;
 
+import ru.vyarus.java.generics.resolver.util.ArrayTypeUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
 import java.lang.reflect.GenericArrayType;
@@ -18,6 +19,9 @@ import java.util.Iterator;
  * near useless as component type always contain another {@link InstanceType}. But instance array type may be
  * useful in rare cases when it is important to differentiate original instance arrays (to properly calculate
  * component type generics).
+ * <p>
+ * As this type is used in cases when pure array class could be used, equals are also works with pure array classes
+ * (e.g. {@code String[].class}).
  *
  * @author Vyacheslav Rusakov
  * @since 27.03.2019
@@ -85,9 +89,9 @@ public class GenericArrayInstanceType implements GenericArrayType, InstanceType 
     @Override
     public boolean equals(final Object o) {
         boolean res = this == o;
-        if (!res && o instanceof GenericArrayType) {
-            final Type thatComponentType = ((GenericArrayType) o).getGenericComponentType();
-            res = componentType.equals(thatComponentType);
+        if (!res && o instanceof Type && ArrayTypeUtils.isArray((Type) o)) {
+            // type could be equal to pure array class
+            res = componentType.equals(ArrayTypeUtils.getArrayComponentType((Type) o));
         }
         return res;
     }

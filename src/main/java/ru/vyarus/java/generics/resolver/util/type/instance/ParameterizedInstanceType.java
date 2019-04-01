@@ -31,6 +31,9 @@ import java.util.Map;
  * some lists support will extract contained elements and resolve median type of list generic and call
  * {@link #improveAccuracy(Type...)} in order to correct this type (note that provided type may also
  * be an instance type so next level analysis could further resolve type information).
+ * <p>
+ * As this type is used in cases when pure class could be used, equals are also works with pure classes
+ * (when no parametrization used).
  *
  * @author Vyacheslav Rusakov
  * @see GenericArrayInstanceType describing arrays which can't be expressed by parameterized type

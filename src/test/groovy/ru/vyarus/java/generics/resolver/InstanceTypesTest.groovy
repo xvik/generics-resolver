@@ -295,6 +295,7 @@ class InstanceTypesTest extends Specification {
         type.hashCode() == type2.hashCode()
         type.equals(type2)
         type.equals(new GenericArrayTypeImpl(String))
+        type.equals(String[])
         !type.equals(WildcardTypeImpl.upper(List))
     }
 }
