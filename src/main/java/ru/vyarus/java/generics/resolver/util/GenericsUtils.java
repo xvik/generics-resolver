@@ -46,7 +46,7 @@ public final class GenericsUtils {
      * lower declaration specificity. If target class does not have declared generics at all - type is returned back
      * as is.
      *
-     * @param type    class to resolve generics for
+     * @param type   class to resolve generics for
      * @param source sub type with known generics
      * @return {@link ParameterizedType} with tracked generics or original type if no declared generics or known
      * type is not {@link ParameterizedType}
@@ -288,7 +288,9 @@ public final class GenericsUtils {
     }
 
     // for TypeVariableUtils access
-    @SuppressWarnings("PMD.AvoidProtectedMethodInFinalClassNotExtending")
+    @SuppressWarnings({"PMD.AvoidProtectedMethodInFinalClassNotExtending",
+            "PMD.CyclomaticComplexity",
+            "checkstyle:CyclomaticComplexity"})
     protected static Type resolveTypeVariables(final Type type,
                                                final Map<String, Type> generics,
                                                final boolean countPreservedVariables) {
@@ -302,30 +304,15 @@ public final class GenericsUtils {
         } else if (type instanceof Class) {
             resolvedGenericType = type;
         } else if (type instanceof ParameterizedType) {
-            final ParameterizedType parametrizedType = (ParameterizedType) type;
-            resolvedGenericType = new ParameterizedTypeImpl(parametrizedType.getRawType(),
-                    resolveTypeVariables(parametrizedType.getActualTypeArguments(), generics, countPreservedVariables),
-                    parametrizedType.getOwnerType());
+            resolvedGenericType = resolveParameterizedTypeVariables(
+                    (ParameterizedType) type, generics, countPreservedVariables);
         } else if (type instanceof GenericArrayType) {
             final GenericArrayType arrayType = (GenericArrayType) type;
             resolvedGenericType = new GenericArrayTypeImpl(resolveTypeVariables(
                     arrayType.getGenericComponentType(), generics, countPreservedVariables));
         } else if (type instanceof WildcardType) {
-            final WildcardType wildcard = (WildcardType) type;
-            if (wildcard.getLowerBounds().length > 0) {
-                // only one lower bound could be (? super A)
-                final Type lowerBound = resolveTypeVariables(
-                        wildcard.getLowerBounds(), generics, countPreservedVariables)[0];
-                // flatten <? super Object> to Object
-                resolvedGenericType = lowerBound == Object.class
-                        ? Object.class : WildcardTypeImpl.lower(lowerBound);
-            } else {
-                // could be multiple upper bounds because of named generic bounds repackage (T extends A & B)
-                final Type[] upperBounds = resolveTypeVariables(
-                        wildcard.getUpperBounds(), generics, countPreservedVariables);
-                // flatten <? extends Object> (<?>) to Object and <? extends Something> to Something
-                resolvedGenericType = upperBounds.length == 1 ? upperBounds[0] : WildcardTypeImpl.upper(upperBounds);
-            }
+            resolvedGenericType = resolveWildcardTypeVariables(
+                    (WildcardType) type, generics, countPreservedVariables);
         }
         return resolvedGenericType;
     }
@@ -636,5 +623,61 @@ public final class GenericsUtils {
                                         final Map<String, Type> declarations,
                                         final boolean resolve) {
         return resolve ? declaredGeneric(generic.getDeclarationSource(), declarations) : generic;
+    }
+
+    /**
+     * Situation when parameterized type contains 0 arguments is not normal (impossible normally, except inner
+     * classes), but may appear after {@link ru.vyarus.java.generics.resolver.util.type.instance.InstanceType}
+     * resolution (where parameterized type have to be used even for classes in order to store actual instance),
+     * but, as we repackage type here, we don't need wrapper anymore.
+     *
+     * @param type                    type to repackage
+     * @param generics                known generics
+     * @param countPreservedVariables true to replace {@link ExplicitTypeVariable} too
+     * @return type without {@link TypeVariable}'s
+     */
+    private static Type resolveParameterizedTypeVariables(final ParameterizedType type,
+                                                          final Map<String, Type> generics,
+                                                          final boolean countPreservedVariables) {
+
+        final boolean emptyContainerForClass = type.getActualTypeArguments().length == 0
+                && type.getOwnerType() == null;
+        return emptyContainerForClass ? type.getRawType()
+                : new ParameterizedTypeImpl(type.getRawType(),
+                resolveTypeVariables(type.getActualTypeArguments(), generics, countPreservedVariables),
+                type.getOwnerType());
+    }
+
+    /**
+     * Some apis (like common types {@link ru.vyarus.java.generics.resolver.util.type.CommonTypeFactory}) use
+     * wildcards as a "composite type" (in essence, the same way as wildcards in pure variable declaration
+     * like {@code T extends A & B}). But it may appear, that wildcard contains only one upper bound, which
+     * is useless and could be unwrapped to this bound directly.
+     * <p>
+     * Note that common types resolution rely on this in order to get rid of wildcard placeholder objects.
+     *
+     * @param type                    type to repackage
+     * @param generics                known generics
+     * @param countPreservedVariables true to replace {@link ExplicitTypeVariable} too
+     * @return type without {@link TypeVariable}'s
+     */
+    private static Type resolveWildcardTypeVariables(final WildcardType type,
+                                                     final Map<String, Type> generics,
+                                                     final boolean countPreservedVariables) {
+        final Type res;
+        if (type.getLowerBounds().length > 0) {
+            // only one lower bound could be (? super A)
+            final Type lowerBound = resolveTypeVariables(
+                    type.getLowerBounds(), generics, countPreservedVariables)[0];
+            // flatten <? super Object> to Object
+            res = lowerBound == Object.class
+                    ? Object.class : WildcardTypeImpl.lower(lowerBound);
+        } else {
+            // could be multiple upper bounds because of named generic bounds repackage (T extends A & B)
+            final Type[] upperBounds = resolveTypeVariables(type.getUpperBounds(), generics, countPreservedVariables);
+            // flatten <? extends Object> (<?>) to Object and <? extends Something> to Something
+            res = upperBounds.length == 1 ? upperBounds[0] : WildcardTypeImpl.upper(upperBounds);
+        }
+        return res;
     }
 }

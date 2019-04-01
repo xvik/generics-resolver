@@ -26,7 +26,7 @@ could be used anywhere (it's just convenient way to preserve all potential type 
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types
-    - Fix incompatible types detetion in isMoreSpecific() (check was stopped on types with obvious specificity)   
+    - Fix incompatible types detection in isMoreSpecific() (check was stopped on types with obvious specificity)   
     - Add getCommonTypes(type1, type2): calculates base type assignable for both provided types
     - Add getInstanceType(...): create instance type for provided instance(s)               
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
