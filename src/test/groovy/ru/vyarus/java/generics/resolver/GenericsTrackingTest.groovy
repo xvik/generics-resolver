@@ -34,6 +34,15 @@ class GenericsTrackingTest extends Specification {
         Reversed | new ParameterizedTypeImpl(List, String) | ["A": String, "B": new ParameterizedTypeImpl(List, String)]
     }
 
+    def "Chcek resolution with known composite generic in known"() {
+
+        when: "all generics are directly used too"
+        def res = GenericsTrackingUtils.track(Root2, Known2, ["T": String, "K": param(List, String)] as LinkedHashMap)
+        then:
+        res == ["A": String, "B": param(List, String), "C": Object]
+
+    }
+
     def "Check tracking shortcut"() {
 
         expect:
@@ -107,4 +116,8 @@ class GenericsTrackingTest extends Specification {
     static class Middle1<T> {}
     static interface MiddleI<T> {}
     static class MultiRoot<T> extends Middle1<T> implements MiddleI<T> {}
+
+
+    static class Known2<T, K> {}
+    static class Root2<A, B extends List<A>, C> extends Known2<A, B> {}
 }

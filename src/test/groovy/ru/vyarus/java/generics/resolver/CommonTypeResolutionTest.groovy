@@ -61,6 +61,7 @@ class CommonTypeResolutionTest extends Specification {
         WildcardTypeImpl.upper(Root1, Cloneable, Comparable)              | WildcardTypeImpl.upper(Root2, Comparable)                  | WildcardTypeImpl.upper(Base, Comparable)
         WildcardTypeImpl.upper(Root1, new ParameterizedTypeImpl(Comparable, String))              | WildcardTypeImpl.upper(Root2, Comparable)                  | WildcardTypeImpl.upper(Base, Comparable)
         WildcardTypeImpl.upper(Root1, new ParameterizedTypeImpl(Comparable, Integer))             | WildcardTypeImpl.upper(Root2, new ParameterizedTypeImpl(Comparable, Number))                  | WildcardTypeImpl.upper(Base, new ParameterizedTypeImpl(Comparable, Number))
+        WildcardTypeImpl.upper(Integer, Serializable)                   | WildcardTypeImpl.upper(Cloneable, CharSequence)           | Object
     }
 
 

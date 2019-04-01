@@ -149,6 +149,12 @@ class InstanceTypesTest extends Specification {
         ex = thrown(IllegalArgumentException)
         ex.message == "Provided generics for type List [Object] are less specific then current [String]"
 
+        when: "try improvement with incorrect count"
+        type.improveAccuracy(Object, Object)
+        then:
+        ex = thrown(IllegalArgumentException)
+        ex.message == "Wrong generics count provided <Object, Object> in compare to current types <String>"
+
         when: "create from parameterizable type"
         type = new ParameterizedInstanceType(new ParameterizedTypeImpl(List, [String] as Type[], Comparable), ["123"])
         then:

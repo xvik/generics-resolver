@@ -23,8 +23,6 @@ public class MatchVariablesVisitor implements TypesVisitor {
         TypeVariable var = null;
         if (one instanceof ExplicitTypeVariable) {
             var = ((ExplicitTypeVariable) one).getDeclarationSource();
-        } else if (one instanceof TypeVariable) {
-            var = (TypeVariable) one;
         }
         if (var != null) {
             matched.put(var, two);
