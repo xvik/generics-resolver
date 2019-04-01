@@ -4,6 +4,7 @@ import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
 import ru.vyarus.java.generics.resolver.support.array.GenericArrayDeclarations
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import ru.vyarus.java.generics.resolver.util.TypeUtils
 import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import spock.lang.Specification
@@ -17,8 +18,10 @@ class CommonTypeResolutionTest extends Specification {
     def "Check common type calculation"() {
 
         expect:
-        TypeUtils.getCommonType(one, two) == res
+        def type = TypeUtils.getCommonType(one, two)
+        type == res
         TypeUtils.getCommonType(two, one) == res
+        TypeToStringUtils.toStringType(type) // check for infinite to string
 
         where:
         one                                           | two                                            | res

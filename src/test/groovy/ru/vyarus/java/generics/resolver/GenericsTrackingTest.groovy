@@ -54,6 +54,7 @@ class GenericsTrackingTest extends Specification {
         List  | upper(List, param(Iterable, String))       | param(List, String)
         array(List) | array(param(Iterable, String))       | array(param(List, String))
         Integer[]       | Number[]                         | Integer[]
+        MultiRoot       | upper(param(Middle1, Number), param(MiddleI, Integer)) | param(MultiRoot, Integer)
     }
 
     def "Check impossible tracking detection"() {
@@ -101,4 +102,9 @@ class GenericsTrackingTest extends Specification {
     WildcardType lower(Type type) {
         return WildcardTypeImpl.lower(type)
     }
+
+
+    static class Middle1<T> {}
+    static interface MiddleI<T> {}
+    static class MultiRoot<T> extends Middle1<T> implements MiddleI<T> {}
 }
