@@ -49,7 +49,7 @@ public final class InstanceTypeFactory {
             return Object.class;
         }
 
-        final Type median = getInstanceType(objects);
+        final Type median = getMedianType(objects);
         final Class<?> type = GenericsUtils.resolveClass(median);
 
         return type.isArray() ? buildArrayType(median, instances) : buildType(median, objects);
@@ -81,7 +81,7 @@ public final class InstanceTypeFactory {
         return res;
     }
 
-    private static Type getInstanceType(final Object... instances) {
+    private static Type getMedianType(final Object... instances) {
         Type median = null;
 
         for (Object obj : instances) {
