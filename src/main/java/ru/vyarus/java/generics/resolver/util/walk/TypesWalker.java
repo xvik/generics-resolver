@@ -1,11 +1,11 @@
 package ru.vyarus.java.generics.resolver.util.walk;
 
+import ru.vyarus.java.generics.resolver.util.ArrayTypeUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeUtils;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
-import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
@@ -75,8 +75,8 @@ public final class TypesWalker {
     }
 
     private static boolean doWalk(final Type one, final Map<String, Type> oneKnownGenerics,
-                               final Type two, final Map<String, Type> twoKnownGenerics,
-                               final TypesVisitor visitor) {
+                                  final Type two, final Map<String, Type> twoKnownGenerics,
+                                  final TypesVisitor visitor) {
         boolean canContinue = true;
         // avoid primitives to simplify comparisons
         final Class<?> oneType = TypeUtils.wrapPrimitive(GenericsUtils.resolveClassIgnoringVariables(one));
@@ -92,7 +92,8 @@ public final class TypesWalker {
 
             // classes are already checked to be compatible (isCompatible) so either both arrays or both not
             if (oneType.isArray()) {
-                canContinue = doWalk(arrayType(one), oneKnownGenerics, arrayType(two), twoKnownGenerics, visitor);
+                canContinue = doWalk(ArrayTypeUtils.getArrayComponentType(one), oneKnownGenerics,
+                        ArrayTypeUtils.getArrayComponentType(two), twoKnownGenerics, visitor);
             } else if (oneType.getTypeParameters().length > 0 || twoType.getTypeParameters().length > 0) {
                 // check generics compatibility
                 canContinue = visitGenerics(one, oneType, oneKnownGenerics, two, twoType, twoKnownGenerics, visitor);
@@ -104,10 +105,10 @@ public final class TypesWalker {
     @SuppressWarnings({"checkstyle:NPathComplexity", "checkstyle:CyclomaticComplexity",
             "PMD.NPathComplexity", "PMD.CyclomaticComplexity"})
     private static boolean visitGenerics(final Type one, final Class<?> oneType,
-                                      final Map<String, Type> oneKnownGenerics,
-                                      final Type two, final Class<?> twoType,
-                                      final Map<String, Type> twoKnownGenerics,
-                                      final TypesVisitor visitor) {
+                                         final Map<String, Type> oneKnownGenerics,
+                                         final Type two, final Class<?> twoType,
+                                         final Map<String, Type> twoKnownGenerics,
+                                         final TypesVisitor visitor) {
 
         // unify types first to compare generics of the same types
         // for example List<T> and ArrayList<T>, lower type is List<T>
@@ -254,14 +255,6 @@ public final class TypesWalker {
         }
         return res;
     }
-
-    private static Type arrayType(final Type type) {
-        // no need for actual generics because types are completely repackaged at the beginning
-        return GenericsUtils.resolveTypeVariables(type instanceof GenericArrayType
-                ? ((GenericArrayType) type).getGenericComponentType()
-                : (GenericsUtils.resolveClass(type)).getComponentType(), IGNORE_VARS);
-    }
-
 
     private static Map<String, Type> resolveUpperGenerics(final Type lowerType,
                                                           final Class<?> lowerClass,

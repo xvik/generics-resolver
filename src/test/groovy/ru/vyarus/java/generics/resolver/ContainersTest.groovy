@@ -13,7 +13,6 @@ import spock.lang.Specification
 
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.lang.reflect.WildcardType
 
 
@@ -34,8 +33,8 @@ class ContainersTest extends Specification {
 
         then: "array wrapper valid"
         array instanceof GenericArrayTypeImpl
-        array.genericComponentType == Model
-        array.toString() == "Model[]"
+        array.genericComponentType.toString() == "List<Model>"
+        array.toString() == "List<Model>[]"
 
         then: "upper wildcard solved to simple type"
         wildcardUpper == Model
@@ -49,9 +48,9 @@ class ContainersTest extends Specification {
         then: "parametrized wrapper valid"
         parametrized instanceof ParameterizedTypeImpl
         parametrized.getRawType() == List
-        parametrized.getActualTypeArguments() == [Model]
+        parametrized.getActualTypeArguments() == [new ParameterizedTypeImpl(List, Model)]
         parametrized.getOwnerType() == null
-        parametrized.toString() == "List<Model>"
+        parametrized.toString() == "List<List<Model>>"
     }
 
     def "Check wildcard methods"() {

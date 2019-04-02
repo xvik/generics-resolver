@@ -40,8 +40,8 @@ class GenericsInfoToStringTest extends Specification {
 """
 
         toString(GenericsResolver.resolve(ArRoot)) == """interface ArRoot
-  extends ArBase<Model, Model, ? super Model>
-    extends ArBaseLvl2<Model[], List<Model>>
+  extends ArBase<List<Model>, Model, ? super Model>
+    extends ArBaseLvl2<List<Model>[], List<List<Model>>>
 """
 
         toString(GenericsResolver.resolve(NoClashRoot)) == """interface NoClashRoot

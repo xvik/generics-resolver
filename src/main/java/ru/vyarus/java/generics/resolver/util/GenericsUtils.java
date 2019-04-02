@@ -2,7 +2,6 @@ package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.context.GenericDeclarationScope;
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
@@ -19,7 +18,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 17.10.2014
  */
-@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods"})
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods", "PMD.CyclomaticComplexity"})
 public final class GenericsUtils {
 
     private static final Type[] NO_TYPES = new Type[0];
@@ -258,11 +257,24 @@ public final class GenericsUtils {
      * variable must be preserved (like generics tracking or custom to string). In order to replace such
      * variables use {@link TypeVariableUtils#resolveAllTypeVariables(Type, Map)}.
      * <p>
-     * Note that upper bounded wildcards are flattened to simple type ({@code ? extends Somthing -> Something} as
-     * upper bounded wildcards are not useful at runtime. The only exception is wildcard with multiple bounds
-     * (repackaged declaration {@code T extends A&B}). Wildcards with Object as bound are also flattened
-     * ({@code List<? extends Object> --> List<Object>}, {@code List<?> --> List<Object>},
-     * {@code List<? super Object> --> List<Object>}.
+     * Important: method performs re-packaging of all inner types. In some cases types could be flattened:
+     * <ul>
+     * <li>{@link WildcardType}: upper bounded wildcards are flattened to simple type
+     * ({@code ? extends Somthing -> Something} as upper bounded wildcards are not useful at runtime. The only
+     * exception is wildcard with multiple bounds (repackaged declaration {@code T extends A&B}). Wildcards with
+     * Object as bound are also flattened ({@code List<? extends Object> --> List<Object>},
+     * {@code List<?> --> List<Object>}, {@code List<? super Object> --> List<Object>}.
+     * </li>
+     * <li>{@link ParameterizedType}: type without arguments ({@code type.getActualTypeArguments().length == 0}) and
+     * outer class {@code  type.getOwnerType() == null} is replaced by raw class (such type most commonly appear in
+     * case of {@link ru.vyarus.java.generics.resolver.util.type.instance.InstanceType} usage).
+     * </li>
+     * <li>{@link GenericArrayType}: if component type flatten to simple class then generic array is replaced by
+     * simple class array.
+     * </li>
+     * </ul>
+     * Re-packaging could be used to convert custom type implementation (e.g.
+     * {@link ru.vyarus.java.generics.resolver.util.type.instance.InstanceType} into normal types).
      *
      * @param type     type to resolve
      * @param generics root class generics mapping
@@ -304,13 +316,15 @@ public final class GenericsUtils {
         } else if (type instanceof Class) {
             resolvedGenericType = type;
         } else if (type instanceof ParameterizedType) {
+            // here parameterized type could shrink to class (if it has no arguments and owner class)
             resolvedGenericType = resolveParameterizedTypeVariables(
                     (ParameterizedType) type, generics, countPreservedVariables);
         } else if (type instanceof GenericArrayType) {
-            final GenericArrayType arrayType = (GenericArrayType) type;
-            resolvedGenericType = new GenericArrayTypeImpl(resolveTypeVariables(
-                    arrayType.getGenericComponentType(), generics, countPreservedVariables));
+            // here generic array could shrink to array class (if component type shrink to simple class)
+            resolvedGenericType = resolveGenericArrayTypeVariables(
+                    (GenericArrayType) type, generics, countPreservedVariables);
         } else if (type instanceof WildcardType) {
+            // here wildcard could shrink to upper type (if it has only one upper type)
             resolvedGenericType = resolveWildcardTypeVariables(
                     (WildcardType) type, generics, countPreservedVariables);
         }
@@ -679,5 +693,22 @@ public final class GenericsUtils {
             res = upperBounds.length == 1 ? upperBounds[0] : WildcardTypeImpl.upper(upperBounds);
         }
         return res;
+    }
+
+    /**
+     * May produce array class instead of generic array type. This is possible due to wildcard or parameterized type
+     * shrinking.
+     *
+     * @param type                    type to repackage
+     * @param generics                known generics
+     * @param countPreservedVariables true to replace {@link ExplicitTypeVariable} too
+     * @return type without {@link TypeVariable}'s
+     */
+    private static Type resolveGenericArrayTypeVariables(final GenericArrayType type,
+                                                         final Map<String, Type> generics,
+                                                         final boolean countPreservedVariables) {
+        final Type componentType = resolveTypeVariables(
+                type.getGenericComponentType(), generics, countPreservedVariables);
+        return ArrayTypeUtils.toArrayType(componentType);
     }
 }

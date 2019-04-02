@@ -40,6 +40,10 @@ import java.lang.reflect.Type;
  * directly.
  * <p>
  * For simplicity, all instance types implements {@link Iterable} so you can use forEach to iterate on it's values.
+ * <p>
+ * Instance types could be easily repackaged to usual type with
+ * {@link ru.vyarus.java.generics.resolver.util.GenericsUtils#resolveTypeVariables(Type, java.util.Map)}
+ * (for example, {@code GenericUtils.resolveTypeVariables(instanceType, EmptyGenericsMap.getInstance()}).
  *
  * @author Vyacheslav Rusakov
  * @see ParameterizedInstanceType

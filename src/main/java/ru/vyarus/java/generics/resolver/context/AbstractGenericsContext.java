@@ -390,10 +390,13 @@ public abstract class AbstractGenericsContext {
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
+     * <p>
+     * This operation repackages original type and so may be used to get rid or custom type implementations.
      *
      * @param type type to resolve named generics in
      * @return type without named generics (replaced by known actual types)
      * @throws WrongGenericsContextException if type contains generics not visible from current class
+     * @see GenericsUtils#resolveTypeVariables(Type, Map) for implementation details
      */
     public Type resolveType(final Type type) {
         return GenericsUtils.resolveTypeVariables(type, chooseContext(type).contextGenerics());

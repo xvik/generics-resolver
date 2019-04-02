@@ -139,23 +139,28 @@ public final class GenericsResolutionUtils {
      */
     public static LinkedHashMap<String, Type> resolveGenerics(final Type type,
                                                               final Map<String, Type> generics) {
-        final LinkedHashMap<String, Type> res;
+        Type actual = type;
         if (type instanceof ParameterizedType) {
-            final ParameterizedType actualType =
-                    (ParameterizedType) GenericsUtils.resolveTypeVariables(type, generics);
+            // if parameterized type is not correct (contain only raw type without type arguments
+            // (possible for instance types) then this call could unwrap it to pure class
+            actual = GenericsUtils.resolveTypeVariables(type, generics);
+        }
+        final LinkedHashMap<String, Type> res;
+        if (actual instanceof ParameterizedType) {
+            final ParameterizedType actualType = (ParameterizedType) actual;
             final Type[] genericTypes = actualType.getActualTypeArguments();
             final Class target = (Class) actualType.getRawType();
             final TypeVariable[] genericNames = target.getTypeParameters();
 
             // inner class can use outer class generics
-            res = fillOuterGenerics(type, new LinkedHashMap<String, Type>(), null);
+            res = fillOuterGenerics(actual, new LinkedHashMap<String, Type>(), null);
 
             final int cnt = genericNames.length;
             for (int i = 0; i < cnt; i++) {
                 res.put(genericNames[i].getName(), genericTypes[i]);
             }
         } else {
-            res = resolveRawGenerics(GenericsUtils.resolveClass(type, generics));
+            res = resolveRawGenerics(GenericsUtils.resolveClass(actual, generics));
         }
         return res;
     }

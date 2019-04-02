@@ -12,7 +12,10 @@ could be used anywhere (it's just convenient way to preserve all potential type 
     - Add shortcuts (to simplify common usages):
         - resolveClass(Type) (shortcut for EmptyGenericsMap.getInstance())
         - resolveClassIgnoringVariables(Type) (shortcut for IgnoreGenericsMap.getInstance())
-    - Add trackGenerics() - shortcut for GenericsTrackingUtils for improving type generics by known sub type generics    
+    - Add trackGenerics() - shortcut for GenericsTrackingUtils for improving type generics by known sub type generics
+    - resolveTypeVariables now replace (in order to simplify type):
+        - ParameterizedType with no arguments and no owner to raw class (flatten)
+        - GenericArrayType with component type resolved to class into pure array class     
 * TypeToStringUtils
     - Add shortcuts (to simplify common usages):
         - toStringType(Type)

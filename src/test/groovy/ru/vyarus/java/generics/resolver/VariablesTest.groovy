@@ -1,6 +1,9 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable
+import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
+import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
+import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
@@ -9,9 +12,11 @@ import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
 
+import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import java.lang.reflect.TypeVariable
+import java.lang.reflect.WildcardType
 
 /**
  * @author Vyacheslav Rusakov
@@ -81,8 +86,8 @@ class VariablesTest extends Specification {
 
         when: "array with variable resolution"
         res = TypeVariableUtils.resolveAllTypeVariables(BoundedRoot.getArrayType())
-        then:
-        res.toString() == "String[]"
+        then: "flattened to class"
+        res == String[]
 
         when: "wildcard with variable resolution"
         res = TypeVariableUtils.resolveAllTypeVariables(BoundedRoot.getWildcardType())
@@ -100,7 +105,7 @@ class VariablesTest extends Specification {
         when: "array with variable resolution"
         res = TypeVariableUtils.resolveAllTypeVariables(TypeVariableUtils.preserveVariables(BoundedRoot.getArrayType()))
         then:
-        res.toString() == "String[]"
+        res == String[]
 
         when: "wildcard with variable resolution"
         res = TypeVariableUtils.resolveAllTypeVariables(TypeVariableUtils.preserveVariables(BoundedRoot.getWildcardType()))
@@ -118,8 +123,49 @@ class VariablesTest extends Specification {
         ] as Type[], ["T": String, "K": String])
         then:
         res[0].toString() == "List<String>"
-        res[1].toString() == "String[]"
+        res[1] == String[]
         res[2] == String
+    }
+
+    def "Check flatten cases"() {
+
+        when: "empty parameterized type without"
+        def res = GenericsUtils.resolveTypeVariables(new ParameterizedTypeImpl(String, [] as Type[]), [:])
+        then: "flattenned"
+        res == String
+
+        when: "empty parameterized type with outer"
+        res = GenericsUtils.resolveTypeVariables(new ParameterizedTypeImpl(String, [] as Type[], VariablesTest), [:])
+        then: "not flattenned"
+        res != String
+        res instanceof ParameterizedType
+
+        when: "empty wildcard type"
+        res = GenericsUtils.resolveTypeVariables(WildcardTypeImpl.upper(String), [:])
+        then: "flattenned"
+        res == String
+
+        when: "correct wildcard type"
+        res = GenericsUtils.resolveTypeVariables(WildcardTypeImpl.upper(String, Cloneable), [:])
+        then: "not flattenned"
+        res != String
+        res instanceof WildcardType
+
+        when: "simple generic array"
+        res = GenericsUtils.resolveTypeVariables(new GenericArrayTypeImpl(String), [:])
+        then: "flattenned"
+        res == String[]
+
+        when: "flattened generic component array"
+        res = GenericsUtils.resolveTypeVariables(new GenericArrayTypeImpl(WildcardTypeImpl.upper(String)), [:])
+        then: "flattenned"
+        res == String[]
+
+        when: "complex generic array"
+        res = GenericsUtils.resolveTypeVariables(new GenericArrayTypeImpl(new ParameterizedTypeImpl(List, String)), [:])
+        then: "not flattenned"
+        res != List[]
+        res instanceof GenericArrayType
     }
 
     static class BoundedRoot<T extends String, K extends T> {
