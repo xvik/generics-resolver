@@ -1,7 +1,5 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import ru.vyarus.java.generics.resolver.util.TypeUtils
@@ -10,6 +8,8 @@ import ru.vyarus.java.generics.resolver.util.type.instance.InstanceType
 import ru.vyarus.java.generics.resolver.util.type.instance.ParameterizedInstanceType
 import ru.vyarus.java.generics.resolver.util.type.instance.WildcardInstanceType
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.Type
@@ -29,8 +29,8 @@ class InstanceTypesTest extends Specification {
         inst                   | res
         "some"                 | String
         12                     | Integer
-        [1, 2, 3] as Integer[] | new GenericArrayTypeImpl(Integer)
-        [1, 1.2] as Number[]   | new GenericArrayTypeImpl(WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number)))
+        [1, 2, 3] as Integer[] | array(Integer)
+        [1, 1.2] as Number[]   | array(upper(Number, param(Comparable, Number)))
     }
 
     def "Check list case"() {
@@ -156,14 +156,14 @@ class InstanceTypesTest extends Specification {
         ex.message == "Wrong generics count provided <Object, Object> in compare to current types <String>"
 
         when: "create from parameterizable type"
-        type = new ParameterizedInstanceType(new ParameterizedTypeImpl(List, [String] as Type[], Comparable), ["123"])
+        type = new ParameterizedInstanceType(param(List, [String] as Type[], Comparable), ["123"])
         then:
         type.rawType == List
         type.ownerType == Comparable
         type.actualTypeArguments == [String] as Type[]
         !type.completeType
         type.toString().matches("Comparable\\.List<String> \\(\\w+\\)")
-        type.equals(new ParameterizedInstanceType(new ParameterizedTypeImpl(List, [String] as Type[], Comparable), ["123"]))
+        type.equals(new ParameterizedInstanceType(param(List, [String] as Type[], Comparable), ["123"]))
 
         when: "type contains multiple generics"
         type = new ParameterizedInstanceType(String, "one", "two", "three")
@@ -178,8 +178,8 @@ class InstanceTypesTest extends Specification {
         type.equals(type2)
         !type.equals(List)
         type.equals(String)
-        type.equals(new ParameterizedTypeImpl(String))
-        !type.equals(new ParameterizedTypeImpl(List))
+        type.equals(param(String))
+        !type.equals(param(List))
     }
 
     def "Check wildcard type behaviour"() {
@@ -221,7 +221,7 @@ class InstanceTypesTest extends Specification {
         then:
         type.completeType
         !type.hasMultipleInstances()
-        type.upperBounds == [new ParameterizedTypeImpl(String), Comparable] as Type[]
+        type.upperBounds == [param(String), Comparable] as Type[]
         type.lowerBounds.length == 0
         type.instance == "asd"
         type.iterator().next() == type.instance
@@ -274,7 +274,7 @@ class InstanceTypesTest extends Specification {
         then:
         type.completeType
         !type.hasMultipleInstances()
-        type.genericComponentType == new ParameterizedTypeImpl(String)
+        type.genericComponentType == param(String)
         type.instance == "asd"
         type.iterator().next() == type.instance
         type.allInstances == ["asd"] as Object[]
@@ -294,8 +294,8 @@ class InstanceTypesTest extends Specification {
         then:
         type.hashCode() == type2.hashCode()
         type.equals(type2)
-        type.equals(new GenericArrayTypeImpl(String))
+        type.equals(array(String))
         type.equals(String[])
-        !type.equals(WildcardTypeImpl.upper(List))
+        !type.equals(upper(List))
     }
 }

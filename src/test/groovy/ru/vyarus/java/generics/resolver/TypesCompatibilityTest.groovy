@@ -1,17 +1,11 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.util.TypeUtils
 import spock.lang.Specification
 
-import java.lang.reflect.GenericArrayType
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
-import java.lang.reflect.WildcardType
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 /**
  * @author Vyacheslav Rusakov
@@ -121,21 +115,5 @@ class TypesCompatibilityTest extends Specification {
 
         expect:
         TypeUtils.getMoreSpecificType(Base1, Root) == Root
-    }
-
-    ParameterizedType param(Class root, Type... types) {
-        return new ParameterizedTypeImpl(root, types)
-    }
-
-    GenericArrayType array(Type type) {
-        return new GenericArrayTypeImpl(type)
-    }
-
-    WildcardType upper(Type... types) {
-        return WildcardTypeImpl.upper(types)
-    }
-
-    WildcardType lower(Type type) {
-        return WildcardTypeImpl.lower(type)
     }
 }

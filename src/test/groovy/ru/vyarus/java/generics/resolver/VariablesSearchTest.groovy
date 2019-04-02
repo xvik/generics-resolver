@@ -1,11 +1,11 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
 import ru.vyarus.java.generics.resolver.util.GenericsUtils
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
+
 
 import java.lang.reflect.Type
 
@@ -21,12 +21,12 @@ class VariablesSearchTest extends Specification {
 
         expect: "variables found for all cases"
         GenericsUtils.findVariables(Object) == []
-        GenericsUtils.findVariables(new ParameterizedTypeImpl(List, E)) == [E]
-        GenericsUtils.findVariables(new ParameterizedTypeImpl(List, [] as Type[], E)) == [E]
-        GenericsUtils.findVariables(new ParameterizedTypeImpl(List, [E] as Type[], E)) == [E]
-        GenericsUtils.findVariables(WildcardTypeImpl.upper(E)) == [E]
-        GenericsUtils.findVariables(WildcardTypeImpl.lower(E)) == [E]
-        GenericsUtils.findVariables(new GenericArrayTypeImpl(E)) == [E]
+        GenericsUtils.findVariables(param(List, E)) == [E]
+        GenericsUtils.findVariables(param(List, [] as Type[], E)) == [E]
+        GenericsUtils.findVariables(param(List, [E] as Type[], E)) == [E]
+        GenericsUtils.findVariables(upper(E)) == [E]
+        GenericsUtils.findVariables(lower(E)) == [E]
+        GenericsUtils.findVariables(array(E)) == [E]
         GenericsUtils.findVariables(new ExplicitTypeVariable(E)) == [E]
     }
 }

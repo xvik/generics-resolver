@@ -1,9 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
@@ -11,6 +8,8 @@ import ru.vyarus.java.generics.resolver.util.GenericsUtils
 import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
@@ -130,39 +129,39 @@ class VariablesTest extends Specification {
     def "Check flatten cases"() {
 
         when: "empty parameterized type without"
-        def res = GenericsUtils.resolveTypeVariables(new ParameterizedTypeImpl(String, [] as Type[]), [:])
+        def res = GenericsUtils.resolveTypeVariables(param(String, [] as Type[]), [:])
         then: "flattenned"
         res == String
 
         when: "empty parameterized type with outer"
-        res = GenericsUtils.resolveTypeVariables(new ParameterizedTypeImpl(String, [] as Type[], VariablesTest), [:])
+        res = GenericsUtils.resolveTypeVariables(param(String, [] as Type[], VariablesTest), [:])
         then: "not flattenned"
         res != String
         res instanceof ParameterizedType
 
         when: "empty wildcard type"
-        res = GenericsUtils.resolveTypeVariables(WildcardTypeImpl.upper(String), [:])
+        res = GenericsUtils.resolveTypeVariables(upper(String), [:])
         then: "flattenned"
         res == String
 
         when: "correct wildcard type"
-        res = GenericsUtils.resolveTypeVariables(WildcardTypeImpl.upper(String, Cloneable), [:])
+        res = GenericsUtils.resolveTypeVariables(upper(String, Cloneable), [:])
         then: "not flattenned"
         res != String
         res instanceof WildcardType
 
         when: "simple generic array"
-        res = GenericsUtils.resolveTypeVariables(new GenericArrayTypeImpl(String), [:])
+        res = GenericsUtils.resolveTypeVariables(array(String), [:])
         then: "flattenned"
         res == String[]
 
         when: "flattened generic component array"
-        res = GenericsUtils.resolveTypeVariables(new GenericArrayTypeImpl(WildcardTypeImpl.upper(String)), [:])
+        res = GenericsUtils.resolveTypeVariables(array(upper(String)), [:])
         then: "flattenned"
         res == String[]
 
         when: "complex generic array"
-        res = GenericsUtils.resolveTypeVariables(new GenericArrayTypeImpl(new ParameterizedTypeImpl(List, String)), [:])
+        res = GenericsUtils.resolveTypeVariables(array(param(List, String)), [:])
         then: "not flattenned"
         res != List[]
         res instanceof GenericArrayType

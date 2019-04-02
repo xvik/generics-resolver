@@ -16,6 +16,9 @@ import ru.vyarus.java.generics.resolver.support.wildcard.WCRoot
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
+
 import spock.lang.Specification
 
 import java.lang.reflect.Type
@@ -56,8 +59,8 @@ class ToStringTest extends Specification {
     def "Parametrized to string"() {
 
         expect:
-        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, String)) == "Model<String>"
-        TypeToStringUtils.toStringType(new ParameterizedTypeImpl(Model, [String] as Class[], new ParameterizedTypeImpl(List, Long))) == "List<Long>.Model<String>"
+        TypeToStringUtils.toStringType(param(Model, String)) == "Model<String>"
+        TypeToStringUtils.toStringType(param(Model, [String] as Class[], param(List, Long))) == "List<Long>.Model<String>"
     }
 
     def "Wildcards to string"() {
@@ -100,13 +103,13 @@ class ToStringTest extends Specification {
         expect:
         TypeToStringUtils.toStringType(type) == res
         where:
-        type                                                                                               | res
-        new ParameterizedTypeImpl(List, Object)                                                            | "List"
-        new ParameterizedTypeImpl(List, String)                                                            | "List<String>"
-        new ParameterizedTypeImpl(ArBaseLvl2, Object, Object)                                              | "ArBaseLvl2"
-        new ParameterizedTypeImpl(ArBaseLvl2, String, Object)                                              | "ArBaseLvl2<String, Object>"
-        new ParameterizedTypeImpl(InOwner.Inner, [] as Type[], new ParameterizedTypeImpl(InOwner, Object)) | "InOwner.Inner"
-        new ParameterizedTypeImpl(InOwner.Inner, [] as Type[], new ParameterizedTypeImpl(InOwner, String)) | "InOwner<String>.Inner"
+        type                                                       | res
+        param(List, Object)                                        | "List"
+        param(List, String)                                        | "List<String>"
+        param(ArBaseLvl2, Object, Object)                          | "ArBaseLvl2"
+        param(ArBaseLvl2, String, Object)                          | "ArBaseLvl2<String, Object>"
+        param(InOwner.Inner, [] as Type[], param(InOwner, Object)) | "InOwner.Inner"
+        param(InOwner.Inner, [] as Type[], param(InOwner, String)) | "InOwner<String>.Inner"
     }
 
     def "Check to string with generics"() {
@@ -123,9 +126,9 @@ class ToStringTest extends Specification {
     def "Check to string multiple types"() {
 
         expect:
-        TypeToStringUtils.toStringTypes([String, Integer, new ParameterizedTypeImpl(Set, Double)] as Type[],
+        TypeToStringUtils.toStringTypes([String, Integer, param(Set, Double)] as Type[],
                 EmptyGenericsMap.getInstance()) == "String, Integer, Set<Double>"
-        TypeToStringUtils.toStringTypes([String, Integer, new ParameterizedTypeImpl(Set, Double)] as Type[],
+        TypeToStringUtils.toStringTypes([String, Integer, param(Set, Double)] as Type[],
                 " & ", EmptyGenericsMap.getInstance()) == "String & Integer & Set<Double>"
     }
 }

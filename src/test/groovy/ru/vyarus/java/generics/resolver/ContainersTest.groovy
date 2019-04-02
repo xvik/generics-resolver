@@ -11,6 +11,8 @@ import ru.vyarus.java.generics.resolver.support.array.ArBaseLvl2
 import ru.vyarus.java.generics.resolver.support.array.ArRoot
 import spock.lang.Specification
 
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
+
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.WildcardType
@@ -48,15 +50,15 @@ class ContainersTest extends Specification {
         then: "parametrized wrapper valid"
         parametrized instanceof ParameterizedTypeImpl
         parametrized.getRawType() == List
-        parametrized.getActualTypeArguments() == [new ParameterizedTypeImpl(List, Model)]
+        parametrized.getActualTypeArguments() == [param(List, Model)]
         parametrized.getOwnerType() == null
         parametrized.toString() == "List<List<Model>>"
     }
 
     def "Check wildcard methods"() {
 
-        WildcardType wildcardUpper = WildcardTypeImpl.upper(Model)
-        WildcardTypeImpl wildcardLower = WildcardTypeImpl.lower(Model)
+        WildcardType wildcardUpper = upper(Model)
+        WildcardTypeImpl wildcardLower = lower(Model)
         
         expect: "upper wildcard valid"
         wildcardUpper instanceof WildcardTypeImpl

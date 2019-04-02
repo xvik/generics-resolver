@@ -19,6 +19,8 @@ import java.util.Collections;
  * This should not cause any harm as, I'm sure, all reflection logic always takes first parameter and will not break.
  *
  * @author Vyacheslav Rusakov
+ * @see ru.vyarus.java.generics.resolver.util.type.TypeFactory#upper(Type...) for simplified construction
+ * @see ru.vyarus.java.generics.resolver.util.type.TypeFactory#lower(Type)  for simplified construction
  * @since 15.12.2014
  */
 public class WildcardTypeImpl implements WildcardType {

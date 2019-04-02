@@ -1,13 +1,12 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.container.GenericArrayTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
-import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl
+
 import ru.vyarus.java.generics.resolver.support.array.GenericArrayDeclarations
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import ru.vyarus.java.generics.resolver.util.TypeUtils
-import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 /**
  * @author Vyacheslav Rusakov
@@ -26,42 +25,42 @@ class CommonTypeResolutionTest extends Specification {
         where:
         one                                           | two                                            | res
         String                                            | String                                            | String
-        Double                                            | Integer                                           | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number))
-        double                                           | int                                               | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number))
-        double                                           | Integer                                           | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number))
-        int                                               | int                                              | Integer
-        new ParameterizedTypeImpl(Comparable, Number)     | Comparable                                        | Comparable
-        new ParameterizedTypeImpl(Comparable, Integer)    | new ParameterizedTypeImpl(Comparable, Double)    | new ParameterizedTypeImpl(Comparable, Number)
-        Root1                                              | Base                                             | Base
-        Root1                                              | Root2                                            | Base
+        Double                                            | Integer                                           | upper(Number, param(Comparable, Number))
+        double                                           | int                                               | upper(Number, param(Comparable, Number))
+        double                                           | Integer                                           | upper(Number, param(Comparable, Number))
+        int                                               | int                                            | Integer
+        param(Comparable, Number)                         | Comparable                                     | Comparable
+        param(Comparable, Integer)                        | param(Comparable, Double)                      | param(Comparable, Number)
+        Root1                                             | Base                                           | Base
+        Root1                                             | Root2                                          | Base
 
-        new TypeLiteral<List<String>>(){}.getType()       | new TypeLiteral<List<String>>(){}.getType()       | new TypeLiteral<List<String>>(){}.getType()
-        new TypeLiteral<List<Double>>(){}.getType()       | new TypeLiteral<List<Integer>>(){}.getType()      | new TypeLiteral<List<Number>>(){}.getType()
-        new TypeLiteral<List<Double>>(){}.getType()       | new TypeLiteral<ArrayList<Integer>>(){}.getType() | new TypeLiteral<List<Number>>(){}.getType()
-        new TypeLiteral<HashMap<Integer, Set<Double>>>(){}.getType() | new TypeLiteral<Map<Double, List<Integer>>>(){}.getType() | new TypeLiteral<Map<Number, Collection<Number>>>(){}.getType()
+        literal(new L<List<String>>(){})                  | literal(new L<List<String>>(){})               | literal(new L<List<String>>(){})
+        literal(new L<List<Double>>(){})                  | literal(new L<List<Integer>>(){})              | literal(new L<List<Number>>(){})
+        literal(new L<List<Double>>(){})                  | literal(new L<ArrayList<Integer>>(){})         | literal(new L<List<Number>>(){})
+        literal(new L<HashMap<Integer, Set<Double>>>(){}) | literal(new L<Map<Double, List<Integer>>>(){}) | literal(new L<Map<Number, Collection<Number>>>(){})
 
-        Double[]                                          | Integer[]                                          | new GenericArrayTypeImpl(WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number)))
-        double[]                                      | int[]                                          | Object
-        Double[]                                      | int[]                                          | Object
-        Double[]                                      | Double                                          | Object
-        GenericArrayDeclarations.doubleList          | GenericArrayDeclarations.integerList     | GenericArrayDeclarations.numberList
-        GenericArrayDeclarations.stringList          | GenericArrayDeclarations.stringList      | GenericArrayDeclarations.stringList
+        Double[]                                          | Integer[]                                      | array(upper(Number, param(Comparable, Number)))
+        double[]                                          | int[]                                          | Object
+        Double[]                                          | int[]                                          | Object
+        Double[]                                          | Double                                         | Object
+        GenericArrayDeclarations.doubleList             | GenericArrayDeclarations.integerList         | GenericArrayDeclarations.numberList
+        GenericArrayDeclarations.stringList             | GenericArrayDeclarations.stringList          | GenericArrayDeclarations.stringList
 
-        WildcardTypeImpl.upper(Double)                | WildcardTypeImpl.upper(Integer)                | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number))
-        WildcardTypeImpl.upper(Double, Cloneable)     | WildcardTypeImpl.upper(Integer, Cloneable)     | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number), Cloneable)
-        WildcardTypeImpl.upper(Comparable, Cloneable, Serializable)     | WildcardTypeImpl.upper(Comparable, Serializable, ObjectInput)     | WildcardTypeImpl.upper(Comparable, Serializable)
-        WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Double, ObjectInput, Root1)                 | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number), Root1)
-        WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Double, Comparable, Root2)                 | WildcardTypeImpl.upper(Number, new ParameterizedTypeImpl(Comparable, Number), Base)
-        WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Number, Comparable, Root1)                  | WildcardTypeImpl.upper(Number, Comparable, Root1)
-        WildcardTypeImpl.upper(Integer, Cloneable, Root1)                | WildcardTypeImpl.upper(Number, Comparable, Root2)                  | WildcardTypeImpl.upper(Number, Comparable, Base)
-        WildcardTypeImpl.upper(Integer, Cloneable)                       | String                                                             | WildcardTypeImpl.upper(Serializable, new ParameterizedTypeImpl(Comparable, Serializable))
+        upper(Double)                                     | upper(Integer)                               | upper(Number, param(Comparable, Number))
+        upper(Double, Cloneable)                          | upper(Integer, Cloneable)                    | upper(Number, param(Comparable, Number), Cloneable)
+        upper(Comparable, Cloneable, Serializable)       | upper(Comparable, Serializable, ObjectInput)  | upper(Comparable, Serializable)
+        upper(Integer, Cloneable, Root1)                | upper(Double, ObjectInput, Root1)              | upper(Number, param(Comparable, Number), Root1)
+        upper(Integer, Cloneable, Root1)                | upper(Double, Comparable, Root2)               | upper(Number, param(Comparable, Number), Base)
+        upper(Integer, Cloneable, Root1)                | upper(Number, Comparable, Root1)               | upper(Number, Comparable, Root1)
+        upper(Integer, Cloneable, Root1)                | upper(Number, Comparable, Root2)               | upper(Number, Comparable, Base)
+        upper(Integer, Cloneable)                       | String                                         | upper(Serializable, param(Comparable, Serializable))
 
-        WildcardTypeImpl.upper(Root1, Cloneable)                           | WildcardTypeImpl.upper(Base, Comparable)                 | Base
-        WildcardTypeImpl.upper(Root1, Cloneable, Comparable)              | WildcardTypeImpl.upper(Base, Comparable)                  | WildcardTypeImpl.upper(Base, Comparable)
-        WildcardTypeImpl.upper(Root1, Cloneable, Comparable)              | WildcardTypeImpl.upper(Root2, Comparable)                  | WildcardTypeImpl.upper(Base, Comparable)
-        WildcardTypeImpl.upper(Root1, new ParameterizedTypeImpl(Comparable, String))              | WildcardTypeImpl.upper(Root2, Comparable)                  | WildcardTypeImpl.upper(Base, Comparable)
-        WildcardTypeImpl.upper(Root1, new ParameterizedTypeImpl(Comparable, Integer))             | WildcardTypeImpl.upper(Root2, new ParameterizedTypeImpl(Comparable, Number))                  | WildcardTypeImpl.upper(Base, new ParameterizedTypeImpl(Comparable, Number))
-        WildcardTypeImpl.upper(Integer, Serializable)                   | WildcardTypeImpl.upper(Cloneable, CharSequence)           | Object
+        upper(Root1, Cloneable)                           | upper(Base, Comparable)                      | Base
+        upper(Root1, Cloneable, Comparable)              | upper(Base, Comparable)                       | upper(Base, Comparable)
+        upper(Root1, Cloneable, Comparable)              | upper(Root2, Comparable)                      | upper(Base, Comparable)
+        upper(Root1, param(Comparable, String))          | upper(Root2, Comparable)                      | upper(Base, Comparable)
+        upper(Root1, param(Comparable, Integer))         | upper(Root2, param(Comparable, Number))       | upper(Base, param(Comparable, Number))
+        upper(Integer, Serializable)                   | upper(Cloneable, CharSequence)                  | Object
     }
 
 

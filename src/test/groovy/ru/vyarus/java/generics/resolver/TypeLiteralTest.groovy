@@ -1,9 +1,10 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 import java.lang.reflect.ParameterizedType
 
@@ -43,7 +44,7 @@ class TypeLiteralTest extends Specification {
         type.type == List
 
         when: "declare from type"
-        type = TypeLiteral.from(new ParameterizedTypeImpl(List, String))
+        type = TypeLiteral.from(param(List, String))
         then:
         type.type instanceof ParameterizedType
         type.type.rawType == List

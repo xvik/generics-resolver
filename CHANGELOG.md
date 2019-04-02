@@ -37,7 +37,8 @@ could be used anywhere (it's just convenient way to preserve all potential type 
 * Fix TypesWalker: processing should not continue after incompatible types detection
 * TypeResolutionUtils
     - Add shortcut resolve(Class, LinkedHashMap<String, Type>, Class...) for resolution with known root generics
-    - Add resolve(Type, Class...) to support resolution from ParameterizedType (and to be used as universal resolution method)      
+    - Add resolve(Type, Class...) to support resolution from ParameterizedType (and to be used as universal resolution method)
+* Add TypeFactory utility to simplify types construction in tests          
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support

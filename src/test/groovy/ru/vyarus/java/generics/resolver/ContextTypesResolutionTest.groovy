@@ -1,11 +1,12 @@
 package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsContext
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.support.Model
 import ru.vyarus.java.generics.resolver.support.Root
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 
 /**
@@ -21,7 +22,7 @@ class ContextTypesResolutionTest extends Specification {
 
         expect: "resolving type"
         context.resolveType(Lvl2Base1.getMethod("doSomth5").getGenericReturnType()) == Model[]
-        context.resolveType(Lvl2Base1.getMethod("doSomth6").getGenericReturnType()) == new ParameterizedTypeImpl(Map, Model, Model)
+        context.resolveType(Lvl2Base1.getMethod("doSomth6").getGenericReturnType()) == param(Map, Model, Model)
     }
 
     def "Check generics resolution from type"() {

@@ -10,6 +10,8 @@ import java.util.Arrays;
  * Wrapper to hold resolved parametrization.
  *
  * @author Vyacheslav Rusakov
+ * @see ru.vyarus.java.generics.resolver.util.type.TypeFactory#param(Class, Type...) for simplified construction
+ * @see ru.vyarus.java.generics.resolver.util.type.TypeFactory#param(Class, Type[], Type) for simplified construction
  * @since 15.12.2014
  */
 public class ParameterizedTypeImpl implements ParameterizedType {

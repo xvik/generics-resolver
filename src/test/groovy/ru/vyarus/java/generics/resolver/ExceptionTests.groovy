@@ -1,6 +1,5 @@
 package ru.vyarus.java.generics.resolver
 
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException
 import ru.vyarus.java.generics.resolver.error.GenericsTrackingException
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException
@@ -11,6 +10,8 @@ import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.TypeVariable
@@ -115,8 +116,7 @@ class ExceptionTests extends Specification {
     def "Check incompatible types"() {
 
         when: "default message"
-        def res = new IncompatibleTypesException(new ParameterizedTypeImpl(Base1, String),
-                new ParameterizedTypeImpl(Lvl2Base1, Integer))
+        def res = new IncompatibleTypesException(param(Base1, String), param(Lvl2Base1, Integer))
         then:
         ((ParameterizedType) res.first).rawType == Base1
         ((ParameterizedType) res.second).rawType == Lvl2Base1
@@ -124,8 +124,7 @@ class ExceptionTests extends Specification {
 
         when: "custom message"
 
-        res = new IncompatibleTypesException("custom %s %s", new ParameterizedTypeImpl(Base1, String),
-                new ParameterizedTypeImpl(Lvl2Base1, Integer))
+        res = new IncompatibleTypesException("custom %s %s", param(Base1, String), param(Lvl2Base1, Integer))
         then:
         ((ParameterizedType) res.first).rawType == Base1
         ((ParameterizedType) res.second).rawType == Lvl2Base1

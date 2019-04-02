@@ -9,6 +9,7 @@ import java.lang.reflect.Type;
  * Wrapper to hold resolved array type.
  *
  * @author Vyacheslav Rusakov
+ * @see ru.vyarus.java.generics.resolver.util.type.TypeFactory#array(Type) for simplified construction
  * @since 15.12.2014
  */
 public class GenericArrayTypeImpl implements GenericArrayType {

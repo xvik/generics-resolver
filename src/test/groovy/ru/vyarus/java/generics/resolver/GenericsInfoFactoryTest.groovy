@@ -2,11 +2,12 @@ package ru.vyarus.java.generics.resolver
 
 import ru.vyarus.java.generics.resolver.context.GenericsInfo
 import ru.vyarus.java.generics.resolver.context.GenericsInfoFactory
-import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.support.*
 import ru.vyarus.java.generics.resolver.support.array.ArBaseLvl2
 import ru.vyarus.java.generics.resolver.support.array.ArRoot
 import spock.lang.Specification
+
+import static ru.vyarus.java.generics.resolver.util.type.TypeFactory.*
 
 import java.lang.reflect.GenericArrayType
 import java.lang.reflect.ParameterizedType
@@ -57,6 +58,6 @@ class GenericsInfoFactoryTest extends Specification {
         GenericsInfo info = GenericsInfoFactory.create(ArRoot)
         then: "resolved"
         info.getTypeGenerics(ArBaseLvl2)['T'] instanceof GenericArrayType
-        (info.getTypeGenerics(ArBaseLvl2)['T'] as GenericArrayType).genericComponentType == new ParameterizedTypeImpl(List, Model)
+        (info.getTypeGenerics(ArBaseLvl2)['T'] as GenericArrayType).genericComponentType == param(List, Model)
     }
 }
