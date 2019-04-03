@@ -256,8 +256,12 @@ public final class TypeUtils {
      * All shared interfaces are returned as wildcard ({@link WildcardType} meaning
      * {@code ? extends BaseType & IFace1 & Iface2 }).
      * <p>
+     * For returned wildcard, contained types will be sorted as: class, interface from not java package, interface
+     * with generic(s), by name. So order of types will always be predictable and first upper bound will be the most
+     * specific type.
+     * <p>
      * Returned type is maximally accurate common type, but if you need only base class without interfaces
-     * (and use interfaces inly if direct base class can't be found) then you can call
+     * (and use interfaces only if direct base class can't be found) then you can call
      * {@code CommonTypeFactory.build(one, two, false)} directly.
      * <p>
      * Primitives are boxed for comparison (e.g. {@code int -> Integer}) so even for two {@code int} common type

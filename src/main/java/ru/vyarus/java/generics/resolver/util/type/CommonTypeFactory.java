@@ -10,6 +10,7 @@ import ru.vyarus.java.generics.resolver.util.TypeUtils;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
@@ -29,6 +30,9 @@ import java.util.*;
 @SuppressWarnings("PMD.GodClass")
 public final class CommonTypeFactory {
 
+    // specificity comparator (more specific types first)
+    private static final Comparator<Type> TYPE_COMPARATOR = Collections.reverseOrder(new TypesComparator());
+
     private CommonTypeFactory() {
     }
 
@@ -46,6 +50,9 @@ public final class CommonTypeFactory {
      * just {@link Number} in example above), which may greatly reduce accuracy in multiple types comparision
      * (e.g. {@code Integer and Double and Comparable} (sequential match): when interfaces included result is
      * {@code Comparable} and without interfaces it's {@code Object}).
+     * <p>
+     * When resolution lead to multiple types (most likely, class + interfaces) they will be ordered as:
+     * class, interface from non java package, interface with generics, by class name (without package).
      *
      * @param one                     first type
      * @param two                     second type
@@ -103,7 +110,6 @@ public final class CommonTypeFactory {
         cache.resolve(first, second, res);
         return res;
     }
-
 
     /**
      * Important step because consequent logic should not fail due to unknown generic. Due to java autoboxing
@@ -346,6 +352,10 @@ public final class CommonTypeFactory {
                 // simpler resolution for contracts (only class to prevent cycles)
                 res.add(buildCommonType(iface, firstContext, secondContext, false, cache));
             }
+            // sort found types by specificity:
+            // class -> interface from non java package -> interface with generic -> sort by name
+            // in order to always get predictable order and so always the same resolution
+            Collections.sort(res, TYPE_COMPARATOR);
         }
 
         return res.isEmpty() ? Object.class
@@ -416,7 +426,7 @@ public final class CommonTypeFactory {
             for (TypeVariable var : typeParameters) {
                 final Type sub1 = firstGenerics.get(var.getName());
                 final Type sub2 = secondGenerics.get(var.getName());
-                final Type paramType = buildImpl(sub1, sub2, alwaysIncludeInterfaces, cache);
+                final Type paramType = buildParameterType(type, sub1, sub2, alwaysIncludeInterfaces, cache);
                 if (paramType != Object.class) {
                     notAllObject = true;
                 }
@@ -433,15 +443,39 @@ public final class CommonTypeFactory {
     }
 
     /**
+     * Method used instead of direct {@link #buildImpl(Type, Type, boolean, PathsCache)} call while computing
+     * generics. Method may return customized placeholder type, which will try to resolve not to the same type
+     * as root type (avoid situation like {@code Comparable<Comparable>}).
+     *
+     * @param root                    root type (computing generics for)
+     * @param first                   first type
+     * @param second                  second type
+     * @param alwaysIncludeInterfaces true to resolve not only base class but also all common interfaces, false
+     *                                to look common class only and lookup interfaces inly when no base class found
+     * @return maximum class assignable to both types or {@code Object} if classes are incompatible
+     */
+    private static Type buildParameterType(final Class<?> root,
+                                           final Type first,
+                                           final Type second,
+                                           final boolean alwaysIncludeInterfaces,
+                                           final PathsCache cache) {
+        Type res = buildImpl(first, second, alwaysIncludeInterfaces, cache);
+        if (res instanceof PlaceholderType) {
+            res = ((PlaceholderType) res).forRoot(root);
+        }
+        return res;
+    }
+
+    /**
      * Internal types resolution cache used to prevent infinite cycles. For example,
      * {@code Integer extends Number implements Comparable<Integer>} and
      * {@code String implements Comparable<String>}: without cache it would be an infinite loop
      * of {@code String} and {@code Integer} resolutions due to {@code Comparable} interface.
      */
     private static class PathsCache {
-        private final Map<TypesKey, ResolutionPlaceholder> cache = new HashMap<TypesKey, ResolutionPlaceholder>();
+        private final Map<TypesKey, PlaceholderType> cache = new HashMap<TypesKey, PlaceholderType>();
 
-        public Type get(final Type one, final Type two) {
+        public PlaceholderType get(final Type one, final Type two) {
             return cache.get(key(one, two));
         }
 
@@ -460,7 +494,7 @@ public final class CommonTypeFactory {
                         TypeToStringUtils.toStringType(one),
                         TypeToStringUtils.toStringType(two)));
             }
-            cache.put(key, new ResolutionPlaceholder());
+            cache.put(key, new PlaceholderType());
         }
 
         /**
@@ -521,22 +555,59 @@ public final class CommonTypeFactory {
      * resolution, the result is simplified (for example, when full type is class + interfaces, inside implemented
      * interfaces there is no need for such accuracy, so only first resolved type could be taken (enough precision)).
      * <p>
+     * Where possible, sub type is created in order to avoid duplication (e.g. {@code Comparable<Comparable>}).
+     * If type was resolved as wildcard with multiple types (class + interfaces) then different type would be selected.
+     * <p>
      * This type is used only inside this factory and never leave it, because
      * {@link GenericsUtils#resolveTypeVariables(Type, Map)} always replace wildcards with one upper bound with
      * actual bound. And that's why no equals or hash code is implemented in type - no need.
      */
-    private static class ResolutionPlaceholder implements WildcardType {
+    private static class PlaceholderType implements WildcardType {
         private static final Type[] EMPTY = new Type[0];
+        private List<PlaceholderType> placeholders;
 
+        private final Class<?> root;
         private Type[] upperBound;
 
+        // root placeholder
+        PlaceholderType() {
+            this(null);
+        }
+
+        // derived placeholder
+        private PlaceholderType(final Class<?> root) {
+            this.root = root;
+        }
+
+        /**
+         * Called when types resolution finished in order to resolve placeholder with real type.
+         *
+         * @param bound real type
+         */
         public void resolve(final Type bound) {
             if (upperBound != null) {
                 throw new IllegalArgumentException("Placeholder already resolved");
             }
+
             // reduce accuracy because otherwise infinite cycles are possible
             // besides, placeholders may appear only on implemented interfaces and there exact type is not important
-            this.upperBound = new Type[]{GenericsUtils.resolveClass(bound)};
+            Class<?> res = GenericsUtils.resolveClass(bound);
+            if (root == null) {
+                // notify derived placeholders
+                if (placeholders != null) {
+                    for (PlaceholderType placeholder : placeholders) {
+                        placeholder.resolve(bound);
+                    }
+                }
+            } else {
+                // try to use different type if possible (to avoid Some<Some> cases)
+                if (res.equals(root)
+                        && bound instanceof WildcardType && (((WildcardType) bound).getUpperBounds()).length > 1) {
+                    // use second type by specificity
+                    res = GenericsUtils.resolveClass(((WildcardType) bound).getUpperBounds()[1]);
+                }
+            }
+            this.upperBound = new Type[]{res};
         }
 
         @Override
@@ -547,6 +618,72 @@ public final class CommonTypeFactory {
         @Override
         public Type[] getLowerBounds() {
             return new Type[0];
+        }
+
+        /**
+         * When resolving generic parameters, it's highly not desirable to get duplicate chain like
+         * {@code Comparable<Comparable>}, so creating custom placeholder which will try to correct this issue
+         * on resolution (resolution is derived from main placeholder resolution).
+         *
+         * @param root root class (resolving generics for)
+         * @return new placeholder
+         */
+        public PlaceholderType forRoot(final Class<?> root) {
+            final PlaceholderType res = new PlaceholderType(root);
+            // delayed init because placeholders often will not be used at all
+            if (placeholders == null) {
+                placeholders = new ArrayList<PlaceholderType>();
+            }
+            placeholders.add(res);
+            return res;
+        }
+    }
+
+    /**
+     * Comparator used to order all resolved types.
+     * Rules:
+     * <ul>
+     * <li>Class</li>
+     * <li>Interface from non java package (assume user interface)</li>
+     * <li>Interface with generics</li>
+     * <li>Order by name</li>
+     * </ul>
+     * This is required in order to always receive predictable results (in case of placeholders, only the first type
+     * is used and so it's important to choose the most specific type).
+     */
+    private static class TypesComparator implements Comparator<Type>, Serializable {
+
+        private static final String JAVA_PKG = "java.";
+
+        @Override
+        @SuppressWarnings("checkstyle:ReturnCount")
+        public int compare(final Type o1, final Type o2) {
+            final Class o1cls = GenericsUtils.resolveClass(o1);
+            final Class o2cls = GenericsUtils.resolveClass(o2);
+
+            // class goes first
+            final boolean o1Interface = o1cls.isInterface();
+            final boolean o2Interface = o2cls.isInterface();
+            if (o1Interface != o2Interface) {
+                return o1Interface ? -1 : 1;
+            }
+
+            // non hava class goes first
+            final boolean o1FromJava = o1cls.getPackage().getName().startsWith(JAVA_PKG);
+            final boolean o2FromJava = o2cls.getPackage().getName().startsWith(JAVA_PKG);
+            if (o1FromJava != o2FromJava) {
+                return o1FromJava ? -1 : 1;
+            }
+
+            // type with generics assumed more specific
+            final boolean o1Generics = o1cls.getTypeParameters().length > 0;
+            final boolean o2Generics = o2cls.getTypeParameters().length > 0;
+            if (o1Generics != o2Generics) {
+                return o1Generics ? 1 : -1;
+            }
+
+            // and finally sort by name
+            return o1cls.getSimpleName().compareTo(o2cls.getSimpleName());
         }
     }
 }

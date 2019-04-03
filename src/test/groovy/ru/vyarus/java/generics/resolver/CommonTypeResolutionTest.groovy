@@ -53,7 +53,7 @@ class CommonTypeResolutionTest extends Specification {
         upper(Integer, Cloneable, Root1)                | upper(Double, Comparable, Root2)               | upper(Number, param(Comparable, Number), Base)
         upper(Integer, Cloneable, Root1)                | upper(Number, Comparable, Root1)               | upper(Number, Comparable, Root1)
         upper(Integer, Cloneable, Root1)                | upper(Number, Comparable, Root2)               | upper(Number, Comparable, Base)
-        upper(Integer, Cloneable)                       | String                                         | upper(Serializable, param(Comparable, Serializable))
+        upper(Integer, Cloneable)                       | String                                         | upper(param(Comparable, Serializable), Serializable)
 
         upper(Root1, Cloneable)                           | upper(Base, Comparable)                      | Base
         upper(Root1, Cloneable, Comparable)              | upper(Base, Comparable)                       | upper(Base, Comparable)
