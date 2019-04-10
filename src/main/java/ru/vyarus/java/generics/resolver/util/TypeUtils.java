@@ -70,6 +70,7 @@ public final class TypeUtils {
      * @return true when provided type is more specific than other type. false otherwise
      * @throws IllegalArgumentException when types are not compatible
      * @see ComparatorTypesVisitor for implementation details
+     * @see #isCompatible(Type, Type) use for compatibility check (before) to avoid incompatible types exception
      */
     public static boolean isMoreSpecific(final Type what, final Type comparingTo) {
         final ComparatorTypesVisitor visitor = new ComparatorTypesVisitor();
@@ -178,7 +179,7 @@ public final class TypeUtils {
      *
      * @param one first type
      * @param two second type
-     * @return more specific type or first type is they are equal
+     * @return more specific type or first type if they are equal
      * @see #isMoreSpecific(Type, Type)
      */
     public static Type getMoreSpecificType(final Type one, final Type two) {
