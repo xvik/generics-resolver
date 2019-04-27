@@ -19,6 +19,7 @@ import java.util.Map;
 public final class TypeToStringUtils {
 
     private static final String COMMA_SEPARATOR = ", ";
+    private static final String HASH = "#";
 
     private TypeToStringUtils() {
     }
@@ -69,7 +70,7 @@ public final class TypeToStringUtils {
     public static String toStringType(final Type type, final Map<String, Type> generics) {
         final String res;
         if (type instanceof Class) {
-            res = ((Class) type).getSimpleName();
+            res = processClass((Class) type);
         } else if (type instanceof ParameterizedType) {
             res = processParametrizedType((ParameterizedType) type, generics);
         } else if (type instanceof GenericArrayType) {
@@ -118,7 +119,7 @@ public final class TypeToStringUtils {
     /**
      * Shortcut for {@link #toStringTypes(Type[], String, Map)} with comma separator (most commonly used).
      *
-     * @param types types to convert to string
+     * @param types    types to convert to string
      * @param generics generics (common for all types)
      * @return string with all types divided by comma
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
@@ -214,6 +215,57 @@ public final class TypeToStringUtils {
         return String.format("%s(%s)",
                 constructor.getDeclaringClass().getSimpleName(),
                 toStringTypes(constructor.getGenericParameterTypes(), generics));
+    }
+
+    /**
+     * For usual classes {@link Class#getSimpleName()} returned. For anonymous classes returning
+     * "EnclosingClass#(constructor|method)$type", where EnclosingClass is a class where anonymous class was
+     * declared, (constructor|method) is method or constructor signature where anonymous class declared
+     * (not present if anonymous class declared in class field) and type is direct super type of anonymous class.
+     * <p>
+     * For example, for
+     * <pre>{@code
+     *      class Something {
+     *          private Inner in1 = new Inner() {...};
+     *
+     *          void method() {
+     *              Inner in2 = new Inner() {...}
+     *          }
+     *      }
+     * }</pre>
+     * to string for in1 will be "Something$Inner" and for in2 "Something#void method()$Inner.
+     * <p>
+     * Note that in java {@code getName()} for such classes would be like "com.mycompany.Something$1", which does
+     * not shows all possible type information ({@code getSimpleName()} on anonymous class is empty string!).
+     * <p>
+     * In groovy, enclosing methods and constructors can't be resolved and so would not be included. Most certainly,
+     * for groovy type (anonymous class created in groovy code, not in java), GroovyObject will appear instead of
+     * Object (because every object in groovy implements GroovyObject).
+     *
+     * @param clazz class
+     * @return to string class representation
+     */
+    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
+    private static String processClass(final Class clazz) {
+        String res;
+        // simpleName on anonymous class is empty string
+        if (clazz.isAnonymousClass()) {
+            res = clazz.getEnclosingClass().getSimpleName();
+            try {
+                if (clazz.getEnclosingConstructor() != null) {
+                    res += HASH + toStringConstructor(clazz.getEnclosingConstructor(), IgnoreGenericsMap.getInstance());
+                } else if (clazz.getEnclosingMethod() != null) {
+                    res += HASH + toStringMethod(clazz.getEnclosingMethod(), IgnoreGenericsMap.getInstance());
+                }
+            } catch (Throwable ignored) {
+                // ignore possible "enclosing method not found" in groovy
+            }
+            res += "$" + (clazz.getSuperclass() == Object.class && clazz.getInterfaces().length > 0
+                    ? clazz.getInterfaces()[0].getSimpleName() : clazz.getSuperclass().getSimpleName());
+        } else {
+            res = clazz.getSimpleName();
+        }
+        return res;
     }
 
     @SuppressWarnings("PMD.UseStringBufferForStringAppends")

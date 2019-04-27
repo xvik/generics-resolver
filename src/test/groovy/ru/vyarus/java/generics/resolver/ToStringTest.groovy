@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver
 import ru.vyarus.java.generics.resolver.context.GenericsContext
 import ru.vyarus.java.generics.resolver.context.container.ParameterizedTypeImpl
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException
+import ru.vyarus.java.generics.resolver.support.AnonymousCases
 import ru.vyarus.java.generics.resolver.support.Model
 import ru.vyarus.java.generics.resolver.support.array.ArBaseLvl2
 import ru.vyarus.java.generics.resolver.support.inner.InOwner
@@ -110,6 +111,31 @@ class ToStringTest extends Specification {
         param(ArBaseLvl2, String, Object)                          | "ArBaseLvl2<String, Object>"
         param(InOwner.Inner, [] as Type[], param(InOwner, Object)) | "InOwner.Inner"
         param(InOwner.Inner, [] as Type[], param(InOwner, String)) | "InOwner<String>.Inner"
+        new Comparable() {
+            @Override
+            int compareTo(Object o) {
+                return 0
+            }
+        }.getClass()                                               | 'ToStringTest$Comparable'
+        new Object(){}.getClass()                                 | 'ToStringTest$GroovyObject'
+        new HashMap() {}.getClass()                               | 'ToStringTest$HashMap'
+    }
+
+    def "Check java anonymous classes"() {
+        
+        expect:
+        TypeToStringUtils.toStringType(type) == res
+        where:
+        type                                          | res
+        new AnonymousCases().direct1.getClass()      | 'AnonymousCases$Object'
+        new AnonymousCases().direct2.getClass()      | 'AnonymousCases$Comparable'
+        new AnonymousCases().direct3.getClass()      | 'AnonymousCases$HashMap'
+        new AnonymousCases().ctor1.getClass()        | 'AnonymousCases#AnonymousCases()$Object'
+        new AnonymousCases().ctor2.getClass()        | 'AnonymousCases#AnonymousCases()$Comparable'
+        new AnonymousCases().ctor3.getClass()        | 'AnonymousCases#AnonymousCases()$HashMap'
+        new AnonymousCases().met1.getClass()         | 'AnonymousCases#void method()$Object'
+        new AnonymousCases().met2.getClass()         | 'AnonymousCases#void method()$Comparable'
+        new AnonymousCases().met3.getClass()         | 'AnonymousCases#void method()$HashMap'
     }
 
     def "Check to string with generics"() {

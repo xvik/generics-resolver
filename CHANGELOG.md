@@ -25,7 +25,8 @@ could be used anywhere (it's just convenient way to preserve all potential type 
         - ParametrizedType avoid generics part when all are Object (e.g. now "List" instead of "List<Object>")
     - Add toStingType + join methods:
         - toStringTypes(Type[], Map<String, Type>) for comma separated types
-        - toStringTypes(Type[], String, Map<String, Type>) for custom types separator            
+        - toStringTypes(Type[], String, Map<String, Type>) for custom types separator
+    - Fix toStringType for anonymous class is empty string. Now will resolve as "EnclosingType#(constructor|method)$type"                
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types
