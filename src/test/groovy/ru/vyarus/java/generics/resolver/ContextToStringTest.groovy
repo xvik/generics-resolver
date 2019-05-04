@@ -68,14 +68,14 @@ class ContextToStringTest extends Specification {
 
         def context = GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('htarget'))
         expect:
-        toString(context) == """class Owner<String>.HInner  resolved in context of Root    <-- current
-  extends Owner<String>.PInner<String>
+        toString(context) == """class InnerTypesTest.Owner<String>.HInner  resolved in context of InnerTypesTest.Root    <-- current
+  extends InnerTypesTest.Owner<String>.PInner<String>
 """
-        toString(context.type(InnerTypesTest.Owner.PInner)) == """class Owner<String>.HInner  resolved in context of Root
-  extends Owner<String>.PInner<String>    <-- current
+        toString(context.type(InnerTypesTest.Owner.PInner)) == """class InnerTypesTest.Owner<String>.HInner  resolved in context of InnerTypesTest.Root
+  extends InnerTypesTest.Owner<String>.PInner<String>    <-- current
 """
 
-        toString(GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('ptarget'))) == """class Owner<String>.PInner<Integer>  resolved in context of Root    <-- current
+        toString(GenericsResolver.resolve(InnerTypesTest.Root).fieldType(InnerTypesTest.Root.getDeclaredField('ptarget'))) == """class InnerTypesTest.Owner<String>.PInner<Integer>  resolved in context of InnerTypesTest.Root    <-- current
 """
     }
 

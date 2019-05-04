@@ -20,6 +20,7 @@ public final class TypeToStringUtils {
 
     private static final String COMMA_SEPARATOR = ", ";
     private static final String HASH = "#";
+    private static final String DOT = ".";
 
     private TypeToStringUtils() {
     }
@@ -41,10 +42,19 @@ public final class TypeToStringUtils {
     /**
      * Shortcut for {@link #toStringType(Type, Map)} (called with {@link EmptyGenericsMap}). Could be used
      * when provided type does not contain variables. If provided type contain variables, error will be thrown.
+     * <p>
+     * Method is very useful for {@link Class} toString because it correctly handle inner and anonymous classes
+     * (much more informative then simple {@link Class#getSimpleName()}):
+     * <ul>
+     * <li>for inner class it would be full chain of outer classes</li>
+     * <li>for anonymous class it would be outer classes chain, context method or constructor (if not field)
+     * and base class (root for anonymous, instead of $N)</li>
+     * </ul>
      *
      * @param type type to convert to string
      * @return string representation of provided type
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
+     * @see #mergeOuterClassGenerics(String, String) to add outer generics when required
      */
     public static String toStringType(final Type type) {
         return toStringType(type, EmptyGenericsMap.getInstance());
@@ -213,12 +223,53 @@ public final class TypeToStringUtils {
      */
     public static String toStringConstructor(final Constructor constructor, final Map<String, Type> generics) {
         return String.format("%s(%s)",
-                constructor.getDeclaringClass().getSimpleName(),
+                toStringType(constructor.getDeclaringClass()),
                 toStringTypes(constructor.getGenericParameterTypes(), generics));
     }
 
     /**
-     * For usual classes {@link Class#getSimpleName()} returned. For anonymous classes returning
+     * Used for cases when outer type generics must be included into type toString render. Note that this
+     * is performed automatically for {@link ParameterizedType}.
+     * <p>
+     * For example, {@link #toStringType(Type)} for {@code Inner} type will print {@code Outer.Inner<S,K>},
+     * even if we know outer type generics. In order to include outer generics, outer type must be rendered
+     * exclusively ({@link #toStringType(Type)} with proper generics) and the result {@code Outer<P>} must
+     * be merged with the inner type toString using this method.
+     * <p>
+     * Note that if all outer type generics would be {@code Object}, entire generics section is removed
+     * (during toString rendering) and so returned inner type will not change.
+     * <p>
+     * A very special case is incorrect parameterized types (constructed manually). For example, if
+     * {@link #toStringType(Type)} will be called with manually constructed {@link ParameterizedType} like
+     * {@code List<K>.Integer} (may be constructed using {@link ParameterizedTypeImpl}). Such incorrect types
+     * are also merged correctly: in this case outer part simply combined with inner part.
+     *
+     * @param outer outer type toString with properly rendered generics (may be null)
+     * @param inner inner type toString (where outer type generics are absent)
+     * @return inner type with outer type generics included
+     */
+    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
+    public static String mergeOuterClassGenerics(final String outer, final String inner) {
+        if (outer == null) {
+            return inner;
+        }
+        String res = inner;
+        final int idx = outer.indexOf('<');
+        if (!res.startsWith(idx > 0 ? outer.substring(0, idx) : outer)) {
+            // this is for incorrect cases when parameterized type is constructed with different types
+            // (used mainly for tests)
+            res = outer + DOT + res;
+        } else if (idx > 0) {
+            // replace pure outer with outer including generics
+            res = outer + res.substring(idx);
+        }
+        return res;
+    }
+
+    /**
+     * For usual classes {@link Class#getSimpleName()} returned.
+     * <p>
+     * For anonymous classes returning
      * "EnclosingClass#(constructor|method)$type", where EnclosingClass is a class where anonymous class was
      * declared, (constructor|method) is method or constructor signature where anonymous class declared
      * (not present if anonymous class declared in class field) and type is direct super type of anonymous class.
@@ -241,6 +292,8 @@ public final class TypeToStringUtils {
      * In groovy, enclosing methods and constructors can't be resolved and so would not be included. Most certainly,
      * for groovy type (anonymous class created in groovy code, not in java), GroovyObject will appear instead of
      * Object (because every object in groovy implements GroovyObject).
+     * <p>
+     * For inner classes, full class name shown (because without outer class inner class name is not much informative).
      *
      * @param clazz class
      * @return to string class representation
@@ -249,8 +302,10 @@ public final class TypeToStringUtils {
     private static String processClass(final Class clazz) {
         String res;
         // simpleName on anonymous class is empty string
-        if (clazz.isAnonymousClass()) {
-            res = clazz.getEnclosingClass().getSimpleName();
+        // simpleName on inner class is not informative at all
+        if (clazz.getEnclosingClass() != null) {
+            // for a chain of inner classes
+            res = processClass(clazz.getEnclosingClass());
             try {
                 if (clazz.getEnclosingConstructor() != null) {
                     res += HASH + toStringConstructor(clazz.getEnclosingConstructor(), IgnoreGenericsMap.getInstance());
@@ -260,8 +315,14 @@ public final class TypeToStringUtils {
             } catch (Throwable ignored) {
                 // ignore possible "enclosing method not found" in groovy
             }
-            res += "$" + (clazz.getSuperclass() == Object.class && clazz.getInterfaces().length > 0
-                    ? clazz.getInterfaces()[0].getSimpleName() : clazz.getSuperclass().getSimpleName());
+            if (clazz.isAnonymousClass()) {
+                // show root class instead of unhelpful $1 for anonymous class
+                res += "$" + (clazz.getSuperclass() == Object.class && clazz.getInterfaces().length > 0
+                        ? clazz.getInterfaces()[0].getSimpleName() : clazz.getSuperclass().getSimpleName());
+            } else {
+                // inner class itself
+                res += DOT + clazz.getSimpleName();
+            }
         } else {
             res = clazz.getSimpleName();
         }
@@ -272,13 +333,6 @@ public final class TypeToStringUtils {
     private static String processParametrizedType(final ParameterizedType parametrized,
                                                   final Map<String, Type> generics) {
         final StringBuilder res = new StringBuilder(50);
-        // important to cover potential owner type generics declaration (Owner<String>.Inner<Integer>)
-        final Type outer = TypeUtils.getOuter(parametrized);
-        if (outer != null) {
-            // known outer generics will be contained, but in case of name clash (invisible outer generics)
-            // use raw object)
-            res.append(toStringType(outer, new IgnoreGenericsMap(generics))).append('.');
-        }
         res.append(toStringType(parametrized.getRawType(), generics));
         final Type[] args = parametrized.getActualTypeArguments();
         if (args.length > 0) {
@@ -288,7 +342,14 @@ public final class TypeToStringUtils {
                 res.append('<').append(params).append('>');
             }
         }
-        return res.toString();
+        final String str = res.toString();
+        // important to cover potential owner type generics declaration (Owner<String>.Inner<Integer>)
+        // (here we assume only correct types: self-constructed parameterized types may not contain outer generics)
+        // note that toStringType will already include outer type, but without generics
+        final Type outer = TypeUtils.getOuter(parametrized);
+        return mergeOuterClassGenerics(
+                outer == null ? null : toStringType(outer, new IgnoreGenericsMap(generics)),
+                str);
     }
 
     private static String processWildcardType(final WildcardType wildcard, final Map<String, Type> generics) {

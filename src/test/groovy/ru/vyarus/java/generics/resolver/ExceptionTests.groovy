@@ -68,14 +68,14 @@ class ExceptionTests extends Specification {
         TypeVariable type = UnknownGeneric.getDeclaredField("field").getGenericType()
         def ex = new UnknownGenericException(type.name, type.genericDeclaration)
         then:
-        ex.message == "Generic 'T' (defined on UnknownGeneric<T>) is not declared "
+        ex.message == "Generic 'T' (defined on ExceptionTests.UnknownGeneric<T>) is not declared "
         ex.genericSource != null
 
         when: "unknown method generic"
         type = UnknownGeneric.getDeclaredMethod("method").getGenericReturnType()
         ex = new UnknownGenericException(type.name, type.genericDeclaration)
         then:
-        ex.message == "Generic 'M' (defined on UnknownGeneric#<M> M method()) is not declared "
+        ex.message == "Generic 'M' (defined on ExceptionTests.UnknownGeneric#<M> M method()) is not declared "
         ex.genericSource != null
     }
 

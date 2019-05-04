@@ -455,7 +455,7 @@ public final class GenericsUtils {
         if (params.length != generics.size()) {
             throw new IllegalArgumentException(String.format(
                     "Can't build generics map for %s with %s because of incorrect generics count",
-                    type.getSimpleName(), Arrays.toString(generics.toArray())));
+                    TypeToStringUtils.toStringType(type), Arrays.toString(generics.toArray())));
         }
         final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
         int i = 0;

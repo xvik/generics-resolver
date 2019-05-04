@@ -244,7 +244,7 @@ public class GenericsContext extends AbstractGenericsContext {
         } catch (IllegalArgumentException ex) {
             throw new IllegalArgumentException(String.format(
                     msgPrefix + " declaration type %s is not present in current hierarchy:%n%s",
-                    target.getSimpleName(), genericsInfo.toString()), ex);
+                    TypeToStringUtils.toStringType(target), genericsInfo.toString()), ex);
         }
     }
 

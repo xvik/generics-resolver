@@ -73,20 +73,20 @@ class GenericsAccessorsTest extends Specification {
         when: "outer class"
         def context = GenericsResolver.resolve(Root).type(Outer)
         then:
-        toString(context) == """class Root
-  extends Outer<String, Integer, Long>    <-- current
+        toString(context) == """class GenericsAccessorsTest.Root
+  extends GenericsAccessorsTest.Outer<String, Integer, Long>    <-- current
 """
 
         when: "field type context (inner class)"
         context = context.fieldType(Root.getDeclaredField('field'))
         then:
-        toString(context) == """class Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of Root    <-- current
+        toString(context) == """class GenericsAccessorsTest.Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of GenericsAccessorsTest.Root    <-- current
 """
 
         when: "method context"
         context = context.method(Outer.Inner.getDeclaredMethod('doSmth'))
         then:
-        toString(context) == """class Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of Root
+        toString(context) == """class GenericsAccessorsTest.Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of GenericsAccessorsTest.Root
   Object doSmth()    <-- current
 """
 
@@ -94,7 +94,7 @@ class GenericsAccessorsTest extends Specification {
         context = context.method(Outer.Inner.getDeclaredMethod('doSmth2'))
         then:
         // generic B of outer is not visible, but here it shown as actual value (universal logic)
-        toString(context) == """class Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of Root
+        toString(context) == """class GenericsAccessorsTest.Outer<Object, Integer, Long>.Inner<Double, Comparable>  resolved in context of GenericsAccessorsTest.Root
   Object doSmth2()    <-- current
 """
 

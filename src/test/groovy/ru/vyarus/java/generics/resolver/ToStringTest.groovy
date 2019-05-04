@@ -82,15 +82,15 @@ class ToStringTest extends Specification {
         GenericsContext innerContext = context.fieldType(InnerTypesTest.Root.getDeclaredField('target'))
 
         then: "to string properly selects type generics only"
-        innerContext.toStringCurrentClass() == "Inner"
-        innerContext.toStringCurrentClassDeclaration() == "Inner"
+        innerContext.toStringCurrentClass() == "InnerTypesTest.Owner.Inner"
+        innerContext.toStringCurrentClassDeclaration() == "InnerTypesTest.Owner.Inner"
 
         when: "parametrized context type"
         innerContext = context.fieldType(InnerTypesTest.Root.getDeclaredField('ptarget'))
 
         then: "to string properly selects type generics only"
-        innerContext.toStringCurrentClass() == "PInner<Integer>"
-        innerContext.toStringCurrentClassDeclaration() == "PInner<K>"
+        innerContext.toStringCurrentClass() == "InnerTypesTest.Owner.PInner<Integer>"
+        innerContext.toStringCurrentClassDeclaration() == "InnerTypesTest.Owner.PInner<K>"
     }
 
     def "Check primitive arrays to string"() {
@@ -146,7 +146,7 @@ class ToStringTest extends Specification {
         type                           | res
         List                           | "List"
         ArBaseLvl2                     | "ArBaseLvl2"
-        InOwner.Inner                  | "Inner"
+        InOwner.Inner                  | "InOwner.Inner"
     }
 
     def "Check to string multiple types"() {

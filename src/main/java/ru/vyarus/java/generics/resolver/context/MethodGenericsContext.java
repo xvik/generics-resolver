@@ -308,7 +308,7 @@ public class MethodGenericsContext extends GenericsContext {
         if (pos < 0 || pos >= genericParams.length) {
             throw new IllegalArgumentException(String.format(
                     "Can't request parameter %s of method '%s' (%s) because it have only %s parameters",
-                    pos, toStringMethod(), currentClass().getSimpleName(), genericParams.length));
+                    pos, toStringMethod(), TypeToStringUtils.toStringType(currentClass()), genericParams.length));
         }
     }
 

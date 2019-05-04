@@ -92,7 +92,8 @@ public final class ArrayTypeUtils {
             }
             return (Class<T[]>) Class.forName(typeName);
         } catch (ClassNotFoundException e) {
-            throw new IllegalStateException("Failed to create array class for " + type.getSimpleName(), e);
+            throw new IllegalStateException("Failed to create array class for "
+                    + TypeToStringUtils.toStringType(type), e);
         }
     }
 

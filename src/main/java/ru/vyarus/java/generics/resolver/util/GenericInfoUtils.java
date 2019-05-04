@@ -109,7 +109,7 @@ public final class GenericInfoUtils {
         final Class<?> middleType = context.resolveClass(actual);
         if (!middleType.isAssignableFrom(asType)) {
             throw new IllegalArgumentException(String.format("Requested type %s is not a subtype of %s",
-                    asType.getSimpleName(), middleType.getSimpleName()));
+                    TypeToStringUtils.toStringType(asType), TypeToStringUtils.toStringType(middleType)));
         }
 
         // known middle type

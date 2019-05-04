@@ -34,9 +34,9 @@ class WrongContextTest extends Specification {
         ex.type == type
         ex.genericSource == ((TypeVariable) type).genericDeclaration
         ex.contextType == Root
-        ex.message.replace('\r', '') == "Type E contains generic 'E' (defined on Other<E>) and can't be resolved in context of current class Root. Generic does not belong to any type in current context hierarchy:\n" +
-                "class Root\n" +
-                "  extends Low<String>\n"
+        ex.message.replace('\r', '') == "Type E contains generic 'E' (defined on WrongContextTest.Other<E>) and can't be resolved in context of current class WrongContextTest.Root. Generic does not belong to any type in current context hierarchy:\n" +
+                "class WrongContextTest.Root\n" +
+                "  extends WrongContextTest.Low<String>\n"
 
         when: "target method differs from current context method"
         context.method(Low.getDeclaredMethod("get"))
@@ -54,8 +54,8 @@ class WrongContextTest extends Specification {
         ex.type == type
         ex.genericSource == ((TypeVariable) type).genericDeclaration
         ex.contextType == Root
-        ex.message.replace('\r', '') == "Type T contains generic 'T' (defined on Low<T>) and can't be resolved in context of current class Root. Generic declaration type Low is ignored in current context hierarchy:\n" +
-                "class Root\n"
+        ex.message.replace('\r', '') == "Type T contains generic 'T' (defined on WrongContextTest.Low<T>) and can't be resolved in context of current class WrongContextTest.Root. Generic declaration type WrongContextTest.Low is ignored in current context hierarchy:\n" +
+                "class WrongContextTest.Root\n"
 
         when: "constructor generic"
         context = GenericsResolver.resolve(ConstructorGenerics)
@@ -74,30 +74,30 @@ class WrongContextTest extends Specification {
         def ex = new WrongGenericsContextException(type, type, Root, context.genericsInfo)
         then:
         ex.genericName == "T"
-        ex.message == "Type T contains generic 'T' (defined on Low<T>) and can't be resolved in context of current class Root. Switch context to handle generic properly: context.type(Low.class)"
+        ex.message == "Type T contains generic 'T' (defined on WrongContextTest.Low<T>) and can't be resolved in context of current class WrongContextTest.Root. Switch context to handle generic properly: context.type(WrongContextTest.Low.class)"
 
         when: "wrong context for method generic"
         type = Low.getDeclaredMethod("get").getGenericReturnType()
         ex = new WrongGenericsContextException(type, type, Root, context.genericsInfo)
         then:
         ex.genericName == "K"
-        ex.message == "Type K contains generic 'K' (defined on Low#<K> K get()) and can't be resolved in context of current class Root. Switch context to handle generic properly: context.method(Low.class.getDeclaredMethod(\"get\"))"
+        ex.message == "Type K contains generic 'K' (defined on WrongContextTest.Low#<K> K get()) and can't be resolved in context of current class WrongContextTest.Root. Switch context to handle generic properly: context.method(WrongContextTest.Low.class.getDeclaredMethod(\"get\"))"
 
         when: "wrong context for different method"
         type = Low.getDeclaredMethod("get2").getGenericReturnType()
         ex = new WrongGenericsContextException(type, Low.getDeclaredMethod("get2").getTypeParameters()[0], Root, context.genericsInfo)
         then:
         ex.genericName == "M"
-        ex.message == "Type List<M> contains generic 'M' (defined on Low#<M> List<M> get2()) and can't be resolved in context of current class Root. Switch context to handle generic properly: context.method(Low.class.getDeclaredMethod(\"get2\"))"
+        ex.message == "Type List<M> contains generic 'M' (defined on WrongContextTest.Low#<M> List<M> get2()) and can't be resolved in context of current class WrongContextTest.Root. Switch context to handle generic properly: context.method(WrongContextTest.Low.class.getDeclaredMethod(\"get2\"))"
 
         when: "generic from class not in hierarchy"
         type = Other.getDeclaredField("field").getGenericType()
         ex = new WrongGenericsContextException(type, type, Root, context.genericsInfo)
         then:
         ex.genericName == "E"
-        ex.message.replace('\r', '') == "Type E contains generic 'E' (defined on Other<E>) and can't be resolved in context of current class Root. Generic does not belong to any type in current context hierarchy:\n" +
-                "class Root\n" +
-                "  extends Low<String>\n"
+        ex.message.replace('\r', '') == "Type E contains generic 'E' (defined on WrongContextTest.Other<E>) and can't be resolved in context of current class WrongContextTest.Root. Generic does not belong to any type in current context hierarchy:\n" +
+                "class WrongContextTest.Root\n" +
+                "  extends WrongContextTest.Low<String>\n"
 
         when: "type from ignored class"
         context = GenericsResolver.resolve(Root, Low)
@@ -105,8 +105,8 @@ class WrongContextTest extends Specification {
         ex = new WrongGenericsContextException(type, type, Root, context.genericsInfo)
         then:
         ex.genericName == "T"
-        ex.message.replace('\r', '') == "Type T contains generic 'T' (defined on Low<T>) and can't be resolved in context of current class Root. Generic declaration type Low is ignored in current context hierarchy:\n" +
-                "class Root\n"
+        ex.message.replace('\r', '') == "Type T contains generic 'T' (defined on WrongContextTest.Low<T>) and can't be resolved in context of current class WrongContextTest.Root. Generic declaration type WrongContextTest.Low is ignored in current context hierarchy:\n" +
+                "class WrongContextTest.Root\n"
 
         when: "constructor generic"
         context = GenericsResolver.resolve(ConstructorGenerics)

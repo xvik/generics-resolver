@@ -39,7 +39,7 @@ public class WrongGenericsContextException extends GenericSourceException {
                 TypeToStringUtils.toStringType(type, PRINTABLE_GENERICS),
                 variable.getName(),
                 formatSource(variable.getGenericDeclaration()),
-                context.getSimpleName(),
+                TypeToStringUtils.toStringType(context),
                 formatCompatibility(variable, info)));
         this.type = type;
         this.variable = variable;
@@ -89,7 +89,7 @@ public class WrongGenericsContextException extends GenericSourceException {
                             formatConstructorGet((Constructor) variable.getGenericDeclaration()));
                     break;
                 default:
-                    nav = String.format("context.type(%s.class)", requiredContext.getSimpleName());
+                    nav = String.format("context.type(%s.class)", TypeToStringUtils.toStringType(requiredContext));
                     break;
             }
             res = "Switch context to handle generic properly: " + nav;
@@ -98,7 +98,7 @@ public class WrongGenericsContextException extends GenericSourceException {
             if (Arrays.asList(info.getIgnoredTypes()).contains(genericTarget)) {
                 // type ignored
                 res = String.format("Generic declaration type %s is ignored in current context hierarchy:%n%s",
-                        genericTarget.getSimpleName(), info.toString());
+                        TypeToStringUtils.toStringType(genericTarget), info.toString());
             } else {
                 res = String.format("Generic does not belong to any type in current context hierarchy:%n%s",
                         info.toString());
@@ -109,7 +109,7 @@ public class WrongGenericsContextException extends GenericSourceException {
 
     private static String formatMethodGet(final Method method) {
         final StringBuilder res = new StringBuilder(60);
-        res.append(method.getDeclaringClass().getSimpleName())
+        res.append(TypeToStringUtils.toStringType(method.getDeclaringClass()))
                 .append(".class.getDeclaredMethod(\"").append(method.getName()).append('"');
         formatParametersTail(res, false, method.getParameterTypes());
         return res.toString();
@@ -117,7 +117,7 @@ public class WrongGenericsContextException extends GenericSourceException {
 
     private static String formatConstructorGet(final Constructor ctor) {
         final StringBuilder res = new StringBuilder(60);
-        res.append(ctor.getDeclaringClass().getSimpleName()).append(".class.getConstructor(");
+        res.append(TypeToStringUtils.toStringType(ctor.getDeclaringClass())).append(".class.getConstructor(");
         formatParametersTail(res, true, ctor.getParameterTypes());
         return res.toString();
     }
@@ -125,7 +125,7 @@ public class WrongGenericsContextException extends GenericSourceException {
     private static void formatParametersTail(final StringBuilder res, final boolean first, final Class<?>... params) {
         boolean isFirst = first;
         for (Class par : params) {
-            res.append(isFirst ? "" : ", ").append(par.getSimpleName()).append(".class");
+            res.append(isFirst ? "" : ", ").append(TypeToStringUtils.toStringType(par)).append(".class");
             isFirst = false;
         }
         res.append(')');

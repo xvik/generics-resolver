@@ -247,7 +247,8 @@ public final class GenericsTrackingUtils {
         if (!TypeUtils.isCompatible(actualType, knownType)) {
             throw new IncompatibleTypesException(String.format(
                     "Known generic %s of %s is not compatible with %s hierarchy: %%s when required %%s",
-                    genericName, TypeToStringUtils.toStringWithNamedGenerics(known), root.getSimpleName()),
+                    genericName, TypeToStringUtils.toStringWithNamedGenerics(known),
+                    TypeToStringUtils.toStringType(root)),
                     knownType, actualType);
         }
     }

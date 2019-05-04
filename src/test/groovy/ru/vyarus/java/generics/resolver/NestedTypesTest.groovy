@@ -63,8 +63,8 @@ class NestedTypesTest extends Specification {
                 [] as List<Class>)
         then: "error"
         ex = thrown(GenericsResolutionException)
-        ex.message == "Failed to analyze hierarchy for BadRoot (with known generics: Indirect<Root>)"
-        ex.getCause().message == "Interface Direct<T> appears multiple times in root class hierarchy with incompatible parametrization for generic T: NestedGenericType<GenericType> and NestedGenericType<Root>"
+        ex.message == "Failed to analyze hierarchy for BadRoot (with known generics: Indirect<NestedTypesTest.Root>)"
+        ex.getCause().message == "Interface Direct<T> appears multiple times in root class hierarchy with incompatible parametrization for generic T: NestedGenericType<GenericType> and NestedGenericType<NestedTypesTest.Root>"
     }
 
     def "Check different interface types merged"() {

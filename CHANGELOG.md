@@ -23,10 +23,12 @@ could be used anywhere (it's just convenient way to preserve all potential type 
     - toStringType behaviour change: 
         - WildcardType prints types with generics nad not just classes as before
         - ParametrizedType avoid generics part when all are Object (e.g. now "List" instead of "List<Object>")
+        - Fix anonymous class render to empty string. Now will resolve as "EnclosingType#(constructor|method)$type"
+        - Inner class now includes enclosing class (chain, if required), 
+           because inner class name alone is usually not much informative (e.g. instead of Inner now will show Outer.Inner)
     - Add toStingType + join methods:
         - toStringTypes(Type[], Map<String, Type>) for comma separated types
-        - toStringTypes(Type[], String, Map<String, Type>) for custom types separator
-    - Fix toStringType for anonymous class is empty string. Now will resolve as "EnclosingType#(constructor|method)$type"                
+        - toStringTypes(Type[], String, Map<String, Type>) for custom types separator                     
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types
@@ -40,6 +42,9 @@ could be used anywhere (it's just convenient way to preserve all potential type 
     - Add shortcut resolve(Class, LinkedHashMap<String, Type>, Class...) for resolution with known root generics
     - Add resolve(Type, Class...) to support resolution from ParameterizedType (and to be used as universal resolution method)
 * Add TypeFactory utility to simplify types construction in tests          
+
+NOTE: It is recommended to use TypeToStringUtils.toStringType(Type) instead of Class.getSimpleName()
+because toStringType version will be much more informative for inner and anonymous classes. 
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support

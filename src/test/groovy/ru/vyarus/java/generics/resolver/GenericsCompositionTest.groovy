@@ -26,7 +26,7 @@ class GenericsCompositionTest extends Specification {
         GenericsUtils.createGenericsMap(Sample, [String])
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message == "Can't build generics map for Sample with [class java.lang.String] because of incorrect generics count"
+        ex.message == "Can't build generics map for GenericsCompositionTest.Sample with [class java.lang.String] because of incorrect generics count"
     }
 
     static class Sample<T, K> {

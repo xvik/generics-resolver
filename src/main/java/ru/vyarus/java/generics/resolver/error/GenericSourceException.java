@@ -53,7 +53,7 @@ public abstract class GenericSourceException extends GenericsException {
             switch (scope) {
                 case METHOD:
                     final Method method = (Method) source;
-                    place.append(method.getDeclaringClass().getSimpleName()).append('#')
+                    place.append(TypeToStringUtils.toStringType(method.getDeclaringClass())).append('#')
                             // append method generic declaration
                             .append(formatGenerics(method.getTypeParameters()))
                             .append(TypeToStringUtils.toStringMethod(method, new PrintableGenericsMap()));

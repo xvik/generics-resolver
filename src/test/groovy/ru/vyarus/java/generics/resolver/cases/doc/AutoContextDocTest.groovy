@@ -27,10 +27,10 @@ class AutoContextDocTest extends Specification {
         then:
         true
         def ex = thrown(WrongGenericsContextException)
-        ex.message.replace('\r', '') == """Type List<T> contains generic 'T' (defined on NotInside<T>) and can't be resolved in context of current class Root. Generic does not belong to any type in current context hierarchy:
-class Root
-  extends Base2<String>
-    extends Base<Long>
+        ex.message.replace('\r', '') == """Type List<T> contains generic 'T' (defined on AutoContextDocTest.NotInside<T>) and can't be resolved in context of current class AutoContextDocTest.Root. Generic does not belong to any type in current context hierarchy:
+class AutoContextDocTest.Root
+  extends AutoContextDocTest.Base2<String>
+    extends AutoContextDocTest.Base<Long>
 """
     }
 

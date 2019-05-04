@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver.context;
 
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
+import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import ru.vyarus.java.generics.resolver.util.TypeUtils;
 
 import java.lang.reflect.Type;
@@ -201,11 +202,12 @@ public class GenericsInfo {
                             final Class<?> owner,
                             final Map<String, Type> ownerGenerics,
                             final String shift) {
-            final String inner = owner != null
-                    ? String.format(
-                    "%s.", toStringWithGenerics(owner, ownerGenerics))
-                    : "";
-            return String.format("%s%s", inner, toStringWithGenerics(type, generics));
+
+            // will already include outer type, but without generics
+            final String res = toStringWithGenerics(type, generics);
+            return TypeToStringUtils.mergeOuterClassGenerics(
+                    owner != null ? toStringWithGenerics(owner, ownerGenerics) : null,
+                    res);
         }
     }
 }

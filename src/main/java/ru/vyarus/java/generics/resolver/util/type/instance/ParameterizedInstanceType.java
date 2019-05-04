@@ -129,7 +129,7 @@ public class ParameterizedInstanceType implements ParameterizedType, InstanceTyp
         if (!isMoreSpecificGenerics(arguments)) {
             throw new IllegalArgumentException(String
                     .format("Provided generics for type %s [%s] are less specific then current [%s]",
-                            rawType.getSimpleName(),
+                            TypeToStringUtils.toStringType(rawType),
                             TypeToStringUtils.toStringTypes(arguments, EmptyGenericsMap.getInstance()),
                             TypeToStringUtils.toStringTypes(actualArguments, EmptyGenericsMap.getInstance())));
         }
