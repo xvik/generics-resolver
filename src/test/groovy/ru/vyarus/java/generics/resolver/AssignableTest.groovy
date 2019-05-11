@@ -51,5 +51,6 @@ class AssignableTest extends Specification {
         left | right | res
         new TypeLiteral<Map<String, String>>(){}.getType() | new TypeLiteral<Map<Object, String>>(){}.getType() | true
         new TypeLiteral<Map<String, String>>(){}.getType() | new TypeLiteral<Map<Integer, String>>(){}.getType() | false
+        new TypeLiteral<List<String>>(){}.getType() | new TypeLiteral<List<List<String>>>(){}.getType() | false
     }
 }

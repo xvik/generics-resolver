@@ -6,7 +6,9 @@ import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeUtils;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.Map;
 
@@ -180,8 +182,7 @@ public final class TypesWalker {
             final Type oneParam = entry.getValue();
             final Type twoParam = twoGenerics.get(generic);
             // direct cycle case Something<T extends Something<T>> (without explicit detection will go to cycle)
-            if ((GenericsUtils.resolveClass(oneParam) == lowerClass)
-                    || GenericsUtils.resolveClass(twoParam) == lowerClass) {
+            if (isGenericLoop(lowerClass, generic, oneParam)) {
                 // here we compared resolved generic value with lower of original classes (because lower class will
                 // be the source for both generics)
                 continue;
@@ -191,6 +192,41 @@ public final class TypesWalker {
             }
         }
         return true;
+    }
+
+    /**
+     * Declarations like {@code Some<T extends Some<T>>} could cause infinite analysis cycles without proper detection.
+     *
+     * @param src         generic declaration class
+     * @param genericName generic name
+     * @param genericType actual generic value
+     * @return true if cycle detected, false otherwise
+     */
+    private static boolean isGenericLoop(final Class<?> src, final String genericName, final Type genericType) {
+        // to avoid redundant checks, first look if same type is declared in parameter
+        if (src.isAssignableFrom(GenericsUtils.resolveClass(genericType))) {
+            // look if this generic declaration reference itself (Some<T extends Some<T>>)
+            for (TypeVariable var : src.getTypeParameters()) {
+                if (var.getName().equals(genericName)) {
+                    for (Type bound : var.getBounds()) {
+                        // declaration through the same type found  (Some<T extends Some>)
+                        if (bound instanceof ParameterizedType
+                                && ((ParameterizedType) bound).getRawType().equals(src)) {
+                            for (Type param : ((ParameterizedType) bound).getActualTypeArguments()) {
+                                // loop detected (recursive generic declaration)
+                                if (param instanceof TypeVariable
+                                        && ((TypeVariable) param).getName().equals(genericName)) {
+                                    return false;
+                                }
+                            }
+                            break;
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+        return false;
     }
 
     /**
