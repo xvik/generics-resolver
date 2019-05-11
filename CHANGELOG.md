@@ -15,7 +15,8 @@ could be used anywhere (it's just convenient way to preserve all potential type 
     - Add trackGenerics() - shortcut for GenericsTrackingUtils for improving type generics by known sub type generics
     - resolveTypeVariables now replace (in order to simplify type):
         - ParameterizedType with no arguments and no owner to raw class (flatten)
-        - GenericArrayType with component type resolved to class into pure array class     
+        - GenericArrayType with component type resolved to class into pure array class
+    - Fix resolveTypeVariables not repackage owner type of ParameterizedType        
 * TypeToStringUtils
     - Add shortcuts (to simplify common usages):
         - toStringType(Type)
@@ -32,15 +33,20 @@ could be used anywhere (it's just convenient way to preserve all potential type 
 * TypeUtils
     - Fix isAssignableBounds() for proper support of complex wildcards where none of left types is assignable 
        to all right types
-    - Fix incompatible types detection in isMoreSpecific() (check was stopped on types with obvious specificity)   
+    - Fix incompatible types detection in isMoreSpecific() (check was stopped on types with obvious specificity)
+    - Behaviour change for isMoreSpecific() on equal types: return false now (works now as name implies)
+       For old behaviour use new method isMoreSpecificOrEqual()    
     - Add getCommonTypes(type1, type2): calculates base type assignable for both provided types
     - Add getInstanceType(...): create instance type for provided instance(s)               
 * Improve types tracking: tracked types now analyzed for dependent variables to extract all possible type information
 * Fix reversed generic variables declaration support (#3)
-* Fix TypesWalker: processing should not continue after incompatible types detection
-* TypeResolutionUtils
+* TypesWalker:
+    - Fix processing continue after incompatible types detection
+    - If types are inner classes, walk by outer types first
+* GenericsResolutionUtils
     - Add shortcut resolve(Class, LinkedHashMap<String, Type>, Class...) for resolution with known root generics
     - Add resolve(Type, Class...) to support resolution from ParameterizedType (and to be used as universal resolution method)
+    - Fix cycled declarations detection (Something<T extends Something<T>)
 * Add TypeFactory utility to simplify types construction in tests          
 
 NOTE: It is recommended to use TypeToStringUtils.toStringType(Type) instead of Class.getSimpleName()

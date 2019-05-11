@@ -207,9 +207,15 @@ public final class GenericsResolutionUtils {
             try {
                 res.put(variable.getName(), resolveRawGeneric(variable, res));
             } catch (UnknownGenericException ex) {
-                // preserve order without resolution
-                res.put(variable.getName(), null);
-                failed.add(variable);
+                // direct cycle case Something<T extends Something<T>>
+                // (failed generic is exactly resolving generic)
+                if (ex.getGenericName().equals(variable.getName()) && ex.getGenericSource().equals(type)) {
+                    res.put(variable.getName(), GenericsUtils.resolveClass(variable.getBounds()[0]));
+                } else {
+                    // preserve order without resolution
+                    res.put(variable.getName(), null);
+                    failed.add(variable);
+                }
             }
         }
         if (!failed.isEmpty()) {
