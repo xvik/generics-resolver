@@ -29,6 +29,9 @@ public class ComparatorTypesVisitor implements TypesVisitor {
 
     private boolean compatible = true;
     private boolean moreSpecific = true;
+    // note: it is not possible to track specificity flag without equality, because we don't know what types pair
+    // will be the last one. All we can is to track equality through all layers and look it in final getter
+    private boolean equal = true;
 
     @Override
     public boolean next(final Type one, final Type two) {
@@ -50,8 +53,14 @@ public class ComparatorTypesVisitor implements TypesVisitor {
             // check lower bounds when upper bounds are equal (checked above)
             moreSpecific = moreSpecific && compareLowerBounds(one, two);
 
+            // track equality 
+            equal = equal && boundsEqual;
+
             // general specificity might be already obvious, but generics could differ and this must be checked
             // in order to throw incompatible types
+        } else {
+            moreSpecific = moreSpecific && one != Object.class;
+            equal = equal && one == Object.class;
         }
         return true;
     }
@@ -59,13 +68,27 @@ public class ComparatorTypesVisitor implements TypesVisitor {
     @Override
     public void incompatibleHierarchy(final Type one, final Type two) {
         compatible = false;
+        equal = false;
+        moreSpecific = false;
     }
 
     /**
-     * @return true if first type is more specific, false otherwise
+     * @return true if first type is more specific, false otherwise (including when types are equal)
      */
     public boolean isMoreSpecific() {
-        return moreSpecific;
+        // more specific flag may be true in case when all layers are equal, so it is important
+        // to use both flags to deny equal types
+        return moreSpecific && !equal;
+    }
+
+    /**
+     * Note that incoming types could be not directly equal but equal actually (e.g. {@code List} and
+     * {@code List<? extends Object>}).
+     *
+     * @return true when types are equal
+     */
+    public boolean isEqual() {
+        return equal;
     }
 
     /**
@@ -98,16 +121,24 @@ public class ComparatorTypesVisitor implements TypesVisitor {
         if (notLowerBounded(two)) {
             // ignore possible left lower bound when simple type on the right (not Object - root condition above)
             res = true;
+            // if left type is wildcard they are not equal (super Object case already prevented)
+            equal = equal && (notLowerBounded(one) || ((WildcardType) one).getLowerBounds()[0] == Object.class);
         } else if (notLowerBounded(one)) {
             // special case: left is Object and right is lower bounded wildcard
             // e.g Object and ? super String (last is more specific, while it's upper bound is Object too)
             // otherwise, any non Object is more specific
             res = one != Object.class;
+            // two is lower bounded and one is not - can't be equal (super Object case already prevented)
+            equal = equal && ((WildcardType) two).getLowerBounds()[0] == Object.class;
         } else {
+            final Type lowerOne = ((WildcardType) two).getLowerBounds()[0];
+            final Type lowerTwo = ((WildcardType) one).getLowerBounds()[0];
+            equal = equal && lowerOne.equals(lowerTwo);
+
             // left type's bound must be lower: not a mistake! left (super inversion)!
-            res = TypeUtils.isMoreSpecific(
-                    ((WildcardType) two).getLowerBounds()[0],
-                    ((WildcardType) one).getLowerBounds()[0]);
+            res = !equal && TypeUtils.isMoreSpecific(
+                    lowerOne,
+                    lowerTwo);
         }
         return res;
     }

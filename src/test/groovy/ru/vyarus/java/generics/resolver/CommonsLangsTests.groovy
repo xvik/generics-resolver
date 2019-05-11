@@ -61,110 +61,111 @@ class CommonsLangsTests<B> extends Specification {
         def type1 = types[pos1]
         def type2 = types[pos2]
         expect:
-        println("$pos1 | $pos2 | ${prettyString(type1)} | ${prettyString(type2)} | ass: $assignable comp: $compatible spec: $moreSpecific")
+        println("$pos1 | $pos2 | ${prettyString(type1)} | ${prettyString(type2)} | ass: $assignable comp: $compatible spec: $moreSpecific or equal: $msOrEqual")
         TypeUtils.isAssignable(type1, type2) == assignable
         TypeUtils.isCompatible(type1, type2) == compatible
         TypeUtils.isMoreSpecific(type1, type2) == moreSpecific
+        TypeUtils.isMoreSpecificOrEqual(type1, type2) == msOrEqual
 
         where:
-        pos1 | pos2 | assignable | compatible | moreSpecific
-        0    | 0    | true       | true       | true       // List | List
-        0    | 1    | true       | true       | true       // List | List<Object>
-        1    | 0    | true       | true       | true       // List<Object> | List
-        2    | 0    | true       | true       | true       // List<?> | List
-        0    | 2    | true       | true       | true       // List | List<?>
-        3    | 0    | true       | true       | true       // List<? super Object> | List
-        0    | 3    | true       | true       | true       // List | List<? super Object>
-        4    | 0    | true       | true       | true       // List<String> | List
-        0    | 4    | true       | true       | false      // List | List<String>
-        5    | 0    | true       | true       | true       // List<? extends String> | List
-        0    | 5    | true       | true       | false      // List| List<? extends String>
-        6    | 0    | true       | true       | true       // List<? super String> | List
-        0    | 6    | true       | true       | false      // List | List<? super String>
-        1    | 1    | true       | true       | true       // List<Object> | List<Object>
-        2    | 1    | true       | true       | true       // List<?> | List<Object>
-        1    | 2    | true       | true       | true       // List<Object> | List<?>
-        3    | 1    | true       | true       | true       // List<? super Object> | List<Object>
-        1    | 3    | true       | true       | true       // List<Object> | List<? super Object>
-        4    | 1    | true       | true       | true       // List<String> | List<Object>
-        1    | 4    | true       | true       | false      // List<Object> | List<String>
-        5    | 1    | true       | true       | true       // List<? extends String> | List<Object>
-        1    | 5    | true       | true       | false      // List<Object> | List<? extends String>
-        6    | 1    | true       | true       | true       // List<? super String> | List<Object>
-        1    | 6    | true       | true       | false      // List<Object> | List<? super String>
-        2    | 2    | true       | true       | true       // List<?> | List<?>
-        3    | 2    | true       | true       | true       // List<? super Object> | List<?>
-        2    | 3    | true       | true       | true       // List<?> | List<? super Object>
-        4    | 2    | true       | true       | true       // List<String> | List<?>
-        2    | 4    | true       | true       | false      // List<?> | List<String>
-        5    | 2    | true       | true       | true       // List<? extends String> | List<?>
-        2    | 5    | true       | true       | false      // List<?> | List<? extends String>
-        6    | 2    | true       | true       | true       // List<? super String> | List<?>
-        2    | 6    | true       | true       | false      // List<?> | List<? super String>
-        3    | 3    | true       | true       | true       // List<? super Object> | List<? super Object>
-        4    | 3    | true       | true       | true       // List<String> | List<? super Object>
-        3    | 4    | true       | true       | false      // List<? super Object> | List<String>
-        5    | 3    | true       | true       | true       // List<? extends String> | List<? super Object>
-        3    | 5    | true       | true       | false      // List<? super Object> | List<? extends String>
-        3    | 6    | true       | true       | false      // List<? super Object> | List<? super String>
-        4    | 4    | true       | true       | true       // List<String> | List<String>
-        5    | 4    | true       | true       | true       // List<? extends String> | List<String>
-        4    | 5    | true       | true       | true       // List<String> | List<? extends String>
-        6    | 4    | false      | true       | false      // List<? super String> | List<String>
-        4    | 6    | true       | true       | true       // List<String> | List<? super String>
-        5    | 5    | true       | true       | true       // List<? extends String> | List<? extends String>
-        6    | 5    | false      | true       | false     // List<? super String> | List<? extends String>
-        5    | 6    | true       | true       | true      // List<? extends String> | List<? super String>
-        6    | 6    | true       | true       | true      // List<? super String> | List<? super String>
-        7    | 7    | true       | true       | true      // List[] | List[]
-        8    | 7    | true       | true       | true      // List<Object>[] | List[]
-        7    | 8    | true       | true       | true      // List[] | List<Object>[]
-        9    | 7    | true       | true       | true      // List<?>[] | List[]
-        7    | 9    | true       | true       | true      // List[] | List<?>[]
-        10   | 7    | true       | true       | true      // List<? super Object>[] | List[]
-        7    | 10   | true       | true       | true      // List[] | List<? super Object>[]
-        11   | 7    | true       | true       | true      // List<String>[] | List[]
-        7    | 11   | true       | true       | false     // List[] | List<String>[]
-        12   | 7    | true       | true       | true      // List<? extends String>[] | List[]
-        7    | 12   | true       | true       | false     // List[] | List<? extends String>[]
-        13   | 7    | true       | true       | true      // List<? super String>[] | List[]
-        7    | 13   | true       | true       | false     // List[] | List<? super String>[]
-        8    | 8    | true       | true       | true      // List<Object>[] | List<Object>[]
-        9    | 8    | true       | true       | true      // List<?>[] | List<Object>[]
-        8    | 9    | true       | true       | true      // List<Object>[] | List<?>[]
-        10   | 8    | true       | true       | true      // List<? super Object>[] | List<Object>[]
-        8    | 10   | true       | true       | true      // List<Object>[] | List<? super Object>[]
-        11   | 8    | true       | true       | true      // List<String>[] | List<Object>[]
-        8    | 11   | true       | true       | false     // List<Object>[] | List<String>[]
-        12   | 8    | true       | true       | true      // List<? extends String>[] | List<Object>[]
-        8    | 12   | true       | true       | false     // List<Object>[] | List<? extends String>[]
-        13   | 8    | true       | true       | true      // List<? super String>[] | List<Object>[]
-        8    | 13   | true       | true       | false     // List<Object>[] | List<? super String>[]
-        9    | 9    | true       | true       | true      // List<?>[] | List<?>[]
-        10   | 9    | true       | true       | true      // List<? super Object>[] | List<?>[]
-        9    | 10   | true       | true       | true      // List<?>[] | List<? super Object>[]
-        11   | 9    | true       | true       | true      // List<String>[] | List<?>[]
-        9    | 11   | true       | true       | false     // List<?>[] | List<String>[]
-        12   | 9    | true       | true       | true      // List<? extends String>[]
-        9    | 12   | true       | true       | false     // List<?>[] | List<? extends String>[]
-        13   | 9    | true       | true       | true      // List<? super String>[] | List<?>[]
-        9    | 13   | true       | true       | false     // List<?>[] | List<? super String>[]
-        10   | 10   | true       | true       | true      // List<? super Object>[] | List<? super Object>[]
-        11   | 10   | true       | true       | true      // List<String>[] | List<? super Object>[]
-        10   | 11   | true       | true       | false     // List<? super Object>[] | List<String>[]
-        12   | 10   | true       | true       | true      // List<? extends String>[] | List<? super Object>[]
-        10   | 12   | true       | true       | false     // List<? super Object>[] | List<? extends String>[]
-        13   | 10   | true       | true       | true      // List<? super String>[] | List<? super Object>[]
-        10   | 13   | true       | true       | false     // List<? super Object>[] | List<? super String>[]
-        11   | 11   | true       | true       | true      // List<String>[] | List<String>[]
-        12   | 11   | true       | true       | true      // List<? extends String>[] | List<String>[]
-        11   | 12   | true       | true       | true      // List<String>[] | List<? extends String>[]
-        13   | 11   | false      | true       | false     // List<? super String>[] | List<String>[]
-        11   | 13   | true       | true       | true      // List<String>[] | List<? super String>[]
-        12   | 12   | true       | true       | true      // List<? extends String>[] | List<? extends String>[]
-        13   | 12   | false      | true       | false     // List<? super String>[] | List<? extends String>[]
-        12   | 13   | true       | true       | true      // List<? extends String>[] | List<? super String>[]
-        13   | 13   | true       | true       | true      // List<? super String>[] | List<? super String>[]
+        pos1 | pos2 | assignable | compatible | moreSpecific | msOrEqual
+        0    | 0    | true       | true       | false      | true      // List | List
+        0    | 1    | true       | true       | false      | true      // List | List<Object>
+        1    | 0    | true       | true       | false      | true      // List<Object> | List
+        2    | 0    | true       | true       | false      | true      // List<?> | List
+        0    | 2    | true       | true       | false      | true      // List | List<?>
+        3    | 0    | true       | true       | false      | true      // List<? super Object> | List
+        0    | 3    | true       | true       | false      | true      // List | List<? super Object>
+        4    | 0    | true       | true       | true       | true      // List<String> | List
+        0    | 4    | true       | true       | false      | false      // List | List<String>
+        5    | 0    | true       | true       | true       | true      // List<? extends String> | List
+        0    | 5    | true       | true       | false      | false      // List| List<? extends String>
+        6    | 0    | true       | true       | true       | true      // List<? super String> | List
+        0    | 6    | true       | true       | false      | false      // List | List<? super String>
+        1    | 1    | true       | true       | false      | true      // List<Object> | List<Object>
+        2    | 1    | true       | true       | false      | true      // List<?> | List<Object>
+        1    | 2    | true       | true       | false      | true      // List<Object> | List<?>
+        3    | 1    | true       | true       | false      | true      // List<? super Object> | List<Object>
+        1    | 3    | true       | true       | false      | true      // List<Object> | List<? super Object>
+        4    | 1    | true       | true       | true       | true      // List<String> | List<Object>
+        1    | 4    | true       | true       | false      | false      // List<Object> | List<String>
+        5    | 1    | true       | true       | true       | true      // List<? extends String> | List<Object>
+        1    | 5    | true       | true       | false      | false      // List<Object> | List<? extends String>
+        6    | 1    | true       | true       | true       | true      // List<? super String> | List<Object>
+        1    | 6    | true       | true       | false      | false      // List<Object> | List<? super String>
+        2    | 2    | true       | true       | false      | true      // List<?> | List<?>
+        3    | 2    | true       | true       | false      | true      // List<? super Object> | List<?>
+        2    | 3    | true       | true       | false      | true      // List<?> | List<? super Object>
+        4    | 2    | true       | true       | true       | true      // List<String> | List<?>
+        2    | 4    | true       | true       | false      | false      // List<?> | List<String>
+        5    | 2    | true       | true       | true       | true      // List<? extends String> | List<?>
+        2    | 5    | true       | true       | false      | false      // List<?> | List<? extends String>
+        6    | 2    | true       | true       | true       | true      // List<? super String> | List<?>
+        2    | 6    | true       | true       | false      | false      // List<?> | List<? super String>
+        3    | 3    | true       | true       | false      | true      // List<? super Object> | List<? super Object>
+        4    | 3    | true       | true       | true       | true      // List<String> | List<? super Object>
+        3    | 4    | true       | true       | false      | false      // List<? super Object> | List<String>
+        5    | 3    | true       | true       | true       | true      // List<? extends String> | List<? super Object>
+        3    | 5    | true       | true       | false      | false      // List<? super Object> | List<? extends String>
+        3    | 6    | true       | true       | false      | false      // List<? super Object> | List<? super String>
+        4    | 4    | true       | true       | false      | true      // List<String> | List<String>
+        5    | 4    | true       | true       | false      | true      // List<? extends String> | List<String>
+        4    | 5    | true       | true       | false      | true      // List<String> | List<? extends String>
+        6    | 4    | false      | true       | false      | false      // List<? super String> | List<String>
+        4    | 6    | true       | true       | true       | true      // List<String> | List<? super String>
+        5    | 5    | true       | true       | false      | true      // List<? extends String> | List<? extends String>
+        6    | 5    | false      | true       | false     | false      // List<? super String> | List<? extends String>
+        5    | 6    | true       | true       | true      | true      // List<? extends String> | List<? super String>
+        6    | 6    | true       | true       | false     | true      // List<? super String> | List<? super String>
+        7    | 7    | true       | true       | false     | true      // List[] | List[]
+        8    | 7    | true       | true       | false     | true      // List<Object>[] | List[]
+        7    | 8    | true       | true       | false     | true      // List[] | List<Object>[]
+        9    | 7    | true       | true       | false     | true      // List<?>[] | List[]
+        7    | 9    | true       | true       | false     | true      // List[] | List<?>[]
+        10   | 7    | true       | true       | false     | true      // List<? super Object>[] | List[]
+        7    | 10   | true       | true       | false     | true      // List[] | List<? super Object>[]
+        11   | 7    | true       | true       | true      | true      // List<String>[] | List[]
+        7    | 11   | true       | true       | false     | false      // List[] | List<String>[]
+        12   | 7    | true       | true       | true      | true      // List<? extends String>[] | List[]
+        7    | 12   | true       | true       | false     | false      // List[] | List<? extends String>[]
+        13   | 7    | true       | true       | true      | true      // List<? super String>[] | List[]
+        7    | 13   | true       | true       | false     | false      // List[] | List<? super String>[]
+        8    | 8    | true       | true       | false     | true      // List<Object>[] | List<Object>[]
+        9    | 8    | true       | true       | false     | true      // List<?>[] | List<Object>[]
+        8    | 9    | true       | true       | false     | true      // List<Object>[] | List<?>[]
+        10   | 8    | true       | true       | false     | true      // List<? super Object>[] | List<Object>[]
+        8    | 10   | true       | true       | false     | true      // List<Object>[] | List<? super Object>[]
+        11   | 8    | true       | true       | true      | true      // List<String>[] | List<Object>[]
+        8    | 11   | true       | true       | false     | false      // List<Object>[] | List<String>[]
+        12   | 8    | true       | true       | true      | true      // List<? extends String>[] | List<Object>[]
+        8    | 12   | true       | true       | false     | false      // List<Object>[] | List<? extends String>[]
+        13   | 8    | true       | true       | true      | true      // List<? super String>[] | List<Object>[]
+        8    | 13   | true       | true       | false     | false      // List<Object>[] | List<? super String>[]
+        9    | 9    | true       | true       | false     | true      // List<?>[] | List<?>[]
+        10   | 9    | true       | true       | false     | true      // List<? super Object>[] | List<?>[]
+        9    | 10   | true       | true       | false     | true      // List<?>[] | List<? super Object>[]
+        11   | 9    | true       | true       | true      | true      // List<String>[] | List<?>[]
+        9    | 11   | true       | true       | false     | false      // List<?>[] | List<String>[]
+        12   | 9    | true       | true       | true      | true      // List<? extends String>[] | List<?>[]
+        9    | 12   | true       | true       | false     | false      // List<?>[] | List<? extends String>[]
+        13   | 9    | true       | true       | true      | true      // List<? super String>[] | List<?>[]
+        9    | 13   | true       | true       | false     | false      // List<?>[] | List<? super String>[]
+        10   | 10   | true       | true       | false     | true      // List<? super Object>[] | List<? super Object>[]
+        11   | 10   | true       | true       | true      | true      // List<String>[] | List<? super Object>[]
+        10   | 11   | true       | true       | false     | false      // List<? super Object>[] | List<String>[]
+        12   | 10   | true       | true       | true      | true      // List<? extends String>[] | List<? super Object>[]
+        10   | 12   | true       | true       | false     | false      // List<? super Object>[] | List<? extends String>[]
+        13   | 10   | true       | true       | true      | true      // List<? super String>[] | List<? super Object>[]
+        10   | 13   | true       | true       | false     | false      // List<? super Object>[] | List<? super String>[]
+        11   | 11   | true       | true       | false     | true      // List<String>[] | List<String>[]
+        12   | 11   | true       | true       | false     | true      // List<? extends String>[] | List<String>[]
+        11   | 12   | true       | true       | false     | true      // List<String>[] | List<? extends String>[]
+        13   | 11   | false      | true       | false     | false      // List<? super String>[] | List<String>[]
+        11   | 13   | true       | true       | true      | true      // List<String>[] | List<? super String>[]
+        12   | 12   | true       | true       | false     | true      // List<? extends String>[] | List<? extends String>[]
+        13   | 12   | false      | true       | false     | false      // List<? super String>[] | List<? extends String>[]
+        12   | 13   | true       | true       | true      | true      // List<? extends String>[] | List<? super String>[]
+        13   | 13   | true       | true       | false     | true      // List<? super String>[] | List<? super String>[]
     }
 
 
@@ -173,58 +174,62 @@ class CommonsLangsTests<B> extends Specification {
 //        println GenericsResolver.resolve(Thing)
 
         expect:
-        println("${prettyString(one)} | ${prettyString(two)} | ass: $assignable comp: $compatible spec: $moreSpecific")
+        println("${prettyString(one)} | ${prettyString(two)} | ass: $assignable comp: $compatible spec: $moreSpecific or equal: $msOrEqual")
         TypeUtils.isAssignable(one, two) == assignable
         TypeUtils.isCompatible(one, two) == compatible
         compatible ? TypeUtils.isMoreSpecific(one, two) == moreSpecific : true
+        // if was more specific then it MUST be not specific otherwise (simple integrity check)
+        compatible && moreSpecific ? !TypeUtils.isMoreSpecific(two, one) : true
+        compatible ? TypeUtils.isMoreSpecificOrEqual(one, two) == msOrEqual : true
 
         where:
-        one         | two         | assignable | compatible | moreSpecific
-        datType     | disType     | true       | true       | true      // That<String, String> | This<String, String>
-        daType      | disType     | false      | false      | false     // The<String, String> | This<String, String>
-        uhderType   | disType     | true       | true       | true      // Other<String> | This<String, String>
-        dingType    | disType     | true       | true       | false     // Thing | This<String, String>
-        disType     | dingType    | false      | true       | false      // This<String, String> | Thing
-        testerType  | disType     | true       | true       | true      // Tester | This<String, String>
-        tester2Type | disType     | true       | true       | false     // Tester | This<String, String>
-        disType     | tester2Type | false      | true       | false      // This<String, String> | Tester
-        dat2Type    | datType     | true       | true       | true      // That<String, String> | That<String, String>
-        datType     | dat2Type    | true       | true       | true      // That<String, String> | That<String, String>
+        one         | two         | assignable | compatible | moreSpecific | msOrEqual
+        datType     | disType     | true       | true       | true     | true    // CommonsLangChecks<B>.That<String, String> | CommonsLangChecks.This<String, String>
+        daType      | disType     | false      | false      | false    | false   // CommonsLangChecks<B>.The<String, String> | CommonsLangChecks.This<String, String>
+        uhderType   | disType     | true       | true       | true     | true   // CommonsLangChecks<B>.Other<String> | CommonsLangChecks.This<String, String>
+        dingType    | disType     | true       | true       | false    | false   // CommonsLangChecks.Thing | CommonsLangChecks.This<String, String>
+        disType     | dingType    | false      | true       | false    | false   // CommonsLangChecks.This<String, String> | CommonsLangChecks.Thing
+        testerType  | disType     | true       | true       | true     | true  // CommonsLangChecks<String>.Tester | CommonsLangChecks.This<String, String>
+        tester2Type | disType     | true       | true       | false    | false  // CommonsLangChecks<B>Tester | This<String, String>
+        disType     | tester2Type | false      | true       | false    | false  // CommonsLangChecks.This<String, String> | CommonsLangChecks<B>.Tester
+        dat2Type    | datType     | true       | true       | true      | true  // CommonsLangChecks<String>.That<String, String> | CommonsLangChecks<B>.That<String, String>
+        datType     | dat2Type    | true       | true       | false     | false  // CommonsLangChecks<B>.That<String, String> | CommonsLangChecks<String>.That<String, String>
     }
 
     def "Check assignable 3"() {
 
         // https://docs.oracle.com/javase/specs/jls/se7/html/jls-5.html#jls-5.1.2
         expect: "widening rules are not supported (because not available for reflection)"
-        println("${prettyString(one)} | ${prettyString(two)} | ass: $assignable comp: $compatible spec: $moreSpecific")
+        println("${prettyString(one)} | ${prettyString(two)} | ass: $assignable comp: $compatible spec: $moreSpecific or equal: $msOrEqual")
         TypeUtils.isAssignable(one, two) == assignable
         TypeUtils.isCompatible(one, two) == compatible
         compatible ? TypeUtils.isMoreSpecific(one, two) == moreSpecific : true
+        compatible ? TypeUtils.isMoreSpecificOrEqual(one, two) == msOrEqual : true
 
 
 
         where:
-        one             | two            | assignable | compatible | moreSpecific
-        char.class      | double.class   | false      | false      | false
-        byte.class      | double.class   | false      | false      | false
-        short.class     | double.class   | false      | false      | false
-        int.class       | double.class   | false      | false      | false
-        long.class      | double.class   | false      | false      | false
-        float.class     | double.class   | false      | false      | false
-        int.class       | long.class     | false      | false      | false
-        Integer         | long.class     | false      | false      | false
-        int.class       | Long           | false      | false      | false
-        Integer         | Long           | false      | false      | false
-        Integer.class   | int.class      | true       | true       | true
-        int.class       | Integer        | true       | true       | true
-        int.class       | Number         | true       | true       | true
-        int.class       | Object         | true       | true       | true
-        int.class       | Comparable     | true       | true       | true
-        int.class       | Serializable   | true       | true       | true
-        int[].class     | long[].class   | false      | false      | false
-        Integer[].class | int[].class    | false      | false      | false
-        int[].class     | Object[].class | false      | false      | false
-        Integer[].class | Object[].class | true       | true       | true
+        one             | two            | assignable | compatible | moreSpecific | msOrEqual
+        char.class      | double.class   | false      | false      | false    | false
+        byte.class      | double.class   | false      | false      | false    | false
+        short.class     | double.class   | false      | false      | false    | false
+        int.class       | double.class   | false      | false      | false    | false
+        long.class      | double.class   | false      | false      | false    | false
+        float.class     | double.class   | false      | false      | false    | false
+        int.class       | long.class     | false      | false      | false     | false
+        Integer         | long.class     | false      | false      | false      | false
+        int.class       | Long           | false      | false      | false      | false
+        Integer         | Long           | false      | false      | false       | false
+        Integer.class   | int.class      | true       | true       | false      | true
+        int.class       | Integer        | true       | true       | false       | true
+        int.class       | Number         | true       | true       | true       | true
+        int.class       | Object         | true       | true       | true       | true
+        int.class       | Comparable     | true       | true       | true       | true
+        int.class       | Serializable   | true       | true       | true       | true
+        int[].class     | long[].class   | false      | false      | false    | false
+        Integer[].class | int[].class    | false      | false      | false    | false
+        int[].class     | Object[].class | false      | false      | false    | false
+        Integer[].class | Object[].class | true       | true       | true      | true
     }
 
     def "Check assignable 4"() {

@@ -67,22 +67,37 @@ public final class TypeUtils {
      *
      * @param what        type to check
      * @param comparingTo type to compare to
-     * @return true when provided type is more specific than other type. false otherwise
+     * @return true when provided type is more specific than other type,
+     * false otherwise (including when types are equal)
      * @throws IllegalArgumentException when types are not compatible
      * @see ComparatorTypesVisitor for implementation details
      * @see #isCompatible(Type, Type) use for compatibility check (before) to avoid incompatible types exception
+     * @see #isMoreSpecificOrEqual(Type, Type) for broader check
      */
     public static boolean isMoreSpecific(final Type what, final Type comparingTo) {
-        final ComparatorTypesVisitor visitor = new ComparatorTypesVisitor();
-        TypesWalker.walk(what, comparingTo, visitor);
-
-        if (!visitor.isCompatible()) {
-            throw new IllegalArgumentException(String.format(
-                    "Type %s can't be compared to %s because they are not compatible",
-                    TypeToStringUtils.toStringTypeIgnoringVariables(what),
-                    TypeToStringUtils.toStringTypeIgnoringVariables(comparingTo)));
+        if (what.equals(comparingTo)) {
+            // assume correct type implementation (for faster check)
+            return false;
         }
-        return visitor.isMoreSpecific();
+        return doMoreSpecificWalk(what, comparingTo).isMoreSpecific();
+    }
+
+    /**
+     * Shortcut for {@link #isMoreSpecific(Type, Type)} for cases when equality is also acceptable (quite often
+     * required case).
+     *
+     * @param what        type to check
+     * @param comparingTo type to compare to
+     * @return true when provided type is more specific than other type or equal, false otherwise
+     * @throws IllegalArgumentException when types are not compatible
+     */
+    public static boolean isMoreSpecificOrEqual(final Type what, final Type comparingTo) {
+        if (what.equals(comparingTo)) {
+            // assume correct type implementation (for faster check)
+            return true;
+        }
+        final ComparatorTypesVisitor visitor = doMoreSpecificWalk(what, comparingTo);
+        return visitor.isMoreSpecific() || visitor.isEqual();
     }
 
     /**
@@ -111,6 +126,10 @@ public final class TypeUtils {
      * @see AssignabilityTypesVisitor for implementation details
      */
     public static boolean isAssignable(final Type what, final Type toType) {
+        if (what.equals(toType)) {
+            // assume correct type implementation (for faster check)
+            return true;
+        }
         final AssignabilityTypesVisitor visitor = new AssignabilityTypesVisitor();
         TypesWalker.walk(what, toType, visitor);
 
@@ -180,10 +199,11 @@ public final class TypeUtils {
      * @param one first type
      * @param two second type
      * @return more specific type or first type if they are equal
+     * @throws IllegalArgumentException when types are not compatible
      * @see #isMoreSpecific(Type, Type)
      */
     public static Type getMoreSpecificType(final Type one, final Type two) {
-        return isMoreSpecific(one, two) ? one : two;
+        return isMoreSpecificOrEqual(one, two) ? one : two;
     }
 
 
@@ -334,5 +354,18 @@ public final class TypeUtils {
      */
     public static Type getInstanceType(final Object... instances) {
         return InstanceTypeFactory.build(instances);
+    }
+
+    private static ComparatorTypesVisitor doMoreSpecificWalk(final Type what, final Type comparingTo) {
+        final ComparatorTypesVisitor visitor = new ComparatorTypesVisitor();
+        TypesWalker.walk(what, comparingTo, visitor);
+
+        if (!visitor.isCompatible()) {
+            throw new IllegalArgumentException(String.format(
+                    "Type %s can't be compared to %s because they are not compatible",
+                    TypeToStringUtils.toStringTypeIgnoringVariables(what),
+                    TypeToStringUtils.toStringTypeIgnoringVariables(comparingTo)));
+        }
+        return visitor;
     }
 }

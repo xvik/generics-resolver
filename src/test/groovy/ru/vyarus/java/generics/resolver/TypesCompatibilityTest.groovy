@@ -76,7 +76,7 @@ class TypesCompatibilityTest extends Specification {
         param(ArrayList, Object)  | param(ArrayList, String)  | false
         new Base1[0].class        | new Root[0].class         | false
         new Root[0].class         | new Base1[0].class        | true
-        lower(String)             | lower(String)             | true
+        lower(String)             | lower(String)             | false
         lower(Number)             | lower(Integer)            | true
         lower(String)             | String                    | false
         String                    | lower(String)             | true
