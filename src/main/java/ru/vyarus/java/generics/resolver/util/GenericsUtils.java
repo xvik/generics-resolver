@@ -656,10 +656,16 @@ public final class GenericsUtils {
 
         final boolean emptyContainerForClass = type.getActualTypeArguments().length == 0
                 && type.getOwnerType() == null;
+        final Type owner = type.getOwnerType() != null
+                ? resolveTypeVariables(type.getOwnerType(),
+                    // some outer class generics could be hidden by inner class generics (same name)
+                    // so need IgnoreGenericsMap to use Object instead (besides these hidden generics
+                    // does not influence for sure inner type)
+                    new IgnoreGenericsMap(extractOwnerGenerics((Class) type.getRawType(), generics)))
+                : null;
         return emptyContainerForClass ? type.getRawType()
                 : new ParameterizedTypeImpl(type.getRawType(),
-                resolveTypeVariables(type.getActualTypeArguments(), generics, countPreservedVariables),
-                type.getOwnerType());
+                resolveTypeVariables(type.getActualTypeArguments(), generics, countPreservedVariables), owner);
     }
 
     /**
