@@ -86,7 +86,7 @@ public class AssignabilityTypesVisitor implements TypesVisitor {
             res = false;
         } else {
             // left type's bound must be lower: not a mistake! left (super inversion)!
-            res = TypeUtils.isMoreSpecific(
+            res = TypeUtils.isAssignable(
                     ((WildcardType) two).getLowerBounds()[0],
                     ((WildcardType) one).getLowerBounds()[0]);
         }
