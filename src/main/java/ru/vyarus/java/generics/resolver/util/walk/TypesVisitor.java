@@ -7,6 +7,10 @@ import java.lang.reflect.Type;
  * Types hierarchy is assumed to be compatible. Use cases: types compatibility or deep comparision.
  * <p>
  * Primitive types will never appear in visitor: wrapper types are used instead for simplicity (e.g. Integer for int).
+ * <p>
+ * If one or two types are inner types (inner non static, non interface classes) then first outer classes will be
+ * compared. This may lead to immediate {@link #incompatibleHierarchy(Type, Type)} call with one type and one null
+ * (if only one of types is inner type).
  *
  * @author Vyacheslav Rusakov
  * @see CompatibilityTypesVisitor
@@ -29,6 +33,13 @@ public interface TypesVisitor {
      * <p>
      * If one of the types is {@code Object} then it will be the last step (no hierarchy incompatibility will be
      * called as object is compatible with everything - we just can't go further because of not enough information).
+     * <p>
+     * If types are inner types (inner non static classes), then first outer class hierarchy will be checked. E.g.
+     * for types {@code Outer<S>.Inner<C, D>} and {@code Outer<T>.Inner<C, D>} first called
+     * {@code next(Outer, Outer)}, then {@code next(S, T)} (if types compatible) or incompatible hierarchy. And only
+     * after outer hierarchy check, actual {@code Inner} types would be compared.
+     * <p>
+     * Only one level of outer class is supported.
      *
      * @param one current class in first hierarchy
      * @param two class from second hierarchy, but from the same place (in type tree)
@@ -43,6 +54,8 @@ public interface TypesVisitor {
      * <li>Types are not compatible (this means hierarchies doesn't match, even if classes doesn't use
      * generics and so will not be analyzed further)</li>
      * </ul>
+     * <p>
+     * WARNING: one of two parameters may be null if one root type is outer type and another is not!
      *
      * @param one current type from hierarchy one (not root type)
      * @param two current type from hierarchy two

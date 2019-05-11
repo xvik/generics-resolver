@@ -70,8 +70,48 @@ public final class TypesWalker {
         // Still have to pass map because of possibly declared outer class generics. Note that for all
         // types operations ignoring map could be used as we already replaced all variables. These generics
         // are required only for type context building (on some level to resolve comparable type)
-        doWalk(GenericsUtils.resolveTypeVariables(one, oneKnownGenerics), oneKnownGenerics,
+        doWalkOuterClass(GenericsUtils.resolveTypeVariables(one, oneKnownGenerics), oneKnownGenerics,
                 GenericsUtils.resolveTypeVariables(two, twoKnownGenerics), twoKnownGenerics, visitor);
+    }
+
+    /**
+     * It is important to check outer classes, because their generics affect types compatibility.
+     * E.g. {@code Outer<String>.Inner<C, D>} is not equal to {@code Outer<Integer>.Inner<C, D>}.
+     *
+     * @param one              first type
+     * @param oneKnownGenerics first type generics
+     * @param two              second type
+     * @param twoKnownGenerics second type generics
+     * @param visitor          visitor
+     */
+    private static void doWalkOuterClass(final Type one, final Map<String, Type> oneKnownGenerics,
+                                         final Type two, final Map<String, Type> twoKnownGenerics,
+                                         final TypesVisitor visitor) {
+        // note: if one or two is self-constructed parameterized type, it may not contain outer (not correct container)
+        final Type outerOne = TypeUtils.getOuter(one);
+        final Type outerTwo = TypeUtils.getOuter(two);
+        if ((outerOne == null || outerTwo == null) && (outerOne != null || outerTwo != null)) {
+            // it does not make sense to go further as one type is inner and another is not
+            visitor.incompatibleHierarchy(outerOne, outerTwo);
+        }
+
+        boolean walk = true;
+        if (outerOne != null) {
+            // walk through outer class hierarchy first
+            // note that only "visible" generics from inner class are counted
+            walk = doWalk(outerOne,
+                    new IgnoreGenericsMap(
+                            GenericsUtils.extractOwnerGenerics(GenericsUtils.resolveClass(one), oneKnownGenerics)),
+                    outerTwo,
+                    new IgnoreGenericsMap(
+                            GenericsUtils.extractOwnerGenerics(GenericsUtils.resolveClass(two), twoKnownGenerics)),
+                    visitor);
+        }
+
+        // continue walking on inner type
+        if (walk) {
+            doWalk(one, oneKnownGenerics, two, twoKnownGenerics, visitor);
+        }
     }
 
     private static boolean doWalk(final Type one, final Map<String, Type> oneKnownGenerics,
@@ -137,7 +177,16 @@ public final class TypesWalker {
         for (Map.Entry<String, Type> entry : GenericsUtils
                 .extractTypeGenerics(oneLower ? oneType : twoType, oneGenerics).entrySet()) {
             final String generic = entry.getKey();
-            if (!doWalk(entry.getValue(), oneKnownGenerics, twoGenerics.get(generic), twoKnownGenerics, visitor)) {
+            final Type oneParam = entry.getValue();
+            final Type twoParam = twoGenerics.get(generic);
+            // direct cycle case Something<T extends Something<T>> (without explicit detection will go to cycle)
+            if ((GenericsUtils.resolveClass(oneParam) == lowerClass)
+                    || GenericsUtils.resolveClass(twoParam) == lowerClass) {
+                // here we compared resolved generic value with lower of original classes (because lower class will
+                // be the source for both generics)
+                continue;
+            }
+            if (!doWalk(oneParam, oneKnownGenerics, twoParam, twoKnownGenerics, visitor)) {
                 return false;
             }
         }
