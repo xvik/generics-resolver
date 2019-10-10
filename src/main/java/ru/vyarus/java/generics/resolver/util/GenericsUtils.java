@@ -429,6 +429,54 @@ public final class GenericsUtils {
     }
 
     /**
+     * Order variables for consequent variables resolution (to support reverse order declaration cases).
+     * E.g. {@code T extends List<K>, K, P extends Collection<T>} must be resolved as 2, 1, 3 or
+     * {@code T extends List<D>, D extends Collection<P>, P} must be resolved as 3, 2, 1 or
+     * {@code T extends List<D>, P, D extends Collection<P>} must be resolved as 2, 3, 1
+     * (otherwise resolution will fail due to unknown generic).
+     * <p>
+     * Note: incomplete set of variables could be provided: method order only provided vars, ignoring all
+     * other variables (assuming they are known). This allows using this method inside error handler
+     * (in order to process only not recognized vars).
+     *
+     * @param variables variables to order
+     * @return variables ordered for correct types resolution
+     */
+    public static List<TypeVariable> orderVariablesForResolution(final List<TypeVariable> variables) {
+        final List<TypeVariable> vars = new ArrayList<TypeVariable>(variables);
+        final List<String> countableNames = new ArrayList<String>();
+        for (TypeVariable var : variables) {
+            countableNames.add(var.getName());
+        }
+        final List<String> known = new ArrayList<String>();
+        final List<TypeVariable> res = new ArrayList<TypeVariable>();
+        // cycle will definitely end because java compiler does not allow to specify generic cycles
+        while (!vars.isEmpty()) {
+            final Iterator<TypeVariable> it = vars.iterator();
+            while (it.hasNext()) {
+                final TypeVariable var = it.next();
+                boolean reject = false;
+                for (Type bound : var.getBounds()) {
+                    // can't be empty as otherwise variables would not be here
+                    final List<TypeVariable> unknowns = GenericsUtils.findVariables(bound);
+                    for (TypeVariable unknown : unknowns) {
+                        if (countableNames.contains(unknown.getName()) && !known.contains(unknown.getName())) {
+                            reject = true;
+                            break;
+                        }
+                    }
+                }
+                if (!reject) {
+                    res.add(var);
+                    known.add(var.getName());
+                    it.remove();
+                }
+            }
+        }
+        return res;
+    }
+
+    /**
      * Searches for generic variable declarations in type. May be used for scope checks.
      * For example, in {@code List<T>} it will find "T", in {@code Some<Long, T, List<K>} "T" and "K".
      *

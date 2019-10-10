@@ -3,6 +3,7 @@ package ru.vyarus.java.generics.resolver.util;
 import ru.vyarus.java.generics.resolver.context.container.WildcardTypeImpl;
 import ru.vyarus.java.generics.resolver.error.GenericsResolutionException;
 import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
+import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
@@ -140,8 +141,30 @@ public final class GenericsResolutionUtils {
             return EmptyGenericsMap.getInstance();
         }
         final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final List<TypeVariable> failed = new ArrayList<TypeVariable>();
+        // variables in declaration could be dependant and in any direction (e.g. <A extends List<B>, B>)
+        // so assuming correct order at first, but if we face any error - order vars and resolve correctly
+        // (it's better to avoid ordering by default as its required quite rarely)
         for (TypeVariable variable : declaredGenerics) {
-            res.put(variable.getName(), resolveRawGeneric(variable, res));
+            try {
+                res.put(variable.getName(), resolveRawGeneric(variable, res));
+            } catch (UnknownGenericException ex) {
+                // direct cycle case Something<T extends Something<T>>
+                // (failed generic is exactly resolving generic)
+                if (ex.getGenericName().equals(variable.getName()) && ex.getGenericSource().equals(type)) {
+                    res.put(variable.getName(), GenericsUtils.resolveClass(variable.getBounds()[0], res));
+                } else {
+                    // preserve order without resolution
+                    res.put(variable.getName(), null);
+                    failed.add(variable);
+                }
+            }
+        }
+        if (!failed.isEmpty()) {
+            for (TypeVariable variable : GenericsUtils.orderVariablesForResolution(failed)) {
+                // replacing nulls in map
+                res.put(variable.getName(), resolveRawGeneric(variable, res));
+            }
         }
         return res;
     }
