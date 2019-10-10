@@ -16,7 +16,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 17.10.2014
  */
-@SuppressWarnings("PMD.GodClass")
+@SuppressWarnings({"PMD.GodClass", "PMD.CyclomaticComplexity"})
 public final class GenericsUtils {
 
     private static final Type[] NO_TYPES = new Type[0];

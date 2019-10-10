@@ -1,4 +1,6 @@
-- Fix cycled declarations detection (Something<T extends Something<T>) 
+- Fix cycled declarations detection (Something<T extends Something<T>)
+- Partial (#3) fix: support inconsistent generics declaration on class
+- Fix method generics resolution as types instead of classes (#4) 
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support

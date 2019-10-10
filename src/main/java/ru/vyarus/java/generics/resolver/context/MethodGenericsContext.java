@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.context;
 
+import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
@@ -289,17 +290,16 @@ public class MethodGenericsContext extends GenericsContext {
         final TypeVariable<Method>[] methodGenerics = meth.getTypeParameters();
         final boolean hasMethodGenerics = methodGenerics.length > 0;
         this.methodGenerics = hasMethodGenerics
-                ? new LinkedHashMap<String, Type>() : Collections.<String, Type>emptyMap();
+                ? GenericsResolutionUtils.resolveDirectRawGenerics(meth, allTypeGenerics)
+                : Collections.<String, Type>emptyMap();
         // important to fill it in time of resolution because method generics could be dependant
-        this.allGenerics = hasMethodGenerics
-                ? new LinkedHashMap<String, Type>(allTypeGenerics) : allTypeGenerics;
-        for (TypeVariable<Method> generic : methodGenerics) {
-            final Class<?> value = resolveClass(generic.getBounds()[0]);
-            this.methodGenerics.put(generic.getName(), value);
-            this.allGenerics.put(generic.getName(), value);
-
+        if (hasMethodGenerics) {
             // method generics may override class or owner class generics, but
             // genericsMap() and ownerGenericsMap() should return the same in all cases for consistency
+            this.allGenerics = new LinkedHashMap<String, Type>(allTypeGenerics);
+            this.allGenerics.putAll(this.methodGenerics);
+        } else {
+            this.allGenerics = allTypeGenerics;
         }
     }
 

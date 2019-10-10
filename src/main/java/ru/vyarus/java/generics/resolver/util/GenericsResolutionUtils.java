@@ -7,10 +7,7 @@ import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -136,38 +133,23 @@ public final class GenericsResolutionUtils {
      * @see #resolveRawGenerics(Class) to include outer type generics
      */
     public static LinkedHashMap<String, Type> resolveDirectRawGenerics(final Class<?> type) {
-        final TypeVariable[] declaredGenerics = type.getTypeParameters();
-        if (declaredGenerics.length == 0) {
-            return EmptyGenericsMap.getInstance();
-        }
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
-        final List<TypeVariable> failed = new ArrayList<TypeVariable>();
-        // variables in declaration could be dependant and in any direction (e.g. <A extends List<B>, B>)
-        // so assuming correct order at first, but if we face any error - order vars and resolve correctly
-        // (it's better to avoid ordering by default as its required quite rarely)
-        for (TypeVariable variable : declaredGenerics) {
-            try {
-                res.put(variable.getName(), resolveRawGeneric(variable, res));
-            } catch (UnknownGenericException ex) {
-                // direct cycle case Something<T extends Something<T>>
-                // (failed generic is exactly resolving generic)
-                if (ex.getGenericName().equals(variable.getName()) && ex.getGenericSource().equals(type)) {
-                    res.put(variable.getName(), GenericsUtils.resolveClass(variable.getBounds()[0], res));
-                } else {
-                    // preserve order without resolution
-                    res.put(variable.getName(), null);
-                    failed.add(variable);
-                }
-            }
-        }
-        if (!failed.isEmpty()) {
-            for (TypeVariable variable : GenericsUtils.orderVariablesForResolution(failed)) {
-                // replacing nulls in map
-                res.put(variable.getName(), resolveRawGeneric(variable, res));
-            }
-        }
-        return res;
+        return resolveRawGenericsChain(type.getTypeParameters(), null);
     }
+
+    /**
+     * Resolve method generics by declaration (as upper bound). Generics are resolved as upper bound (because it is
+     * all available type information). For example, {@code public <T extends Serializable> do(T param)}
+     * contains generic T which must be resolved as Serializable.
+     *
+     * @param method   method to analyze generics for
+     * @param generics context class generics (which could be used in method generics declarations)
+     * @return resolved generics or empty map if method does not contain generics
+     */
+    public static LinkedHashMap<String, Type> resolveDirectRawGenerics(final Method method,
+                                                                       final Map<String, Type> generics) {
+        return resolveRawGenericsChain(method.getTypeParameters(), generics);
+    }
+
 
     /**
      * Extracts declared upper bound from generic declaration. For example, {@code Base<T>} will be resolved
@@ -277,6 +259,58 @@ public final class GenericsResolutionUtils {
             } else {
                 generics.putAll(outerGenerics);
                 res = generics;
+            }
+        }
+        return res;
+    }
+
+    /**
+     * Generic method for direct generics declaration analysis for class, method or constructor.
+     * Generic declarations may depend on each other ({@code <T, K extends Collection<T>>}, cycle
+     * ({@code <T extends Comparable<T>}) and depend on some other generics (hosting class generics).
+     *
+     * @param declaredGenerics declaration chain (chain is important because declarations may be dependent)
+     * @param generics         known context generics or null
+     * @return resolved generics or empty map if empty generic declarations provided
+     */
+    private static LinkedHashMap<String, Type> resolveRawGenericsChain(final TypeVariable[] declaredGenerics,
+                                                                       final Map<String, Type> generics) {
+        if (declaredGenerics.length == 0) {
+            return EmptyGenericsMap.getInstance();
+        }
+        final LinkedHashMap<String, Type> contextGenerics = generics == null ? new LinkedHashMap<String, Type>()
+                : new LinkedHashMap<String, Type>(generics);
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final List<TypeVariable> failed = new ArrayList<TypeVariable>();
+        // variables in declaration could be dependant and in any direction (e.g. <A extends List<B>, B>)
+        // so assuming correct order at first, but if we face any error - order vars and resolve correctly
+        // (it's better to avoid ordering by default as its required quite rarely)
+        for (TypeVariable variable : declaredGenerics) {
+            Type resolved = null;
+            try {
+                resolved = resolveRawGeneric(variable, contextGenerics);
+            } catch (UnknownGenericException ex) {
+                // direct cycle case Something<T extends Something<T>>
+                // (failed generic is exactly resolving generic)
+                if (ex.getGenericName().equals(variable.getName())
+                        && ex.getGenericSource().equals(variable.getGenericDeclaration())) {
+                    resolved = GenericsUtils.resolveClass(variable.getBounds()[0], contextGenerics);
+                } else {
+                    // variable will be stored with null to preserve order (without resolution) and resolved later
+                    // (inversed declaration order case)
+                    failed.add(variable);
+                }
+            }
+            // storing null is OK! - just holding correct generic place
+            res.put(variable.getName(), resolved);
+            contextGenerics.put(variable.getName(), resolved);
+        }
+        if (!failed.isEmpty()) {
+            for (TypeVariable variable : GenericsUtils.orderVariablesForResolution(failed)) {
+                // replacing nulls in map
+                final Type result = resolveRawGeneric(variable, contextGenerics);
+                res.put(variable.getName(), result);
+                contextGenerics.put(variable.getName(), result);
             }
         }
         return res;
