@@ -150,6 +150,20 @@ public final class GenericsResolutionUtils {
         return resolveRawGenericsChain(method.getTypeParameters(), generics);
     }
 
+    /**
+     * Resolve constructor generics by declaration (as upper bound). Generics are resolved as upper bound (because it is
+     * all available type information). For example, {@code public <T extends Serializable> MyType(T param)}
+     * contains generic T which must be resolved as Serializable.
+     *
+     * @param constructor constructor to analyze generics for
+     * @param generics    context class generics (which could be used in constructor generics declarations)
+     * @return resolved generics or empty map if constructor does not contain generics
+     */
+    public static LinkedHashMap<String, Type> resolveDirectRawGenerics(final Constructor constructor,
+                                                                       final Map<String, Type> generics) {
+        return resolveRawGenericsChain(constructor.getTypeParameters(), generics);
+    }
+
 
     /**
      * Extracts declared upper bound from generic declaration. For example, {@code Base<T>} will be resolved

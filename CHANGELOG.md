@@ -1,6 +1,8 @@
 - Fix cycled declarations detection (Something<T extends Something<T>)
+- Add GenericUtils.orderVariablesForResolution method for ordering type variable declarations
 - Partial (#3) fix: support inconsistent generics declaration on class
-- Fix method generics resolution as types instead of classes (#4) 
+- Fix method generics resolution as types instead of classes (#4)
+- Fix constructor generics resolution as types instead of classes 
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support
