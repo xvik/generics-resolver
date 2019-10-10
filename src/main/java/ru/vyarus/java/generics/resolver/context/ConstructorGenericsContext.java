@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.context;
 
+import ru.vyarus.java.generics.resolver.util.GenericsResolutionUtils;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
@@ -202,17 +203,16 @@ public class ConstructorGenericsContext extends GenericsContext {
         final TypeVariable<Constructor>[] constrGenerics = ctor.getTypeParameters();
         final boolean hasConstrGenerics = constrGenerics.length > 0;
         this.constructorGenerics = hasConstrGenerics
-                ? new LinkedHashMap<String, Type>() : Collections.<String, Type>emptyMap();
+                ? GenericsResolutionUtils.resolveDirectRawGenerics(ctor, allTypeGenerics)
+                : Collections.<String, Type>emptyMap();
         // important to fill it in time of resolution because constructor generics could be dependant
-        this.allGenerics = hasConstrGenerics
-                ? new LinkedHashMap<String, Type>(allTypeGenerics) : allTypeGenerics;
-        for (TypeVariable<Constructor> generic : constrGenerics) {
-            final Class<?> value = resolveClass(generic.getBounds()[0]);
-            this.constructorGenerics.put(generic.getName(), value);
-            this.allGenerics.put(generic.getName(), value);
-
-            // constructor generics may override class or owner class generics, but
+        if (hasConstrGenerics) {
+            // method generics may override class or owner class generics, but
             // genericsMap() and ownerGenericsMap() should return the same in all cases for consistency
+            this.allGenerics = new LinkedHashMap<String, Type>(allTypeGenerics);
+            this.allGenerics.putAll(this.constructorGenerics);
+        } else {
+            this.allGenerics = allTypeGenerics;
         }
     }
 
