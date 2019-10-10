@@ -85,7 +85,7 @@ test {
 
 dependencyUpdates.revision = 'release'
 jacocoTestReport.reports.xml.enabled = true
-release.requireBranch = '3.0.1'
+release.git.requireBranch = '3.0.x'
 
 task showDependenciesTree(dependsOn: 'htmlDependencyReport', group: 'help', description:
         'Generates dependencies tree report and opens it in browser') {
