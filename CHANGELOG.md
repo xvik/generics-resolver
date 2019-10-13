@@ -52,6 +52,13 @@ could be used anywhere (it's just convenient way to preserve all potential type 
 NOTE: It is recommended to use TypeToStringUtils.toStringType(Type) instead of Class.getSimpleName()
 because toStringType version will be much more informative for inner and anonymous classes. 
 
+### 3.0.1 (2019-10-10)
+- Fix cycled declarations detection (`T extends Something<T>`)
+- Add `GenericUtils.orderVariablesForResolution` method for ordering type variable declarations
+- Partial (#3) fix: support reversed generics declaration order on class
+- Fix method generics resolution as types instead of classes (#4)
+- Fix constructor generics resolution as types instead of classes 
+
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support
 * Add inlying contexts support: generics context building for type "inside" of known hierarchy (field, method parameter etc): 
