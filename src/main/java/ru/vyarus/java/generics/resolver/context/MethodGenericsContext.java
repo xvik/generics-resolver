@@ -121,6 +121,10 @@ public class MethodGenericsContext extends GenericsContext {
      * }}</pre>
      * Resolving parameters types in context of root class:
      * {@code method(B.class.getMethod("doSmth", List.class)).resolveParametersTypes() == [List<Long>]}
+     * <p>
+     * Note: may return primitives because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitives,
+     * if required.
      *
      * @return resolved method parameters types or empty list if method doesn't contain parameters
      * @see #resolveParameters()
@@ -130,6 +134,10 @@ public class MethodGenericsContext extends GenericsContext {
     }
 
     /**
+     * Note: may return primitives because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitives,
+     * if required.
+     *
      * @param pos parameter position (form 0)
      * @return parameter type with resolved generic variables
      * @throws IllegalArgumentException if parameter index is incorrect
@@ -151,6 +159,11 @@ public class MethodGenericsContext extends GenericsContext {
      * <p>
      * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
      * would be counted for hierarchy resolution.
+     * <p>
+     * For primitive parameters wrapper class would be used (for example. if target parameter is
+     * {@code int} then returned context type would be {@link Integer}). It is not hard to detect primitives
+     * manually when required (it may be only directly declared primitive argument because it is impossible to
+     * declare primitive with generic variable).
      *
      * @param pos parameter position (from 0)
      * @return generics context of parameter type
@@ -168,6 +181,11 @@ public class MethodGenericsContext extends GenericsContext {
      * target type hierarchy). This is useful when analyzing object instance (introspecting actual object).
      * <p>
      * Other than target type, method is the same as {@link #parameterType(int)}.
+     * <p>
+     * For primitive parameters wrapper class would be used (for example. if target parameter is
+     * {@code int} then returned context type would be {@link Integer}). It is not hard to detect primitives
+     * manually when required (it may be only directly declared primitive argument because it is impossible to
+     * declare primitive with generic variable).
      *
      * @param pos    parameter position (from 0)
      * @param asType required target type to build generics context for (must include declared type as base class)
@@ -212,6 +230,10 @@ public class MethodGenericsContext extends GenericsContext {
      *      List<T> get();
      * }}</pre>.
      * {@code (context of B).method(A.class.getMethod("get")).resolveReturnType() == List<Long>}
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
      *
      * @return method return type with resolved generic variables
      */
@@ -230,6 +252,11 @@ public class MethodGenericsContext extends GenericsContext {
      * <p>
      * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
      * would be counted for hierarchy resolution.
+     * <p>
+     * For primitive return type wrapper class would be used (for example. if target parameter is
+     * {@code int} then returned context type would be {@link Integer}). It is not hard to detect primitives
+     * manually when required (it may be only directly declared primitive argument because it is impossible to
+     * declare primitive with generic variable).
      *
      * @return generics context of return type
      * @see #inlyingType(Type)
@@ -244,6 +271,11 @@ public class MethodGenericsContext extends GenericsContext {
      * type hierarchy). This is useful when analyzing object instance (introspecting actual object).
      * <p>
      * Other than target type, method is the same as {@link #returnType()}.
+     * <p>
+     * For primitive return type wrapper class would be used (for example. if target parameter is
+     * {@code int} then returned context type would be {@link Integer}). It is not hard to detect primitives
+     * manually when required (it may be only directly declared primitive argument because it is impossible to
+     * declare primitive with generic variable).
      *
      * @param asType required target type to build generics context for (must include declared type as base class)
      * @return generics context of requested type with known return type generics
@@ -307,7 +339,7 @@ public class MethodGenericsContext extends GenericsContext {
         final Type[] genericParams = meth.getGenericParameterTypes();
         if (pos < 0 || pos >= genericParams.length) {
             throw new IllegalArgumentException(String.format(
-                    "Can't request parameter %s of method '%s' (%s) because it have only %s parameters",
+                    "Can't request parameter %s of method '%s' (%s) because it has only %s parameters",
                     pos, toStringMethod(), TypeToStringUtils.toStringType(currentClass()), genericParams.length));
         }
     }

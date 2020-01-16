@@ -48,7 +48,7 @@ class InlyingGenericsResolutionTest extends Specification {
         context.method(DeclarationType.getMethod("param", SubType.class)).parameterType(2)
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message == "Can't request parameter 2 of method 'void param(SubType<Double>)' (DeclarationType) because it have only 1 parameters"
+        ex.message == "Can't request parameter 2 of method 'void param(SubType<Double>)' (DeclarationType) because it has only 1 parameters"
 
         when: "wrong field"
         context.fieldType(Err.getDeclaredField("wrongField"))
