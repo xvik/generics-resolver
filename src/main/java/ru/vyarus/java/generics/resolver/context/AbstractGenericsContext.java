@@ -42,7 +42,7 @@ import java.util.*;
  * declared directly (e.g. field declaration: {@code Outer<String>.Inner field}) and, in this case, direct
  * declaration is used in priority.
  * <p>
- * It is impossible to to perform incorrect generics resolution through context api: it will either change context
+ * It is impossible to perform incorrect generics resolution through context api: it will either change context
  * automatically or fail with error (with detailed incompatibility explanation).
  *
  * @author Vyacheslav Rusakov
@@ -58,6 +58,10 @@ public abstract class AbstractGenericsContext {
     protected final Map<String, Type> typeGenerics;
 
     public AbstractGenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
+        if (type.isPrimitive()) {
+            throw new IllegalArgumentException(String.format(
+                    "Primitive type %s can't be used for generics context building", type.getSimpleName()));
+        }
         this.genericsInfo = genericsInfo;
         this.currentType = type;
         // fail on wrong type
@@ -306,6 +310,8 @@ public abstract class AbstractGenericsContext {
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
+     * <p>
+     * For primitive type empty list will be returned.
      *
      * @param type type to resolve generics
      * @return resolved generic classes or empty list if type does not use generics
@@ -339,6 +345,8 @@ public abstract class AbstractGenericsContext {
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
+     * <p>
+     * For primitive type null will be returned.
      *
      * @param type type to resolve generic
      * @return first resolved generic or null if type does not use generics
@@ -354,6 +362,8 @@ public abstract class AbstractGenericsContext {
      * Use for more informative error message on incorrect usage.
      * <p>
      * Automatically choose correct context or fail if field does not belong to current hierarchy.
+     * <p>
+     * For primitive field null will be returned.
      *
      * @param field field to resolve generic for
      * @return resolved field generic or null if field does not declare generics
@@ -369,6 +379,8 @@ public abstract class AbstractGenericsContext {
      * (if T == String).
      * <p>
      * Automatically choose correct context or fail if field does not belong to current hierarchy.
+     * <p>
+     * If provided type is primitive then it will be returned as is.
      *
      * @param field field to resolve generics for
      * @return field type with resolved generic variables
@@ -390,6 +402,8 @@ public abstract class AbstractGenericsContext {
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
+     * <p>
+     * If provided type is primitive then it will be returned as is.
      *
      * @param type type to resolve named generics in
      * @return type without named generics (replaced by known actual types)
@@ -404,13 +418,15 @@ public abstract class AbstractGenericsContext {
      * {@code ParameterizedType Map<String, List<T>>} would become
      * {@code [Class String, ParameterizedType List<String>]} (assumed generic T is defined as String).
      * <p>
-     * Note: if type is Class then return raw generics definition (for consistency).
+     * Note: if type is {@code Class} then return raw generics definition (for consistency).
      * <p>
      * Useful when complete generic types are required.
      * <p>
      * Check if type containing generics, belonging to different context in current hierarchy and
      * automatically change context to properly resolve generics. Fails when it is impossible to correctly
      * resolve generics (preventing incorrect usage).
+     * <p>
+     * For primitive type empty list would be returned.
      *
      * @param type type to return resolved generics of
      * @return type generics without variables
@@ -494,6 +510,8 @@ public abstract class AbstractGenericsContext {
      * <p>
      * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
      * would be counted for hierarchy resolution.
+     * <p>
+     * If field declares primitive type then wrapper class would be used instead.
      *
      * @param field field in current class hierarchy to resolve type from (may be field from superclass, relative to
      *              currently selected, in this case context type will be automatically switched)
@@ -549,6 +567,9 @@ public abstract class AbstractGenericsContext {
      * Returned context holds reference to original (root) context: {@link GenericsContext#rootContext()}.
      * <p>
      * Ignored types, used for context creation, are counted (will also be ignored for inlying context building).
+     * <p>
+     * If provided type is primitive then wrapper will be used instead (for example, {@link Integer} instead of
+     * {@link int}).
      *
      * @param type type to resolve hierarchy from (it must be generified type, resolved in current class)
      * @return generics context of type (inlying context)
@@ -573,6 +594,9 @@ public abstract class AbstractGenericsContext {
      * are provided for simpler navigation: {@link #fieldTypeAs(Field, Class)},
      * {@link MethodGenericsContext#returnTypeAs(Class)}, {@link MethodGenericsContext#parameterTypeAs(int, Class)}
      * and {@link ConstructorGenericsContext#parameterTypeAs(int, Class)}.
+     * <p>
+     * If provided type is primitive then wrapper will be used instead (for example, {@link Integer} instead of
+     * {@link int}).
      *
      * @param type   type to resolve actual generics from (it must be generified type, resolved in current class)
      * @param asType required target type to build generics context for (must include declared type as base class)

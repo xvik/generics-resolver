@@ -1,9 +1,13 @@
+* Fix failing navigation to primitive constructor or method parameter (#5)      
+* Improve javadoc mentioning primitives behaviour
+
+
 ### 3.0.1 (2019-10-10)
-- Fix cycled declarations detection (Something<T extends Something<T>)
-- Add GenericUtils.orderVariablesForResolution method for ordering type variable declarations
-- Partial (#3) fix: support reversed generics declaration order on class
-- Fix method generics resolution as types instead of classes (#4)
-- Fix constructor generics resolution as types instead of classes 
+* Fix cycled declarations detection (Something<T extends Something<T>)
+* Add GenericUtils.orderVariablesForResolution method for ordering type variable declarations
+* Partial (#3) fix: support reversed generics declaration order on class
+* Fix method generics resolution as types instead of classes (#4)
+* Fix constructor generics resolution as types instead of classes 
 
 ### 3.0.0 (2018-06-19)
 * Add constructor generics support

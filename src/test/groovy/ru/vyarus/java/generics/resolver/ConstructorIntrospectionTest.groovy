@@ -50,6 +50,6 @@ class ConstructorIntrospectionTest extends Specification {
         context.resolveParameterType(5)
         then:
         def ex = thrown(IllegalArgumentException)
-        ex.message == "Can't request parameter 5 of constructor 'ConstructorGenerics(Comparable)' because it have only 1 parameters"
+        ex.message == "Can't request parameter 5 of constructor 'ConstructorGenerics(Comparable)' because it has only 1 parameters"
     }
 }

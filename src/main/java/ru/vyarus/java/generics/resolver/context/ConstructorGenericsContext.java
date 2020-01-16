@@ -104,6 +104,10 @@ public class ConstructorGenericsContext extends GenericsContext {
      * }}</pre>
      * Resolving parameters types in context of root class:
      * {@code constructor(B.class.getConstructor(List.class)).resolveParametersTypes() == [List<Long>]}
+     * <p>
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
      *
      * @return resolved constructor parameters types or empty list if constructor doesn't contain parameters
      * @see #resolveParameters()
@@ -114,6 +118,10 @@ public class ConstructorGenericsContext extends GenericsContext {
     }
 
     /**
+     * Note: may return primitive because it might be important to differentiate actual value.
+     * Use {@link ru.vyarus.java.generics.resolver.util.TypeUtils#wrapPrimitive(Class)} to box possible primitive,
+     * if required.
+     *
      * @param pos parameter position (form 0)
      * @return parameter type with resolved generic variables
      * @throws IllegalArgumentException if parameter index is incorrect
@@ -135,6 +143,11 @@ public class ConstructorGenericsContext extends GenericsContext {
      * <p>
      * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
      * would be counted for hierarchy resolution.
+     * <p>
+     * For primitive constructor parameters wrapper class would be used (for example. if target parameter is
+     * {@code int} then returned context type would be {@link Integer}). It is not hard to detect primitives
+     * manually when required (it may be only directly declared primitive argument because it is impossible to
+     * declare primitive with generic variable).
      *
      * @param pos parameter position (from 0)
      * @return generics context of parameter type
@@ -152,6 +165,11 @@ public class ConstructorGenericsContext extends GenericsContext {
      * target type hierarchy). This is useful when analyzing object instance (introspecting actual object).
      * <p>
      * Other than target type, method is the same as {@link #parameterType(int)}.
+     * <p>
+     * For primitive constructor parameters wrapper class would be used (for example. if target parameter is
+     * {@code int} then returned context type would be {@link Integer}). It is not hard to detect primitives
+     * manually when required (it may be only directly declared primitive argument because it is impossible to
+     * declare primitive with generic variable).
      *
      * @param pos    parameter position (from 0)
      * @param asType required target type to build generics context for (must include declared type as base class)
@@ -220,7 +238,7 @@ public class ConstructorGenericsContext extends GenericsContext {
         final Type[] genericParams = ctor.getGenericParameterTypes();
         if (pos < 0 || pos >= genericParams.length) {
             throw new IllegalArgumentException(String.format(
-                    "Can't request parameter %s of constructor '%s' because it have only %s parameters",
+                    "Can't request parameter %s of constructor '%s' because it has only %s parameters",
                     pos, toStringConstructor(), genericParams.length));
         }
     }
