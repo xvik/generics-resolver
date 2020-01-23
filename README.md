@@ -1,6 +1,7 @@
 # Java generics runtime resolver
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
 [![Build Status](http://img.shields.io/travis/xvik/generics-resolver.svg?style=flat&branch=master)](https://travis-ci.org/xvik/generics-resolver)
+[![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/xvik/generics-resolver?svg=true)](https://ci.appveyor.com/project/xvik/generics-resolver)
 [![codecov](https://codecov.io/gh/xvik/generics-resolver/branch/master/graph/badge.svg)](https://codecov.io/gh/xvik/generics-resolver)
 
 Support: [gitter chat](https://gitter.im/xvik/generics-resolver) 
@@ -92,14 +93,19 @@ Gradle:
 compile 'ru.vyarus:generics-resolver:3.0.2'
 ```
 
-##### Snapshots
+#### Snapshots
 
-You can use snapshot versions through [JitPack](https://jitpack.io):
-
-* Go to [JitPack project page](https://jitpack.io/#xvik/generics-resolver)
+<details>
+      <summary>Snapshots may be used through JitPack</summary>
+      
+* Go to [JitPack project page](https://jitpack.io/#ru.vyarus/generics-resolver)
 * Select `Commits` section and click `Get it` on commit you want to use (top one - the most recent)
-* Follow displayed instruction: add repository and change dependency (NOTE: due to JitPack convention artifact group will be different)
-
+* Follow displayed instruction: 
+    - Add jitpack repository: `maven { url 'https://jitpack.io' }`
+    - Use commit hash as version: `ru.vyarus:generics-resolver:56537f7d23` (or use `master-SNAPSHOT`)
+    
+</details>        
+      
 ### Examples (practice)
 
 #### Type resolution safety
