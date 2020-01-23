@@ -9,23 +9,10 @@ import spock.lang.Specification
  */
 class PrimitiveConstructorParamTest extends Specification {
 
-    def "Check primitive constructor parameter resolution"() {
-
-        Integer.class.getConstructors()[0].newInstance(new Integer(10))
-
-        def context = GenericsResolver.resolve(Integer.class)
-                .constructor(Integer.class.getConstructors()[0])
-
-        when: "resolving sub context"
-        def type = context.parameterType(0)
-        then: "target primitive wrapped"
-        type.currentClass() == Integer
-    }
-
     def "Check primitives resolution"() {
         def context = GenericsResolver.resolve(Constr.class)
                 .constructor(Constr.class.getConstructors()[0])
-        
+
         expect: "primitives preserved"
         context.resolveParametersTypes() == [int, List, short]
         context.resolveParameterType(0) == int
