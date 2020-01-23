@@ -74,7 +74,7 @@ have required tool in the classpath (and it will be enough):
 
 Releases are published to [bintray jcenter](https://bintray.com/bintray/jcenter) and maven central. 
 
-[![Download](https://api.bintray.com/packages/vyarus/xvik/generics-resolver/images/download.svg) ](https://bintray.com/vyarus/xvik/generics-resolver/_latestVersion)
+[![JCenter](https://img.shields.io/bintray/v/vyarus/xvik/generics-resolver.svg?label=jcenter)](https://bintray.com/vyarus/xvik/generics-resolver/_latestVersion)
 [![Maven Central](https://img.shields.io/maven-central/v/ru.vyarus/generics-resolver.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/generics-resolver)
 
 Maven:
