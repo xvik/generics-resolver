@@ -5,15 +5,18 @@
     to simplify usage. Internally it consists of a Map with resolved type generics and 
     utilities calls, which may be used directly.
 
+
+!!! tip
     If known generics exists only as List, then it can be converted to map with:
 
     ```java
     Map<String, Type> generics = GenericsUtils.createGenericsMap(Some.class, knownGenericsList);
     ```
+    (often required conversion)
 
 ## Utilities
 
-`TypeUtils` was already mentioned above - pure types operations (unknown generics ignored)
+`TypeUtils` - pure types operations (unknown generics ignored)
 like `.isCompatible(Type, Type) == boolean`, `.getMoreSpecific(Type, Type)`, `.isAssignable(Type, Type)`
 
 `TypeToStringUtils` - various to string helper methods  
@@ -37,6 +40,10 @@ Essentially it's the same as GenericsResolver but without context wrapping (navi
     Another example is `ToStringUtils.toStringType()` which prints outer class only if provided type
     is ParameterizedType with not null owner. I essence, api oriented to generic resolution cases and
     all edge cases are described in javadoc.
+
+!!! tip
+    See utiltity classes or javadoc for actual api methods. Almost all of them contain examples inside javadoc
+    (no need to duplicate detailed description here).
 
 ## Special maps
 

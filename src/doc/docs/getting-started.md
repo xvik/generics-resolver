@@ -98,7 +98,7 @@ types information.
 
 There are 2 API levels: 
 
-* [Context API](guide/usage.md) (primary) used to support introspection (reflection analysis)
+* [Context API](guide/context.md) (primary) used to support introspection (reflection analysis)
 and direct utilities. Context API is safe because it always performs compatibility checks and throws descriptive
 exceptions. 
 * [Static utilities](guide/utils.md). With utilities, usage errors are possible (quite possible to use wrong generics map), but in simple cases 

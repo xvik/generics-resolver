@@ -1,8 +1,8 @@
-# Usage
+# Context API
 
-!!! note 
+!!! note "" 
     There are 2 APIs: context API (primary) used to support introspection (reflection analysis)
-    and direct utilities. Context API is safe because it always performs compatibility checks and throws descriptive
+    and direct [utilities](utils.md). Context API is safe because it always performs compatibility checks and throws descriptive
     exceptions. With utilities, usage errors are possible (quite possible to use wrong generics map), but in simple cases 
     it's not a problem. Use API that fits best your use case. 
 
@@ -12,15 +12,16 @@ Class hierarchy needs to be parsed to properly resolve all generics:
 GenericsContext context = GenericsResolver.resolve(Root.class)
 ```
 
-Now we can perform introspection of any class in hierarchy (look methods or fields) and know exact generics.
+Now we can perform introspection of any class in the hierarchy (look methods or fields) and know exact generics.
 
 If root class also contains generics, they are resolved by upper generic bound (e.g. `<T extends Model>` will be 
 resolved as `T=Model.class`, and resolved as `Object.class` when no bounds set)
 
-NOTE: Resolved class hierarchy is cached internally, so it's *cheap* to resolve single class many times
-(call `GenericsResolver.resolve(Class)`).
+!!! note "" 
+    Resolved class hierarchy is cached internally, so it's *cheap* to resolve single class many times
+    (call `GenericsResolver.resolve(Class)`).
 
-## Partial hierarchy
+## Limit hierarchy resolution
 
 You can limit hierarchy resolution depth (or exclude some interfaces) by providing ignored classes: 
 
@@ -29,12 +30,13 @@ GenericsResolver.resolve(Root.class, Base.class, SomeInterface.class)
 ```
 
 Here hierarchy resolution will stop on `Base` class (will not be included) and 
-all appeared SomeInterfaces will be skipped (interfaces are also hierarchical so it could exclude sub hierarchy too).  
+all appeared `SomeInterface` will be skipped (interfaces are also hierarchical so it could exclude sub hierarchy too).  
 
-Option exists for very rare cases when some types breaks analysis (possible bug workaround).
+Option exists for very rare cases when some types breaks analysis (as possible bug workaround).
 
-WARNING: When ignored classes specified, resolved generics information is not cached(!) even if complete type resolution
-was done before (descriptor always computed, but it's not expensive).
+!!! warning 
+    When ignored classes specified, resolved generics information is not cached(!) even if complete type resolution
+    was done before (descriptor always computed, but it's not expensive).
 
 ## Context
 
@@ -69,6 +71,10 @@ context navigation.
 Context operates on types (`Type`), not classes, because only types holds all generics information, including composite
 generics info (e.g. `List<List<String>>`). Any type, obtained using reflection may be resolved through api to real class.
 
+!!! important
+    See context API methods javadoc: it almost always contains example. Moreover, methods
+    are grouped by name to simplify search (you can note `generic..`, `resolve..`, `toString..` groups).  
+
 All classes in root class hierarchy may be obtained like this:
 
 ```java
@@ -77,7 +83,8 @@ context.getGenericsInfo().getComposingTypes()
 
 This will be all classes and interfaces in hierarchy (including root class), even if they not contain generics.
 
-IMPORTANT: context class toString() returns complete context with current position marker:
+!!! tip
+    `toString()` called on context instance returns complete context with current position marker:
 
 `context.type(Base.class).toString()`:
 
@@ -88,7 +95,7 @@ class Root
 
 For example, in intellij idea, current context (with resolved generics) and position could be seen by using "view value" link inside debugger 
 
-## Context class generics
+## Class generics
 
 First group of context api methods targets context type own generics. All these methods starts from `generic..`.
 
@@ -109,7 +116,7 @@ If generic value is parameterizable type then string will include it too: `"List
 
 See api for all supported methods.
 
-## Working with methods
+## Methods
 
 When working with methods it's required to use method context:
 
@@ -169,7 +176,7 @@ Types resolution api (the same as in types context) will count method generics t
 methodContext.resolveGenericOf(method.getGenericParameterTypes()[1]) == Cloneable.class
 ```
 
-## Working with constructors
+## Constructors
 
 Constructor could declare generics like:
 
@@ -188,7 +195,7 @@ ConstructorGenericsContext ctorContext = context.constructor(Some.class.getConst
 By analogy with method context, constructor context contains extra methods for working
 with constructor generics and parameters. 
 
-## Working with fields
+## Fields
 
 Context contains special shortcut methods for working with fields. For example,
 
@@ -242,109 +249,6 @@ See api for all supported methods.
 
 Note that type navigation (`.type()`) is important when you need to access exact type
 generics. For example, in order to use type's generics map in direct utility calls.
-
-## Inlying context
-
-Inlying context is generics context build for type inside current context.
-
-```java
-class Root<T> {
-    Inlying<T> field;   
-}
-```
-
-Suppose we analyzing some hierarchy with root and need to build hierarchy for field type.
-If we do `GenericsResolver.resolve(Inlying)` then we will lost information about known generic T.
-
-So we need inlying context (lying in current context): 
-
-```java
-// note that .type(Root.class) is not required, and used just to show that root
-// context contains Root.class 
-GenericsContext inlyingContext = context.type(Root.class)
-        .fieldType(Root.class.getDeclaredField("field"))
-```
-
-Resulted context (for `Inlying`) will contain known value for root generic T.
-
-You can check if current context is inlying by `context.isInlying()` and navigate
-to root context using `context.rootContext()`.
-
-!!! note 
-    Inlying context also inherits all ignored classes specified during root context 
-    creation (`GenericResolver.resolve(Root.class, [classes to ignore])`). 
-
-If target type does not contains generics then type resolution will be cached
-(because it is the same as direct type resolution).
-
-### Inlying inner classes
-
-Note: inner class requires outer class instance for creation (differs from [static nested classes](https://docs.oracle.com/javase/tutorial/java/javaOO/nested.html))
-
-```java
-class Outer<T> {
-    class Inner {
-        // inner class use owner class generic 
-        T getSomething() {}
-    }
-}
-
-class Root extends Outer<String> {
-    Inner field;
-}
-```
-
-Inner class could access generics of owner class (T). *In most cases* inner class is used inside
-owner class and so if you building inlying context for inner class and
-root context contains outer class in hierarchy then **outer class generics used from  root context**
-
-```java
-                          // root context
-GenericsContext context = GenericsResolver.resolve(Root.class)
-    // inlying context
-    .fieldType(Root.class.getDeclaredField("field"));
-
-context.ownerGenericsMap() == ["T": String]  // visible generics of Outer
-```  
-
-Note that this **assumption** is true not for all cases, but for most.
-
-When outer class generics declared explicitly:
-
-```java
-Outer<Long>.Inner field;
-```
-
-Explicit declaration is used instead: `context.ownerGenericsMap() == ["T": Long] `.
-
-### Inlying context for sub type
-
-In some (rear) cases, you may need to build inlying context for sub type of declared type:
-
-```java
-class Base<T> {
-    Inlying<T> field;   
-}
-
-class Root extends Base<List<String>> {}
-
-class InlyingExt<K> extends Inlying<List<K>> {}
-```
-
-Possible case is object instance analysis when type information could be taken both from 
-class declaration and actual values.
-
-```java
-GenericsContext context = GenericsResolver.resolve(Root.class)
-    .fieldTypeAs(Base.class.getDeclaredField("field"), InlyingExt.class);
-
-// InlyingExt generic tracked from known Inlying<List<String>>
-context.genericsMap() == ["K": String]
-
-// context.toString():
-// class InlyingExt<String> resolved in context of Root  <-- current
-//   extends Inlying<List<String>
-```
 
 ## To string
 

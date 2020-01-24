@@ -71,9 +71,10 @@ nav:
       - Instance analysis: examples/instance.md
       - Generics visibility: examples/visibility.md
   - User guide:
-      - Usage: guide/usage.md
+      - Context API: guide/context.md
+      - Inlying contexts: guide/inlying.md
       - Cache: guide/cache.md
-      - Low level api: guide/utils.md
+      - Low level API: guide/utils.md
       - Types walker: guide/walker.md
   - About:
       - Release notes: about/history.md
