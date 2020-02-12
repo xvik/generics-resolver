@@ -59,8 +59,9 @@ public class ComparatorTypesVisitor implements TypesVisitor {
             // general specificity might be already obvious, but generics could differ and this must be checked
             // in order to throw incompatible types
         } else {
-            moreSpecific = moreSpecific && one != Object.class;
             equal = equal && one == Object.class;
+            // if types are equal then specificity myst be taken from upper levels
+            moreSpecific = moreSpecific && !equal;
         }
         return true;
     }

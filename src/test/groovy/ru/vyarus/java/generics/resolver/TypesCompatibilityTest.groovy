@@ -25,6 +25,8 @@ class TypesCompatibilityTest extends Specification {
         String                         | Object                      | true
         Base1                          | Root                        | true
         Root                           | Base1                       | true
+        ArrayList                      | List                        | true
+        List                           | ArrayList                   | true
         param(List, String)            | param(List, Integer)        | false
         param(List, Base1)             | param(List, Root)           | true
         param(List, Root)              | param(List, Base1)          | true
@@ -67,6 +69,8 @@ class TypesCompatibilityTest extends Specification {
         type1                     | type2                     | res
         Base1                     | Root                      | false
         Root                      | Base1                     | true
+        List                      | ArrayList                 | false
+        ArrayList                 | List                      | true
         param(List, String)       | param(List, Object)       | true
         param(List, Base1)        | param(List, Root)         | false
         array(Base1)              | array(Root)               | false
