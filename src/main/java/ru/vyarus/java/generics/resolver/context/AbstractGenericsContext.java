@@ -572,7 +572,7 @@ public abstract class AbstractGenericsContext {
      * Ignored types, used for context creation, are counted (will also be ignored for inlying context building).
      * <p>
      * If provided type is primitive then wrapper will be used instead (for example, {@link Integer} instead of
-     * {@link int}).
+     * {@code int}).
      *
      * @param type type to resolve hierarchy from (it must be generified type, resolved in current class)
      * @return generics context of type (inlying context)
@@ -599,7 +599,7 @@ public abstract class AbstractGenericsContext {
      * and {@link ConstructorGenericsContext#parameterTypeAs(int, Class)}.
      * <p>
      * If provided type is primitive then wrapper will be used instead (for example, {@link Integer} instead of
-     * {@link int}).
+     * {@code int}).
      *
      * @param type   type to resolve actual generics from (it must be generified type, resolved in current class)
      * @param asType required target type to build generics context for (must include declared type as base class)
