@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
+import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException
 import ru.vyarus.java.generics.resolver.support.Base1
 import ru.vyarus.java.generics.resolver.support.Root
 import ru.vyarus.java.generics.resolver.util.TypeUtils
@@ -99,19 +100,19 @@ class TypesCompatibilityTest extends Specification {
         when: "compare incompatible types"
         TypeUtils.isMoreSpecific(String, Integer)
         then: "err"
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(IncompatibleTypesException)
         ex.message == "Type String can't be compared to Integer because they are not compatible"
 
         when: "incompatible generics on obviously specific types"
         TypeUtils.isMoreSpecific(param(ArrayList, String), param(Iterable, Integer))
         then: "err"
-        ex = thrown(IllegalArgumentException)
+        ex = thrown(IncompatibleTypesException)
         ex.message == "Type ArrayList<String> can't be compared to Iterable<Integer> because they are not compatible"
 
         when: "incompatible generics on obviously less specific"
         TypeUtils.isMoreSpecific(param(Iterable, Integer), param(ArrayList, String))
         then: "err"
-        ex = thrown(IllegalArgumentException)
+        ex = thrown(IncompatibleTypesException)
         ex.message == "Type Iterable<Integer> can't be compared to ArrayList<String> because they are not compatible"
     }
 

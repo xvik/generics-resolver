@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util;
 
+import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
 import ru.vyarus.java.generics.resolver.util.type.CommonTypeFactory;
 import ru.vyarus.java.generics.resolver.util.type.InstanceTypeFactory;
 import ru.vyarus.java.generics.resolver.util.walk.AssignabilityTypesVisitor;
@@ -69,7 +70,7 @@ public final class TypeUtils {
      * @param comparingTo type to compare to
      * @return true when provided type is more specific than other type,
      * false otherwise (including when types are equal)
-     * @throws IllegalArgumentException when types are not compatible
+     * @throws IncompatibleTypesException when types are not compatible
      * @see ComparatorTypesVisitor for implementation details
      * @see #isCompatible(Type, Type) use for compatibility check (before) to avoid incompatible types exception
      * @see #isMoreSpecificOrEqual(Type, Type) for broader check
@@ -89,7 +90,7 @@ public final class TypeUtils {
      * @param what        type to check
      * @param comparingTo type to compare to
      * @return true when provided type is more specific than other type or equal, false otherwise
-     * @throws IllegalArgumentException when types are not compatible
+     * @throws IncompatibleTypesException when types are not compatible
      */
     public static boolean isMoreSpecificOrEqual(final Type what, final Type comparingTo) {
         if (what.equals(comparingTo)) {
@@ -199,7 +200,7 @@ public final class TypeUtils {
      * @param one first type
      * @param two second type
      * @return more specific type or first type if they are equal
-     * @throws IllegalArgumentException when types are not compatible
+     * @throws IncompatibleTypesException when types are not compatible
      * @see #isMoreSpecific(Type, Type)
      */
     public static Type getMoreSpecificType(final Type one, final Type two) {
@@ -361,10 +362,8 @@ public final class TypeUtils {
         TypesWalker.walk(what, comparingTo, visitor);
 
         if (!visitor.isCompatible()) {
-            throw new IllegalArgumentException(String.format(
-                    "Type %s can't be compared to %s because they are not compatible",
-                    TypeToStringUtils.toStringTypeIgnoringVariables(what),
-                    TypeToStringUtils.toStringTypeIgnoringVariables(comparingTo)));
+            throw new IncompatibleTypesException("Type %s can't be compared to %s because they are not compatible",
+                    what, comparingTo);
         }
         return visitor;
     }

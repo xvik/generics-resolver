@@ -1,6 +1,7 @@
 package ru.vyarus.java.generics.resolver.util;
 
 import ru.vyarus.java.generics.resolver.context.container.ExplicitTypeVariable;
+import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.util.walk.MatchVariablesVisitor;
 import ru.vyarus.java.generics.resolver.util.walk.TypesWalker;
@@ -84,14 +85,14 @@ public final class TypeVariableUtils {
      * real type {@code List<String>}. This method will match variable E to String from real type.
      * <p>
      * WARNING: if provided template type will contain {@link TypeVariable} - they would not be detected!
-     * Because method resolve all variables to it's raw declaration. Use {@link #preserveVariables(Type)} in order
-     * to replace variables before matching. It is not dont automatically to avoid redundant calls (this api
+     * Because method resolve all variables to its raw declaration. Use {@link #preserveVariables(Type)} in order
+     * to replace variables before matching. It is not don't automatically to avoid redundant calls (this api
      * considered as low level api).
      *
      * @param template type with variables
      * @param real     type to compare and resolve variables from
      * @return map of resolved variables or empty map
-     * @throws IllegalArgumentException when provided types are nto compatible
+     * @throws IncompatibleTypesException when provided types are not compatible
      * @see #trackRootVariables(Class, List) for variables tracking form root class
      * @see #preserveVariables(Type) for variables preserving in types
      */
@@ -99,11 +100,9 @@ public final class TypeVariableUtils {
         final MatchVariablesVisitor visitor = new MatchVariablesVisitor();
         TypesWalker.walk(template, real, visitor);
         if (visitor.isHierarchyError()) {
-            throw new IllegalArgumentException(String.format(
+            throw new IncompatibleTypesException(
                     "Type %s variables can't be matched from type %s because they "
-                            + "are not compatible",
-                    TypeToStringUtils.toStringTypeIgnoringVariables(template),
-                    TypeToStringUtils.toStringTypeIgnoringVariables(real)));
+                            + "are not compatible", template, real);
         }
         final Map<TypeVariable, Type> res = visitor.getMatched();
         // to be sure that right type does not contain variables

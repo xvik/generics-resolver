@@ -137,9 +137,7 @@ public class ComparatorTypesVisitor implements TypesVisitor {
             equal = equal && lowerOne.equals(lowerTwo);
 
             // left type's bound must be lower: not a mistake! left (super inversion)!
-            res = !equal && TypeUtils.isMoreSpecific(
-                    lowerOne,
-                    lowerTwo);
+            res = !equal && TypeUtils.isMoreSpecific(lowerOne, lowerTwo);
         }
         return res;
     }

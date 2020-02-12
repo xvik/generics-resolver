@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver
 
+import ru.vyarus.java.generics.resolver.error.IncompatibleTypesException
 import ru.vyarus.java.generics.resolver.support.Lvl2Base1
 import ru.vyarus.java.generics.resolver.util.type.TypeLiteral
 import ru.vyarus.java.generics.resolver.util.TypeVariableUtils
@@ -34,13 +35,13 @@ class MatchVariablesTest extends Specification {
         when: "matching var"
         match(Lvl2Base1.getMethod("doSomth3").getGenericReturnType(), String.class)
         then: "incompatible"
-        def ex = thrown(IllegalArgumentException)
+        def ex = thrown(IncompatibleTypesException)
         ex.message == "Type List<I> variables can't be matched from type String because they are not compatible"
 
         when: "matching var"
         match(Lvl2Base1.getMethod("doSomth3").getGenericReturnType(), new TypeLiteral<Map<String, Object>>(){}.getType())
         then: "incompatible"
-        ex = thrown(IllegalArgumentException)
+        ex = thrown(IncompatibleTypesException)
         ex.message == "Type List<I> variables can't be matched from type Map<String, Object> because they are not compatible"
     }
 
