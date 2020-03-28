@@ -2,8 +2,10 @@ package ru.vyarus.java.generics.resolver.inlying
 
 import ru.vyarus.java.generics.resolver.GenericsResolver
 import ru.vyarus.java.generics.resolver.context.GenericsContext
+import ru.vyarus.java.generics.resolver.inlying.support.BaseIface
 import ru.vyarus.java.generics.resolver.inlying.support.DeclarationType
 import ru.vyarus.java.generics.resolver.inlying.support.Err
+import ru.vyarus.java.generics.resolver.inlying.support.NoGenericType
 import ru.vyarus.java.generics.resolver.inlying.support.RootType
 import ru.vyarus.java.generics.resolver.inlying.support.SubType
 import spock.lang.Specification
@@ -69,5 +71,56 @@ class RootType
         def res = context.fieldType(RootType.getDeclaredField("nogen"))
         then:
         res.rootContext().currentClass() == RootType.class
+    }
+
+    def "cannot find field in whole hierarchy"() {
+
+        setup: "prepare base type context"
+        GenericsContext context = GenericsResolver.resolve(RootType)
+        GenericsContext nogenFieldGenContext = context.fieldTypeByName("nogen")
+
+        when: "try get generic context for field by name"
+        nogenFieldGenContext.fieldTypeByName("someUnknownField")
+        then:
+        IllegalArgumentException ex = thrown()
+        ex.message == "cannot find field: 'someUnknownField' in hierarchy of class: " + NoGenericType
+    }
+
+    def "GenericsContext by field by name"() {
+
+        setup: "prepare base type context"
+        GenericsContext context = GenericsResolver.resolve(RootType)
+
+        when: "generic context for field by name"
+        GenericsContext twoFieldContext = context.fieldTypeByName("two")
+        then:
+        twoFieldContext.getGenericsInfo().rootClass == BaseIface
+        twoFieldContext.generic(0) == Integer
+    }
+
+    def "GenericsContexts for for field with generic types"() {
+
+        setup: "prepare base type context"
+        GenericsContext context = GenericsResolver.resolve(RootType)
+
+        when: "generic context for field by name"
+        GenericsContext someListContext = context.fieldTypeByName("someList")
+        GenericsContext genericTypeOfListContext = someListContext.genericContextOf(0)
+        then:
+        genericTypeOfListContext.getGenericsInfo().rootClass == Map
+        genericTypeOfListContext.genericContextOf(0).getGenericsInfo().rootClass == Integer
+        genericTypeOfListContext.genericContextOf(1).getGenericsInfo().rootClass == Double
+    }
+
+    def "cannot get index of generic type for field"() {
+
+        setup: "prepare base type context"
+        GenericsContext context = GenericsResolver.resolve(RootType)
+        GenericsContext nogenFieldGenContext = context.fieldTypeByName("nogen")
+        when:
+        nogenFieldGenContext.genericContextOf(0)
+        then:
+        Exception ex = thrown()
+        ex instanceof IndexOutOfBoundsException
     }
 }

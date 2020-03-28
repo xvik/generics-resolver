@@ -8,6 +8,8 @@ import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import java.lang.reflect.*;
 import java.util.*;
 
+import static org.apache.commons.lang3.reflect.FieldUtils.getField;
+
 /**
  * Context object wraps root type hierarchy generics information descriptor and provides utility methods for
  * actual types resolution. This base class contains all type resolution logic (commonly used), whereas type specific
@@ -50,7 +52,7 @@ import java.util.*;
  */
 // huge class size is OK, because it should be the only entry point for api
 @SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace",
-        "PMD.TooManyMethods", "PMD.GodClass"})
+                   "PMD.TooManyMethods", "PMD.GodClass"})
 public abstract class AbstractGenericsContext {
 
     protected final GenericsInfo genericsInfo;
@@ -154,6 +156,20 @@ public abstract class AbstractGenericsContext {
      */
     public Type genericType(final String genericName) {
         return contextGenerics().get(checkGenericName(genericName));
+    }
+
+
+    /**
+     * {@code class A extends B<Object, C<Long>>}.
+     * <pre>{@code type(B.class).genericType(1) == ParametrizedType }</pre>
+     *
+     * @param position generic position (from 0)
+     * @return GenericsContext for type under provided position
+     * @throws IndexOutOfBoundsException for wrong index
+     * @see #inlyingType(Type) for details
+     */
+    public GenericsContext genericContextOf(final int position) {
+        return inlyingType(genericType(position));
     }
 
     /**
@@ -524,6 +540,35 @@ public abstract class AbstractGenericsContext {
      */
     public GenericsContext fieldType(final Field field) {
         return switchContext4field(field).inlyingType(field.getGenericType());
+    }
+
+    /**
+     * Create generics context for field type (with correctly resolved root generics)."Drill down".
+     * <pre>{@code class A<T> {
+     *    private B<T> field;
+     * }
+     * class C extends A<String> {}}</pre>
+     * Build generics context for field type (to continue analyzing field class fields):
+     * {@code type(A.class).fieldType(A.class.getField("field")) == generics context of B<String>}
+     * <p>
+     * Note that, in contrast to direct resolution {@code GenericsResolver.resolve(B.class)}, actual root generic
+     * would be counted for hierarchy resolution.
+     * <p>
+     * If field declares primitive type then wrapper class would be used instead.
+     *
+     * @param fieldName for field from current class or superclass either, relative to
+     *              currently selected context, in this case context type will be automatically switched to that field
+     * @return generics context for field type (inlying context)
+     * @throws IllegalArgumentException if field cannot be found in hierarchy of current root class
+     * @see #inlyingType(Type)
+     */
+    public GenericsContext fieldTypeByName(final String fieldName) {
+        final Field field = getField(getGenericsInfo().getRootClass(), fieldName, true);
+        if (field == null) {
+            throw new IllegalArgumentException("cannot find field: '" + fieldName
+                                               + "' in hierarchy of class: " + getGenericsInfo().getRootClass());
+        }
+        return fieldType(field);
     }
 
     /**
