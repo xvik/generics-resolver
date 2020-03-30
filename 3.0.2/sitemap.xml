@@ -1,128 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    <url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/getting-started/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/safe-resolve/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/reflect/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/sanitizer/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/resolution/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/di/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/hierarchy/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/compat/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/track/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/vars/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/construct/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/direct/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/utils/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/inception/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/instance/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/examples/visibility/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/guide/context/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/guide/inlying/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/guide/cache/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/guide/utils/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/guide/walker/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/about/history/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/about/support/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
-    </url>
-    <url>
+    </url><url>
      <loc>https://xvik.github.io/generics-resolver/3.0.2/about/license/</loc>
-     <lastmod>2020-01-26</lastmod>
+     <lastmod>2020-03-31</lastmod>
      <changefreq>daily</changefreq>
     </url>
 </urlset>
