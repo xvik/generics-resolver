@@ -32,3 +32,9 @@ void analyzeType(GenericsContext context) {
     analyzeType(context.type(superclass));
 }
 ```
+
+!!! tip
+    You may use `commons-lang` [ConstructorUtils](https://www.baeldung.com/java-commons-lang-3#the-constructorutils-class), 
+    [FieldUtils](https://www.baeldung.com/java-commons-lang-3#the-fieldutils-class) 
+    or [MethodUtils](https://www.baeldung.com/java-commons-lang-3#the-fieldutils-class) to simplify fields, methods or 
+    constructor searches (for example, if you know field name but don't know exact type in hierarchy).
