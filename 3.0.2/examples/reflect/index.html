@@ -285,9 +285,38 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Refelction assist
+      </label>
+    
     <a href="./" title="Refelction assist" class="md-nav__link md-nav__link--active">
       Refelction assist
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#type-utils" class="md-nav__link">
+    Type utils
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -614,6 +643,22 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#type-utils" class="md-nav__link">
+    Type utils
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -657,6 +702,28 @@ and navigated to required type in the hierarchy:</p>
     <span class="n">Class</span> <span class="n">superclass</span> <span class="o">=</span> <span class="n">type</span><span class="p">.</span><span class="na">getSuperclass</span><span class="p">();</span>    
     <span class="n">analyzeType</span><span class="p">(</span><span class="n">context</span><span class="p">.</span><span class="na">type</span><span class="p">(</span><span class="n">superclass</span><span class="p">));</span>
 <span class="p">}</span>
+</code></pre></div>
+
+<h2 id="type-utils">Type utils<a class="headerlink" href="#type-utils" title="Permanent link">&para;</a></h2>
+<p>To avoid dealing with type objects (<code>ParameterizedType</code>) context provides pure utility methods 
+(not actually tied to "context"):
+- <code>context.resolveTypeGenerics(type)</code> resolved generics of provided type
+- <code>context.resolveClass(type)</code> returns raw type's class (reducing type information)
+- <code>context.resolveType(type)</code> return type with replaced variables</p>
+<div class="codehilite"><pre><span></span><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Base</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="p">{</span>
+    <span class="n">T</span> <span class="n">field</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">Root</span> <span class="kd">extends</span> <span class="n">Base</span><span class="o">&lt;</span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;&gt;</span> <span class="p">{}</span>
+
+<span class="n">GenericsContext</span> <span class="n">context</span> <span class="o">=</span> <span class="n">GenericsResolver</span><span class="p">.</span><span class="na">resolve</span><span class="p">(</span><span class="n">Root</span><span class="p">.</span><span class="na">class</span><span class="p">).</span><span class="na">type</span><span class="p">(</span><span class="n">Base</span><span class="p">.</span><span class="na">class</span><span class="p">);</span>
+<span class="c1">// List&lt;String&gt;</span>
+<span class="n">Type</span> <span class="n">fieldType</span> <span class="o">=</span> <span class="n">Base</span><span class="p">.</span><span class="na">class</span><span class="p">.</span><span class="na">getDeclaredField</span><span class="p">(</span><span class="s">&quot;field&quot;</span><span class="p">);</span>
+<span class="c1">// type class</span>
+<span class="n">context</span><span class="p">.</span><span class="na">resolveClass</span><span class="p">(</span><span class="n">fieldType</span><span class="p">)</span> <span class="o">==</span> <span class="n">List</span><span class="p">.</span><span class="na">class</span><span class="p">;</span>
+<span class="c1">// first generic class (type information may be reduced)</span>
+<span class="n">context</span><span class="p">.</span><span class="na">resolveGenericOf</span><span class="p">(</span><span class="n">fieldType</span><span class="p">)</span> <span class="o">==</span> <span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="p">;</span>
+<span class="c1">// general case (no type precision lost)</span>
+<span class="n">context</span><span class="p">.</span><span class="na">resolveTypeGenerics</span><span class="p">(</span><span class="n">fieldType</span><span class="p">)</span> <span class="o">==</span> <span class="o">[</span><span class="n">String</span><span class="p">.</span><span class="na">class</span><span class="o">]</span><span class="p">;</span>
 </code></pre></div>
 
 <div class="admonition tip">
