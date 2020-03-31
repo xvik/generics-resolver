@@ -33,6 +33,31 @@ void analyzeType(GenericsContext context) {
 }
 ```
 
+## Type utils
+
+To avoid dealing with type objects (`ParameterizedType`) context provides pure utility methods 
+(not actually tied to "context"):
+- `context.resolveTypeGenerics(type)` resolved generics of provided type
+- `context.resolveClass(type)` returns raw type's class (reducing type information)
+- `context.resolveType(type)` return type with replaced variables
+
+```java
+public class Base<T> {
+    T field;
+}
+public class Root extends Base<List<String>> {}
+
+GenericsContext context = GenericsResolver.resolve(Root.class).type(Base.class);
+// List<String>
+Type fieldType = Base.class.getDeclaredField("field");
+// type class
+context.resolveClass(fieldType) == List.class;
+// first generic class (type information may be reduced)
+context.resolveGenericOf(fieldType) == String.class;
+// general case (no type precision lost)
+context.resolveTypeGenerics(fieldType) == [String.class];
+```
+
 !!! tip
     You may use `commons-lang` [ConstructorUtils](https://www.baeldung.com/java-commons-lang-3#the-constructorutils-class), 
     [FieldUtils](https://www.baeldung.com/java-commons-lang-3#the-fieldutils-class) 
