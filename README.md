@@ -79,14 +79,14 @@ Maven:
 <dependency>
   <groupId>ru.vyarus</groupId>
   <artifactId>generics-resolver</artifactId>
-  <version>3.0.2</version>
+  <version>3.0.3</version>
 </dependency>
 ```
 
 Gradle:
 
 ```groovy
-compile 'ru.vyarus:generics-resolver:3.0.2'
+compile 'ru.vyarus:generics-resolver:3.0.3'
 ```
 
 #### Snapshots

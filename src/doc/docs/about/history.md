@@ -1,3 +1,6 @@
+### [3.0.3](https://xvik.github.io/generics-resolver/3.0.2) (2020-09-29)
+* Fix stackoverflow for enum types comparison with java.lang.Enum
+
 ### [3.0.2](https://xvik.github.io/generics-resolver/3.0.2) (2020-01-16)
 * Fix failing navigation to primitive constructor or method parameter (#5)      
 * Improve javadoc mentioning primitives behaviour

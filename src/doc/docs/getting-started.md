@@ -11,14 +11,14 @@ Maven:
 <dependency>
   <groupId>ru.vyarus</groupId>
   <artifactId>generics-resolver</artifactId>
-  <version>3.0.2</version>
+  <version>3.0.3</version>
 </dependency>
 ```
 
 Gradle:
 
 ```groovy
-implementation 'ru.vyarus:generics-resolver:3.0.2'
+implementation 'ru.vyarus:generics-resolver:3.0.3'
 ```    
 
 Requires java 6 or above (compatible with java 11).
