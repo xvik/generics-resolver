@@ -10,6 +10,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -47,6 +49,8 @@ import java.util.Map;
  */
 public final class TypesWalker {
     private static final IgnoreGenericsMap IGNORE_VARS = IgnoreGenericsMap.getInstance();
+    @SuppressWarnings("unchecked")
+    private static final List<Class<?>> STOP_TYPES = Arrays.asList(Object.class, Enum.class);
 
     private TypesWalker() {
     }
@@ -129,7 +133,7 @@ public final class TypesWalker {
             // this point must stop future processing
             visitor.incompatibleHierarchy(one, two);
             canContinue = false;
-        } else if (visitor.next(one, two) && oneType != Object.class && twoType != Object.class) {
+        } else if (visitor.next(one, two) && !STOP_TYPES.contains(oneType) && !STOP_TYPES.contains(twoType)) {
             // user stop or nowhere to go from object
 
             // classes are already checked to be compatible (isCompatible) so either both arrays or both not
