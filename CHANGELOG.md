@@ -1,3 +1,4 @@
+### 3.0.3 (2020-09-29)
 * Fix stackoverflow for enum types comparison with java.lang.Enum
 
 ### 3.0.2 (2020-01-16)
