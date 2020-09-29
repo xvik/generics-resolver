@@ -8,8 +8,10 @@ import ru.vyarus.java.generics.resolver.util.map.IgnoreGenericsMap;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,6 +45,9 @@ import java.util.Map;
  */
 public final class TypesWalker {
     private static final IgnoreGenericsMap IGNORE_VARS = IgnoreGenericsMap.getInstance();
+    // Enum is a special case - if it would not be a stop type, it will go to infinite recursion
+    @SuppressWarnings("unchecked")
+    private static final List<Class<?>> STOP_TYPES = Arrays.asList(Object.class, Enum.class);
 
     private TypesWalker() {
     }
@@ -82,8 +87,8 @@ public final class TypesWalker {
         // direct compatibility
         if (!isCompatible(one, two)) {
             visitor.incompatibleHierarchy(one, two);
-        } else if (visitor.next(one, two) && oneType != Object.class && twoType != Object.class) {
-            // user stop or nowhere to go from object
+        } else if (visitor.next(one, two) && !STOP_TYPES.contains(oneType) && !STOP_TYPES.contains(twoType)) {
+            // user stop or nowhere to go from object (or enum)
 
             // classes are already checked to be compatible (isCompatible) so either both arrays or both not
             if (oneType.isArray()) {
