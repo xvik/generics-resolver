@@ -2,7 +2,6 @@
 
 ## Installation
 
-[![JCenter](https://img.shields.io/bintray/v/vyarus/xvik/generics-resolver.svg?label=jcenter)](https://bintray.com/vyarus/xvik/generics-resolver/_latestVersion)
 [![Maven Central](https://img.shields.io/maven-central/v/ru.vyarus/generics-resolver.svg?style=flat)](https://maven-badges.herokuapp.com/maven-central/ru.vyarus/generics-resolver)
 
 Maven:
