@@ -1,6 +1,6 @@
 # Java generics runtime resolver
 [![License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://www.opensource.org/licenses/MIT)
-[![Build Status](http://img.shields.io/travis/xvik/generics-resolver.svg?style=flat&branch=master)](https://travis-ci.org/xvik/generics-resolver)
+[![Build Status](https://travis-ci.com/xvik/generics-resolver.svg?branch=master)](https://travis-ci.com/xvik/generics-resolver)
 [![Appveyor build status](https://ci.appveyor.com/api/projects/status/github/xvik/generics-resolver?svg=true)](https://ci.appveyor.com/project/xvik/generics-resolver)
 [![codecov](https://codecov.io/gh/xvik/generics-resolver/branch/master/graph/badge.svg)](https://codecov.io/gh/xvik/generics-resolver)
 
