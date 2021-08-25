@@ -11,7 +11,7 @@ env:
   - TRAVIS=true
 
 install: ./gradlew assemble --no-daemon
-script: travis_wait 20 ./gradlew check --no-daemon
+script: ./gradlew check --no-daemon
 
 after_success:
   - ./gradlew jacocoTestReport --no-daemon
