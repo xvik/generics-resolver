@@ -18,7 +18,8 @@ import java.util.*;
  * @since 11.05.2018
  */
 // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
-@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass", "PMD.AvoidLiteralsInIfCondition"})
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass", "PMD.AvoidLiteralsInIfCondition",
+        "checkstyle:IllegalIdentifierName"})
 public final class GenericsResolutionUtils {
 
     private static final String GROOVY_OBJECT = "GroovyObject";
@@ -108,8 +109,7 @@ public final class GenericsResolutionUtils {
             final LinkedHashMap<String, Type> rootGenerics,
             final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics,
             final List<Class<?>> ignoreClasses) {
-        final Map<Class<?>, LinkedHashMap<String, Type>> generics =
-                new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        final Map<Class<?>, LinkedHashMap<String, Type>> generics = new HashMap<>();
         generics.put(type, rootGenerics);
         try {
             analyzeType(generics, type, knownGenerics, ignoreClasses);
@@ -239,7 +239,7 @@ public final class GenericsResolutionUtils {
         final Type res;
         if (variable.getBounds().length > 1) {
             // case: T extends A & B -->  ? extends A & B
-            final List<Type> types = new ArrayList<Type>();
+            final List<Type> types = new ArrayList<>();
             for (Type bound : variable.getBounds()) {
                 // replace possible named generics with actual type (for cases like K extends T)
                 final Type actual = GenericsUtils.resolveTypeVariables(bound, generics);
@@ -315,7 +315,7 @@ public final class GenericsResolutionUtils {
                 final Class<?> outerType = GenericsUtils.resolveClass(outer, generics);
                 // either use known generics for outer class or resolve by upper bound
                 outerGenerics = knownGenerics != null && knownGenerics.containsKey(outerType)
-                        ? new LinkedHashMap<String, Type>(knownGenerics.get(outerType))
+                        ? new LinkedHashMap<>(knownGenerics.get(outerType))
                         : resolveRawGenerics(outerType);
             }
             // class may declare generics with the same name and they must not be overridden
@@ -344,15 +344,16 @@ public final class GenericsResolutionUtils {
      * @param generics         known context generics or null
      * @return resolved generics or empty map if empty generic declarations provided
      */
+    @SuppressWarnings("PMD.UseDiamondOperator") // remove after moving to java 8 (bug)
     private static LinkedHashMap<String, Type> resolveRawGenericsChain(final TypeVariable[] declaredGenerics,
                                                                        final Map<String, Type> generics) {
         if (declaredGenerics.length == 0) {
             return EmptyGenericsMap.getInstance();
         }
         final LinkedHashMap<String, Type> contextGenerics = generics == null ? new LinkedHashMap<String, Type>()
-                : new LinkedHashMap<String, Type>(generics);
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
-        final List<TypeVariable> failed = new ArrayList<TypeVariable>();
+                : new LinkedHashMap<>(generics);
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<>();
+        final List<TypeVariable> failed = new ArrayList<>();
         // variables in declaration could be dependant and in any direction (e.g. <A extends List<B>, B>)
         // so assuming correct order at first, but if we face any error - order vars and resolve correctly
         // (it's better to avoid ordering by default as its required quite rarely)

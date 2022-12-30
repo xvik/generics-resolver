@@ -69,7 +69,7 @@ public final class InstanceTypeFactory {
         if (!repackage) {
             res = objects;
         } else {
-            final List<Object> elts = new ArrayList<Object>();
+            final List<Object> elts = new ArrayList<>();
             for (Object obj : objects) {
                 if (obj != null) {
                     elts.add(obj);
@@ -97,8 +97,8 @@ public final class InstanceTypeFactory {
 
     private static Type buildArrayType(final Type median, final Object... objects) {
         // search for non empty arrays
-        final List<Object[]> arrays = new ArrayList<Object[]>();
-        final List<Object> elements = new ArrayList<Object>();
+        final List<Object[]> arrays = new ArrayList<>();
+        final List<Object> elements = new ArrayList<>();
         for (Object object : objects) {
             final Object[] arr = filterNulls((Object[]) object);
             if (arr.length > 0) {

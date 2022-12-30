@@ -28,7 +28,7 @@ public final class GenericsInfoFactory {
      */
     public static final String CACHE_PROPERTY = GenericsInfoFactory.class.getName() + ".cache";
 
-    private static final Map<Class<?>, GenericsInfo> CACHE = new WeakHashMap<Class<?>, GenericsInfo>();
+    private static final Map<Class<?>, GenericsInfo> CACHE = new WeakHashMap<>();
     // lock will not affect performance for cached descriptors, just to make sure nothing was build two times
     private static final ReentrantLock LOCK = new ReentrantLock();
 

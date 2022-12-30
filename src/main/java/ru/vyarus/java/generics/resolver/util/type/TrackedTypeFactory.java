@@ -72,7 +72,7 @@ public final class TrackedTypeFactory {
     }
 
     private static Map<String, Type> resolveGenerics(final Type type, final Class<?> target, final Type source) {
-        final List<Map<String, Type>> selection = new ArrayList<Map<String, Type>>();
+        final List<Map<String, Type>> selection = new ArrayList<>();
 
         if (source instanceof WildcardType) {
             for (Type sub : ((WildcardType) source).getUpperBounds()) {
@@ -112,7 +112,7 @@ public final class TrackedTypeFactory {
         if (generics.isEmpty()) {
             return Collections.emptyMap();
         }
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<>();
         // they all will contain the same set of keys and in correct order
         for (String key : generics.get(0).keySet()) {
             Type type = null;

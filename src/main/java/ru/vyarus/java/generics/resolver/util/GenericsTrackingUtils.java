@@ -23,7 +23,7 @@ import java.util.Map;
  * @since 11.05.2018
  */
 // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
-@SuppressWarnings("PMD.LooseCoupling")
+@SuppressWarnings({"PMD.LooseCoupling", "checkstyle:IllegalIdentifierName"})
 public final class GenericsTrackingUtils {
 
     private GenericsTrackingUtils() {
@@ -75,7 +75,7 @@ public final class GenericsTrackingUtils {
         final Map<Class<?>, LinkedHashMap<String, Type>> generics = TypeVariableUtils.trackRootVariables(type);
 
         // trace back generics (what we can)
-        final Map<String, Type> tracedRootGenerics = new HashMap<String, Type>();
+        final Map<String, Type> tracedRootGenerics = new HashMap<>();
         // required to check tracked type compatibility
         final Map<String, Type> rawRootGenerics = GenericsResolutionUtils.resolveRawGenerics(type);
         for (Map.Entry<String, Type> entry : generics.get(known).entrySet()) {
@@ -90,7 +90,7 @@ public final class GenericsTrackingUtils {
         trackDependentVariables(type, tracedRootGenerics);
 
         // resolve all generics in correct resolution order
-        final Map<String, Type> tmpTypes = new HashMap<String, Type>(tracedRootGenerics);
+        final Map<String, Type> tmpTypes = new HashMap<>(tracedRootGenerics);
         for (TypeVariable gen : GenericsUtils.orderVariablesForResolution(type.getTypeParameters())) {
             final String name = gen.getName();
             final Type value = tracedRootGenerics.containsKey(name)
@@ -103,7 +103,7 @@ public final class GenericsTrackingUtils {
         }
 
         // finally apply correct generics order
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<>();
         for (TypeVariable gen : type.getTypeParameters()) {
             res.put(gen.getName(), tmpTypes.get(gen.getName()));
         }
@@ -268,14 +268,14 @@ public final class GenericsTrackingUtils {
         if (tracedRootGenerics.isEmpty() || typeParameters.length == tracedRootGenerics.size()) {
             return;
         }
-        final Map<String, TypeVariable> varsIndex = new HashMap<String, TypeVariable>();
+        final Map<String, TypeVariable> varsIndex = new HashMap<>();
         for (TypeVariable var : typeParameters) {
             varsIndex.put(var.getName(), var);
         }
 
         // find dependent generics - add to tracked - repeat with found only (cycle)
-        final Map<String, Type> toCheck = new HashMap<String, Type>(tracedRootGenerics);
-        final Map<String, Type> found = new HashMap<String, Type>();
+        final Map<String, Type> toCheck = new HashMap<>(tracedRootGenerics);
+        final Map<String, Type> found = new HashMap<>();
         while (!toCheck.isEmpty()) {
             for (Map.Entry<String, Type> entry : toCheck.entrySet()) {
                 found.putAll(
@@ -292,7 +292,7 @@ public final class GenericsTrackingUtils {
     private static Map<String, Type> matchVariables(final TypeVariable declared,
                                                     final Type known,
                                                     final Map<String, Type> tracedRootGenerics) {
-        final Map<String, Type> res = new HashMap<String, Type>();
+        final Map<String, Type> res = new HashMap<>();
 
         // lookup variable declaration for variables (e.g. T extends List<K>)
         for (Type decl : declared.getBounds()) {

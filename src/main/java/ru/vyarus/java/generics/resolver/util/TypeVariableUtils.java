@@ -36,6 +36,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 15.12.2018
  */
+@SuppressWarnings("checkstyle:IllegalIdentifierName")
 public final class TypeVariableUtils {
 
     private TypeVariableUtils() {
@@ -57,7 +58,7 @@ public final class TypeVariableUtils {
             final Class<?> type,
             final List<Class<?>> ignoreClasses) {
         // leave type variables to track where would they go
-        final LinkedHashMap<String, Type> rootGenerics = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> rootGenerics = new LinkedHashMap<>();
         for (TypeVariable var : type.getTypeParameters()) {
             // special variables type, known by resolver (no exceptions for unknown generics will be thrown)
             rootGenerics.put(var.getName(), new ExplicitTypeVariable(var));
@@ -126,7 +127,7 @@ public final class TypeVariableUtils {
         if (match.isEmpty()) {
             return Collections.emptyMap();
         }
-        final Map<String, Type> res = new HashMap<String, Type>();
+        final Map<String, Type> res = new HashMap<>();
         for (Map.Entry<TypeVariable, Type> entry : match.entrySet()) {
             res.put(entry.getKey().getName(), entry.getValue());
         }
@@ -179,7 +180,7 @@ public final class TypeVariableUtils {
             return type;
         }
 
-        final LinkedHashMap<String, Type> generics = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> generics = new LinkedHashMap<>();
         // important to resolve vars in correct order
         for (TypeVariable var : GenericsUtils.orderVariablesForResolution(vars)) {
             generics.put(var.getName(), GenericsResolutionUtils.resolveRawGeneric(var, generics));
@@ -204,7 +205,7 @@ public final class TypeVariableUtils {
         if (vars.isEmpty()) {
             return type;
         }
-        final Map<String, Type> preservation = new HashMap<String, Type>();
+        final Map<String, Type> preservation = new HashMap<>();
         for (TypeVariable var : vars) {
             preservation.put(var.getName(), new ExplicitTypeVariable(var));
         }

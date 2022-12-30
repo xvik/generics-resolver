@@ -24,6 +24,7 @@ import java.util.Map;
  * @see #inlyingType(java.lang.reflect.Type)
  * @since 26.06.2015
  */
+@SuppressWarnings("checkstyle:IllegalIdentifierName")
 public class GenericsContext extends AbstractGenericsContext {
 
     /**
@@ -271,7 +272,7 @@ public class GenericsContext extends AbstractGenericsContext {
         if (ownerGenerics.isEmpty()) {
             allTypeGenerics = typeGenerics;
         } else {
-            allTypeGenerics = new LinkedHashMap<String, Type>(typeGenerics);
+            allTypeGenerics = new LinkedHashMap<>(typeGenerics);
             // remove owner generics from main set (ok to modify map because it's a copy)
             for (String key : ownerGenerics.keySet()) {
                 typeGenerics.remove(key);

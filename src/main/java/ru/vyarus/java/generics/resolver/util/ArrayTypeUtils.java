@@ -18,7 +18,7 @@ public final class ArrayTypeUtils {
     private static final String ARRAY_TYPE_SIMPLE_PREFIX = "[";
     private static final String ARRAY_TYPE_OBJECT_PREFIX = "[L";
 
-    @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.AvoidUsingShortType"})
+    @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.DoubleBraceInitialization"})
     private static final Map<Class, String> PRIMITIVE_ARRAY_LETTER = new HashMap<Class, String>() {{
         put(byte.class, "B");
         put(char.class, "C");

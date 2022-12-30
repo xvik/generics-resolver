@@ -47,6 +47,7 @@ import java.util.Map;
  * @author Vyacheslav Rusakov
  * @since 11.05.2018
  */
+@SuppressWarnings({"checkstyle:IllegalIdentifierName", "PMD.GodClass"})
 public final class TypesWalker {
     private static final IgnoreGenericsMap IGNORE_VARS = IgnoreGenericsMap.getInstance();
     @SuppressWarnings("unchecked")
@@ -206,6 +207,7 @@ public final class TypesWalker {
      * @param genericType actual generic value
      * @return true if cycle detected, false otherwise
      */
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private static boolean isGenericLoop(final Class<?> src, final String genericName, final Type genericType) {
         // to avoid redundant checks, first look if same type is declared in parameter
         if (src.isAssignableFrom(GenericsUtils.resolveClass(genericType))) {

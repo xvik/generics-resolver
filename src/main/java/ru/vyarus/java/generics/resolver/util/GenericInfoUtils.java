@@ -114,14 +114,13 @@ public final class GenericInfoUtils {
 
         // known middle type
         LinkedHashMap<String, Type> typeGenerics = GenericsResolutionUtils.resolveGenerics(actual, rootGenerics);
-        final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics =
-                new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        final Map<Class<?>, LinkedHashMap<String, Type>> knownGenerics = new HashMap<>();
         // field could be declared as (Outer<String>.Inner field) and already contain actual outer generics
         knownGenerics.put(middleType, GenericsResolutionUtils
                 .fillOuterGenerics(actual, typeGenerics, context.getGenericsInfo().getTypesMap()));
         if (TypeUtils.isInner(middleType)) {
             // remember possibly specified outer generics (they were already resolved above)
-            knownGenerics.put((Class) TypeUtils.getOuter(middleType), new LinkedHashMap<String, Type>(
+            knownGenerics.put((Class) TypeUtils.getOuter(middleType), new LinkedHashMap<>(
                     GenericsUtils.extractOwnerGenerics(middleType, knownGenerics.get(middleType))));
         } else {
             // store other types for possible outer classes generics resolution
@@ -169,7 +168,7 @@ public final class GenericInfoUtils {
      */
     private static Map<Class<?>, LinkedHashMap<String, Type>> usePossiblyOwnerGenerics(
             final Class<?> type, final GenericsInfo info) {
-        final Map<Class<?>, LinkedHashMap<String, Type>> res = new HashMap<Class<?>, LinkedHashMap<String, Type>>();
+        final Map<Class<?>, LinkedHashMap<String, Type>> res = new HashMap<>();
         // use only types, not included in target hierarchy
         for (Class<?> root : info.getComposingTypes()) {
             if (!root.isAssignableFrom(type)) {

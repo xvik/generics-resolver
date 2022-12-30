@@ -208,7 +208,7 @@ public class ConstructorGenericsContext extends GenericsContext {
     @Override
     public ConstructorGenericsContext constructor(final Constructor constructor) {
         // optimization
-        return constructor == currentConstructor() ? this : super.constructor(constructor);
+        return constructor.equals(currentConstructor()) ? this : super.constructor(constructor);
     }
 
     @Override
@@ -227,7 +227,7 @@ public class ConstructorGenericsContext extends GenericsContext {
         if (hasConstrGenerics) {
             // method generics may override class or owner class generics, but
             // genericsMap() and ownerGenericsMap() should return the same in all cases for consistency
-            this.allGenerics = new LinkedHashMap<String, Type>(allTypeGenerics);
+            this.allGenerics = new LinkedHashMap<>(allTypeGenerics);
             this.allGenerics.putAll(this.constructorGenerics);
         } else {
             this.allGenerics = allTypeGenerics;

@@ -18,7 +18,8 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 17.10.2014
  */
-@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods", "PMD.CyclomaticComplexity"})
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods", "PMD.CyclomaticComplexity",
+        "checkstyle:IllegalIdentifierName"})
 public final class GenericsUtils {
 
     private static final Type[] NO_TYPES = new Type[0];
@@ -119,7 +120,7 @@ public final class GenericsUtils {
         if (typeGenerics.length == 0) {
             return Collections.emptyList();
         }
-        final List<Class<?>> res = new ArrayList<Class<?>>();
+        final List<Class<?>> res = new ArrayList<>();
         for (Type gen : typeGenerics) {
             res.add(resolveClass(gen, generics));
         }
@@ -198,7 +199,7 @@ public final class GenericsUtils {
      * @return list of resolved types classes
      */
     public static List<Class<?>> resolveClasses(final Type[] types, final Map<String, Type> generics) {
-        final List<Class<?>> params = new ArrayList<Class<?>>();
+        final List<Class<?>> params = new ArrayList<>();
         for (Type type : types) {
             params.add(resolveClass(type, generics));
         }
@@ -227,7 +228,7 @@ public final class GenericsUtils {
     public static Class[] resolveUpperBounds(final Type type, final Map<String, Type> generics) {
         final Class[] res;
         if (type instanceof WildcardType) {
-            final List<Class> list = new ArrayList<Class>();
+            final List<Class> list = new ArrayList<>();
             for (Type t : ((WildcardType) type).getUpperBounds()) {
                 final Class<?> bound = resolveClass(t, generics);
                 // possible case: T extends K & Serializable - if T unknown then it become
@@ -367,7 +368,7 @@ public final class GenericsUtils {
         if (!hasOwnerGenerics) {
             return Collections.emptyMap();
         }
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>(generics);
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<>(generics);
         // owner generics are all generics not mentioned in signature
         for (TypeVariable var : type.getTypeParameters()) {
             res.remove(var.getName());
@@ -394,7 +395,7 @@ public final class GenericsUtils {
         if (enoughGenerics) {
             return generics;
         }
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<>();
         // owner generics are all generics not mentioned in signature
         for (TypeVariable var : type.getTypeParameters()) {
             final String name = var.getName();
@@ -457,7 +458,7 @@ public final class GenericsUtils {
                     "Can't build generics map for %s with %s because of incorrect generics count",
                     TypeToStringUtils.toStringType(type), Arrays.toString(generics.toArray())));
         }
-        final LinkedHashMap<String, Type> res = new LinkedHashMap<String, Type>();
+        final LinkedHashMap<String, Type> res = new LinkedHashMap<>();
         int i = 0;
         for (TypeVariable var : params) {
             res.put(var.getName(), generics.get(i++));
@@ -496,7 +497,7 @@ public final class GenericsUtils {
             // e.g. correct class, but method generic when current context represents class
             if (!contextScope.isCompatible(GenericDeclarationScope.from(var.getGenericDeclaration()))
                     // e.g. method scope could match but actual methods differ
-                    || contextSource != var.getGenericDeclaration()) {
+                    || !contextSource.equals(var.getGenericDeclaration())) {
                 res = var;
                 break;
             }
@@ -519,13 +520,13 @@ public final class GenericsUtils {
      * @return variables ordered for correct types resolution
      */
     public static List<TypeVariable> orderVariablesForResolution(final List<TypeVariable> variables) {
-        final List<TypeVariable> vars = new ArrayList<TypeVariable>(variables);
-        final List<String> countableNames = new ArrayList<String>();
+        final List<TypeVariable> vars = new ArrayList<>(variables);
+        final List<String> countableNames = new ArrayList<>();
         for (TypeVariable var : variables) {
             countableNames.add(var.getName());
         }
-        final List<String> known = new ArrayList<String>();
-        final List<TypeVariable> res = new ArrayList<TypeVariable>();
+        final List<String> known = new ArrayList<>();
+        final List<TypeVariable> res = new ArrayList<>();
         // cycle will definitely end because java compiler does not allow to specify generic cycles
         while (!vars.isEmpty()) {
             final Iterator<TypeVariable> it = vars.iterator();
@@ -577,11 +578,12 @@ public final class GenericsUtils {
         if (type instanceof Class) {
             return Collections.emptyList();
         }
-        final List<TypeVariable> res = new ArrayList<TypeVariable>();
+        final List<TypeVariable> res = new ArrayList<>();
         findVariables(type, res);
         return res;
     }
 
+    @SuppressWarnings("PMD.CognitiveComplexity")
     private static void findVariables(final Type type, final List<TypeVariable> found) {
         // note ExplicitTypeVariable is not checked as it's considered as known type
         if (type instanceof TypeVariable) {

@@ -27,7 +27,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 22.03.2019
  */
-@SuppressWarnings("PMD.GodClass")
+@SuppressWarnings({"PMD.GodClass", "checkstyle:IllegalIdentifierName"})
 public final class CommonTypeFactory {
 
     // specificity comparator (more specific types first)
@@ -189,7 +189,7 @@ public final class CommonTypeFactory {
         final List<Type> firstTypes = collectContainedTypes(first);
         final List<Type> secondTypes = collectContainedTypes(second);
 
-        final List<Type> res = new ArrayList<Type>();
+        final List<Type> res = new ArrayList<>();
         // compare each left type with each right and all non Object matches will compose target common type
         for (Type left : firstTypes) {
             for (Type right : secondTypes) {
@@ -279,11 +279,11 @@ public final class CommonTypeFactory {
         final Map<Class<?>, LinkedHashMap<String, Type>> secondContext = resolveHierarchy(second);
 
         // all types in hierarchies
-        final Set<Class<?>> firstComposingTypes = new HashSet<Class<?>>(firstContext.keySet());
-        final Set<Class<?>> secondComposingTypes = new HashSet<Class<?>>(secondContext.keySet());
+        final Set<Class<?>> firstComposingTypes = new HashSet<>(firstContext.keySet());
+        final Set<Class<?>> secondComposingTypes = new HashSet<>(secondContext.keySet());
 
         Class<?> commonRoot = Object.class;
-        final Set<Class<?>> commonContracts = new HashSet<Class<?>>();
+        final Set<Class<?>> commonContracts = new HashSet<>();
 
         for (Class<?> type : firstComposingTypes) {
             if (secondComposingTypes.contains(type)) {
@@ -341,7 +341,7 @@ public final class CommonTypeFactory {
 
         removeDuplicateContracts(type, contracts);
 
-        final List<Type> res = new ArrayList<Type>();
+        final List<Type> res = new ArrayList<>();
         if (type != Object.class) {
             res.add(buildCommonType(type, firstContext, secondContext, alwaysIncludeInterfaces, cache));
         }
@@ -473,7 +473,7 @@ public final class CommonTypeFactory {
      * of {@code String} and {@code Integer} resolutions due to {@code Comparable} interface.
      */
     private static class PathsCache {
-        private final Map<TypesKey, PlaceholderType> cache = new HashMap<TypesKey, PlaceholderType>();
+        private final Map<TypesKey, PlaceholderType> cache = new HashMap<>();
 
         public PlaceholderType get(final Type one, final Type two) {
             return cache.get(key(one, two));
@@ -611,6 +611,7 @@ public final class CommonTypeFactory {
         }
 
         @Override
+        @SuppressWarnings("PMD.MethodReturnsInternalArray")
         public Type[] getUpperBounds() {
             return upperBound == null ? EMPTY : upperBound;
         }
@@ -632,7 +633,7 @@ public final class CommonTypeFactory {
             final PlaceholderType res = new PlaceholderType(root);
             // delayed init because placeholders often will not be used at all
             if (placeholders == null) {
-                placeholders = new ArrayList<PlaceholderType>();
+                placeholders = new ArrayList<>();
             }
             placeholders.add(res);
             return res;

@@ -13,9 +13,10 @@ import java.util.Map;
  * @author Vyacheslav Rusakov
  * @since 14.12.2018
  */
+@SuppressWarnings("checkstyle:IllegalIdentifierName")
 public class MatchVariablesVisitor implements TypesVisitor {
-    private final Map<TypeVariable, Type> matched = new HashMap<TypeVariable, Type>();
-    private final Map<String, Type> matchedMap = new HashMap<String, Type>();
+    private final Map<TypeVariable, Type> matched = new HashMap<>();
+    private final Map<String, Type> matchedMap = new HashMap<>();
     private boolean hierarchyError;
 
     @Override

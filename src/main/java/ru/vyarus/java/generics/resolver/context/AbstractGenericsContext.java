@@ -99,7 +99,7 @@ public abstract class AbstractGenericsContext {
      * @return current class generic classes
      */
     public List<Class<?>> generics() {
-        final List<Class<?>> res = new ArrayList<Class<?>>();
+        final List<Class<?>> res = new ArrayList<>();
         for (Type type : typeGenerics.values()) {
             res.add(resolveClass(type));
         }
@@ -119,7 +119,7 @@ public abstract class AbstractGenericsContext {
      * @return current generics string representation
      */
     public List<String> genericsAsString() {
-        final List<String> res = new ArrayList<String>();
+        final List<String> res = new ArrayList<>();
         for (Type type : contextGenerics().values()) {
             res.add(toStringType(type));
         }

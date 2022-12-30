@@ -9,7 +9,7 @@
     "libVersion": "0.1.0",
     "libDesc": "Java generics runtime resolver",
     "enableQualityChecks": true,
-    "usedGeneratorVersion": "3.0.0",
+    "usedGeneratorVersion": "3.1.0",
     "multiModule": false,
     "modulePrefix": "-",
     "moduleName": "-"

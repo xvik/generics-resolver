@@ -310,7 +310,7 @@ public class MethodGenericsContext extends GenericsContext {
     @Override
     public MethodGenericsContext method(final Method method) {
         // optimization
-        return method == currentMethod() ? this : super.method(method);
+        return method.equals(currentMethod()) ? this : super.method(method);
     }
 
     @Override
@@ -328,7 +328,7 @@ public class MethodGenericsContext extends GenericsContext {
         if (hasMethodGenerics) {
             // method generics may override class or owner class generics, but
             // genericsMap() and ownerGenericsMap() should return the same in all cases for consistency
-            this.allGenerics = new LinkedHashMap<String, Type>(allTypeGenerics);
+            this.allGenerics = new LinkedHashMap<>(allTypeGenerics);
             this.allGenerics.putAll(this.methodGenerics);
         } else {
             this.allGenerics = allTypeGenerics;

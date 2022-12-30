@@ -1,5 +1,7 @@
 package ru.vyarus.java.generics.resolver.util.map;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -31,6 +33,7 @@ public class EmptyGenericsMap extends LinkedHashMap<String, Type> {
     /**
      * @return shared map instance
      */
+    @SuppressFBWarnings("MS_EXPOSE_REP")
     public static EmptyGenericsMap getInstance() {
         return INSTANCE;
     }
