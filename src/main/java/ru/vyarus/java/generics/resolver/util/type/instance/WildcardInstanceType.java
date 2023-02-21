@@ -28,7 +28,7 @@ import java.util.Iterator;
  */
 public class WildcardInstanceType implements WildcardType, InstanceType {
 
-    private final Type[] noLowerBounds = new Type[0];
+    private static final Type[] NO_LOWER_BOUNDS = new Type[0];
 
     private final Object[] instances;
     private final Type[] upperBounds;
@@ -78,7 +78,7 @@ public class WildcardInstanceType implements WildcardType, InstanceType {
     @Override
     public Type[] getLowerBounds() {
         // useless for type resolution
-        return noLowerBounds;
+        return NO_LOWER_BOUNDS;
     }
 
     @Override
@@ -124,7 +124,7 @@ public class WildcardInstanceType implements WildcardType, InstanceType {
             final Type[] thatLowerBounds = that.getLowerBounds();
             final Type[] thatUpperBounds = that.getUpperBounds();
 
-            res = Arrays.equals(noLowerBounds, thatLowerBounds) && Arrays.equals(upperBounds, thatUpperBounds);
+            res = Arrays.equals(NO_LOWER_BOUNDS, thatLowerBounds) && Arrays.equals(upperBounds, thatUpperBounds);
         }
         return res;
     }
@@ -132,7 +132,7 @@ public class WildcardInstanceType implements WildcardType, InstanceType {
     @Override
     public int hashCode() {
         int result = Arrays.hashCode(upperBounds);
-        result = 31 * result + Arrays.hashCode(noLowerBounds);
+        result = 31 * result + Arrays.hashCode(NO_LOWER_BOUNDS);
         return result;
     }
 }
