@@ -3,7 +3,7 @@ plugins {
     id 'jacoco'
     id 'project-report'
     id 'signing'
-    id 'ru.vyarus.java-lib' version '2.4.0'
+    id 'ru.vyarus.java-lib' version '3.0.0'
     id 'ru.vyarus.github-info' version '2.0.0'
     id 'ru.vyarus.quality' version '4.9.0'
     id 'net.researchgate.release' version '3.0.2'
