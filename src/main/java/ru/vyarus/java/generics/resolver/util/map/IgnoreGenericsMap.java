@@ -17,6 +17,8 @@ import java.util.Map;
  * @since 11.05.2018
  */
 @SuppressWarnings("PMD.LooseCoupling")
+@SuppressFBWarnings({"SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR",
+        "SING_SINGLETON_INDIRECTLY_IMPLEMENTS_CLONEABLE", "SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"})
 public final class IgnoreGenericsMap extends LinkedHashMap<String, Type> {
 
     private static final IgnoreGenericsMap INSTANCE = new IgnoreGenericsMap();

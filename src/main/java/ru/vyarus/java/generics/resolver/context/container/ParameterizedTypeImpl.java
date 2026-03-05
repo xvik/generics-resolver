@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.context.container;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
 import java.lang.reflect.ParameterizedType;
@@ -20,10 +21,12 @@ public class ParameterizedTypeImpl implements ParameterizedType {
     private final Type[] actualArguments;
     private final Type ownerType;
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public ParameterizedTypeImpl(final Type rawType, final Type... actualArguments) {
         this(rawType, actualArguments, null);
     }
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public ParameterizedTypeImpl(final Type rawType, final Type[] actualArguments, final Type ownerType) {
         this.rawType = rawType;
         this.actualArguments = Arrays.copyOf(actualArguments, actualArguments.length);

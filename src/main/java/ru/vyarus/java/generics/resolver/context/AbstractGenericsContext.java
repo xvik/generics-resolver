@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.context;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.error.UnknownGenericException;
 import ru.vyarus.java.generics.resolver.error.WrongGenericsContextException;
 import ru.vyarus.java.generics.resolver.util.GenericsUtils;
@@ -56,6 +57,7 @@ public abstract class AbstractGenericsContext {
     protected final Class<?> currentType;
     protected final Map<String, Type> typeGenerics;
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public AbstractGenericsContext(final GenericsInfo genericsInfo, final Class<?> type) {
         if (type.isPrimitive()) {
             throw new IllegalArgumentException(String.format(

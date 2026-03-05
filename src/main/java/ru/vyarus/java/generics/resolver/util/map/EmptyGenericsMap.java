@@ -13,6 +13,8 @@ import java.util.Map;
  * @since 05.06.2018
  */
 @SuppressWarnings("PMD.LooseCoupling")
+@SuppressFBWarnings({"SING_SINGLETON_HAS_NONPRIVATE_CONSTRUCTOR",
+        "SING_SINGLETON_INDIRECTLY_IMPLEMENTS_CLONEABLE", "SING_SINGLETON_IMPLEMENTS_SERIALIZABLE"})
 public class EmptyGenericsMap extends LinkedHashMap<String, Type> {
 
     private static final EmptyGenericsMap INSTANCE = new EmptyGenericsMap();

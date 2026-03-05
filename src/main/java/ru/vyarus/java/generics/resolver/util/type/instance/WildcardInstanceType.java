@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util.type.instance;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import ru.vyarus.java.generics.resolver.util.map.EmptyGenericsMap;
 
@@ -45,6 +46,7 @@ public class WildcardInstanceType implements WildcardType, InstanceType {
      * @param instances   array instances used for analysis (without nulls)
      * @throws IllegalArgumentException if no instances provided or bounds contain not first instance type
      */
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public WildcardInstanceType(final Type[] upperBounds, final Object... instances) {
         if (instances.length == 0) {
             throw new IllegalArgumentException("No instances provided");

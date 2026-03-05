@@ -57,6 +57,7 @@ public class ParameterizedInstanceType implements ParameterizedType, InstanceTyp
      * @param instances actual non null (!) instances used for analysis
      * @throws IllegalArgumentException if no instances provided
      */
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public ParameterizedInstanceType(final Type type, final Object... instances) {
         if (instances.length == 0) {
             throw new IllegalArgumentException("No instances provided");

@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util.type;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 import ru.vyarus.java.generics.resolver.util.map.PrintableGenericsMap;
 
@@ -24,6 +25,7 @@ public class TypeLiteral<T> {
 
     private final Type type;
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     protected TypeLiteral() {
         type = readDeclaredType();
     }

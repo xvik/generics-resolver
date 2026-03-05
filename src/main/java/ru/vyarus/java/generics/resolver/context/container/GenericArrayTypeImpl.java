@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.context.container;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
 import java.lang.reflect.GenericArrayType;
@@ -16,6 +17,7 @@ public class GenericArrayTypeImpl implements GenericArrayType {
 
     private final Type componentType;
 
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public GenericArrayTypeImpl(final Type componentType) {
         this.componentType = componentType;
         if (componentType == null) {

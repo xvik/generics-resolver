@@ -1,5 +1,6 @@
 package ru.vyarus.java.generics.resolver.util.type.instance;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import ru.vyarus.java.generics.resolver.util.ArrayTypeUtils;
 import ru.vyarus.java.generics.resolver.util.TypeToStringUtils;
 
@@ -42,6 +43,7 @@ public class GenericArrayInstanceType implements GenericArrayType, InstanceType 
      * @param componentType component type, already resolved from instances
      * @param instances     array instances used for analysis (without nulls)
      */
+    @SuppressFBWarnings("CT_CONSTRUCTOR_THROW")
     public GenericArrayInstanceType(final Type componentType, final Object... instances) {
         if (instances.length == 0) {
             throw new IllegalArgumentException("No instances provided");
