@@ -12,6 +12,7 @@ import java.util.Map;
  * @author Vyacheslav Rusakov
  * @since 05.06.2018
  */
+@SuppressWarnings("PMD.LooseCoupling")
 public class EmptyGenericsMap extends LinkedHashMap<String, Type> {
 
     private static final EmptyGenericsMap INSTANCE = new EmptyGenericsMap();

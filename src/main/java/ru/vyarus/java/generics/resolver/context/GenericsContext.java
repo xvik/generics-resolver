@@ -31,6 +31,7 @@ public class GenericsContext extends AbstractGenericsContext {
      * Current hierarchy position marker (for toString).
      */
     public static final String CURRENT_POSITION_MARKER = "    <-- current";
+    @SuppressWarnings("PMD.LooseCoupling")
     private static final PrintableGenericsMap PRINTABLE_GENERICS = new PrintableGenericsMap();
 
     protected Class<?> ownerType;
@@ -117,7 +118,7 @@ public class GenericsContext extends AbstractGenericsContext {
      */
     public Map<String, Type> ownerGenericsMap() {
         return ownerGenerics.isEmpty()
-                ? Collections.<String, Type>emptyMap() : new LinkedHashMap<String, Type>(ownerGenerics);
+                ? Collections.emptyMap() : new LinkedHashMap<>(ownerGenerics);
     }
 
     @Override
@@ -299,7 +300,6 @@ public class GenericsContext extends AbstractGenericsContext {
      */
     public abstract class RootContextAwareTypeWriter extends GenericsInfo.DefaultTypeWriter {
         @Override
-        @SuppressWarnings("PMD.UseStringBufferForStringAppends")
         public String write(final Class<?> type,
                             final Map<String, Type> generics,
                             final Class<?> owner,

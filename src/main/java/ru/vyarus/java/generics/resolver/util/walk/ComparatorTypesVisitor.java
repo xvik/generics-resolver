@@ -24,7 +24,7 @@ import java.util.Arrays;
  * @since 11.05.2018
  */
 public class ComparatorTypesVisitor implements TypesVisitor {
-
+    @SuppressWarnings("PMD.LooseCoupling")
     private static final IgnoreGenericsMap IGNORE = IgnoreGenericsMap.getInstance();
 
     private boolean compatible = true;

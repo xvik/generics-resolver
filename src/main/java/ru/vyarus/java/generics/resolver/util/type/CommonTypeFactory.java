@@ -27,7 +27,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 22.03.2019
  */
-@SuppressWarnings({"PMD.GodClass", "checkstyle:IllegalIdentifierName"})
+@SuppressWarnings({"PMD.GodClass", "checkstyle:IllegalIdentifierName", "PMD.LooseCoupling"})
 public final class CommonTypeFactory {
 
     // specificity comparator (more specific types first)
@@ -472,7 +472,7 @@ public final class CommonTypeFactory {
      * {@code String implements Comparable<String>}: without cache it would be an infinite loop
      * of {@code String} and {@code Integer} resolutions due to {@code Comparable} interface.
      */
-    private static class PathsCache {
+    private static final class PathsCache {
         private final Map<TypesKey, PlaceholderType> cache = new HashMap<>();
 
         public PlaceholderType get(final Type one, final Type two) {
@@ -536,10 +536,7 @@ public final class CommonTypeFactory {
 
             final TypesKey typePair = (TypesKey) o;
 
-            if (!one.equals(typePair.one)) {
-                return false;
-            }
-            return two.equals(typePair.two);
+            return one.equals(typePair.one) && two.equals(typePair.two);
         }
 
         @Override
@@ -611,7 +608,6 @@ public final class CommonTypeFactory {
         }
 
         @Override
-        @SuppressWarnings("PMD.MethodReturnsInternalArray")
         public Type[] getUpperBounds() {
             return upperBound == null ? EMPTY : upperBound;
         }
@@ -652,7 +648,7 @@ public final class CommonTypeFactory {
      * This is required in order to always receive predictable results (in case of placeholders, only the first type
      * is used and so it's important to choose the most specific type).
      */
-    private static class TypesComparator implements Comparator<Type>, Serializable {
+    private static final class TypesComparator implements Comparator<Type>, Serializable {
 
         private static final String JAVA_PKG = "java.";
 

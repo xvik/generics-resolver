@@ -36,7 +36,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 15.12.2018
  */
-@SuppressWarnings("checkstyle:IllegalIdentifierName")
+@SuppressWarnings({"checkstyle:IllegalIdentifierName", "PMD.LooseCoupling"})
 public final class TypeVariableUtils {
 
     private TypeVariableUtils() {
@@ -53,7 +53,6 @@ public final class TypeVariableUtils {
      * @param ignoreClasses classes to ignore during analysis (may be null)
      * @return resolved generics for all types in class hierarchy with root variables preserved
      */
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     public static Map<Class<?>, LinkedHashMap<String, Type>> trackRootVariables(
             final Class<?> type,
             final List<Class<?>> ignoreClasses) {
@@ -199,7 +198,6 @@ public final class TypeVariableUtils {
      * {@link ExplicitTypeVariable}
      * @see #resolveAllTypeVariables(Type, Map) to replace explicit varaibles
      */
-    @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
     public static Type preserveVariables(final Type type) {
         final List<TypeVariable> vars = GenericsUtils.findVariables(type);
         if (vars.isEmpty()) {

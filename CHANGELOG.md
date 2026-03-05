@@ -1,4 +1,4 @@
-* (breaking) Drop java 6 support
+* (breaking) Drop java 6,7 support
 * Add ArrayTypeUtils with operations on array types
 * Add TypeVariableUtils for working with type templates (with preserved variables)
 * Add TypeLiteral utility class to simplify complex types declaration (by analogy with guice's class)

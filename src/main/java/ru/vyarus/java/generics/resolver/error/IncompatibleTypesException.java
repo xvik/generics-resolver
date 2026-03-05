@@ -49,6 +49,7 @@ public class IncompatibleTypesException extends GenericsException {
         return second;
     }
 
+    @SuppressWarnings("PMD.LooseCoupling")
     private static String formatMessage(final String message,
                                         final Type first,
                                         final Type second) {

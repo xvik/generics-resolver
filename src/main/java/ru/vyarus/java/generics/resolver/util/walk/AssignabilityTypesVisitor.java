@@ -24,6 +24,7 @@ import java.lang.reflect.WildcardType;
  * @since 18.05.2018
  */
 public class AssignabilityTypesVisitor implements TypesVisitor {
+    @SuppressWarnings("PMD.LooseCoupling")
     private static final IgnoreGenericsMap IGNORE = IgnoreGenericsMap.getInstance();
 
     private boolean assignable = true;

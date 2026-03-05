@@ -18,7 +18,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 17.10.2014
  */
-@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods", "PMD.CyclomaticComplexity",
+@SuppressWarnings({"PMD.GodClass", "PMD.TooManyMethods", "PMD.CyclomaticComplexity", "PMD.LooseCoupling",
         "checkstyle:IllegalIdentifierName"})
 public final class GenericsUtils {
 
@@ -302,7 +302,6 @@ public final class GenericsUtils {
 
     // for TypeVariableUtils access
     @SuppressWarnings({"PMD.AvoidProtectedMethodInFinalClassNotExtending",
-            "PMD.CyclomaticComplexity",
             "checkstyle:CyclomaticComplexity"})
     protected static Type resolveTypeVariables(final Type type,
                                                final Map<String, Type> generics,
@@ -449,7 +448,6 @@ public final class GenericsUtils {
      * @throws IllegalArgumentException if type's generics count don't match provided list
      */
     // LinkedHashMap indicates stored order, important for context
-    @SuppressWarnings("PMD.LooseCoupling")
     public static LinkedHashMap<String, Type> createGenericsMap(final Class<?> type,
                                                                 final List<? extends Type> generics) {
         final TypeVariable<? extends Class<?>>[] params = type.getTypeParameters();
@@ -535,7 +533,7 @@ public final class GenericsUtils {
                 boolean reject = false;
                 for (Type bound : var.getBounds()) {
                     // can't be empty as otherwise variables would not be here
-                    final List<TypeVariable> unknowns = GenericsUtils.findVariables(bound);
+                    final List<TypeVariable> unknowns = findVariables(bound);
                     for (TypeVariable unknown : unknowns) {
                         if (countableNames.contains(unknown.getName()) && !known.contains(unknown.getName())) {
                             reject = true;

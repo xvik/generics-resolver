@@ -23,7 +23,6 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 26.06.2015
  */
-@SuppressWarnings("PMD.PreserveStackTrace")
 public class MethodGenericsContext extends GenericsContext {
 
     private final Method meth;
@@ -51,7 +50,7 @@ public class MethodGenericsContext extends GenericsContext {
      */
     public List<Type> methodGenericTypes() {
         return methodGenerics.isEmpty()
-                ? Collections.<Type>emptyList() : new ArrayList<Type>(methodGenerics.values());
+                ? Collections.emptyList() : new ArrayList<>(methodGenerics.values());
     }
 
     /**
@@ -69,7 +68,7 @@ public class MethodGenericsContext extends GenericsContext {
      */
     public Map<String, Type> methodGenericsMap() {
         return methodGenerics.isEmpty()
-                ? Collections.<String, Type>emptyMap() : new LinkedHashMap<String, Type>(methodGenerics);
+                ? Collections.emptyMap() : new LinkedHashMap<>(methodGenerics);
     }
 
     /**

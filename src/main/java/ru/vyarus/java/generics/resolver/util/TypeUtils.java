@@ -22,7 +22,7 @@ import java.util.Map;
  */
 public final class TypeUtils {
 
-    @SuppressWarnings({"checkstyle:Indentation", "PMD.NonStaticInitializer", "PMD.DoubleBraceInitialization"})
+    @SuppressWarnings({"checkstyle:Indentation", "PMD.DoubleBraceInitialization", "PMD.UseDiamondOperator"})
     private static final Map<Class, Class> PRIMITIVES = new HashMap<Class, Class>() {{
         put(boolean.class, Boolean.class);
         put(byte.class, Byte.class);
@@ -76,11 +76,9 @@ public final class TypeUtils {
      * @see #isMoreSpecificOrEqual(Type, Type) for broader check
      */
     public static boolean isMoreSpecific(final Type what, final Type comparingTo) {
-        if (what.equals(comparingTo)) {
-            // assume correct type implementation (for faster check)
-            return false;
-        }
-        return doMoreSpecificWalk(what, comparingTo).isMoreSpecific();
+        // assume correct type implementation (for faster check)
+        return !what.equals(comparingTo)
+                && doMoreSpecificWalk(what, comparingTo).isMoreSpecific();
     }
 
     /**
@@ -164,8 +162,7 @@ public final class TypeUtils {
      * @return true if left bound could be assigned to right bound, false otherwise
      * @see GenericsUtils#resolveUpperBounds(Type, Map) supplement bound resolution method
      */
-    @SuppressWarnings({"PMD.UseVarargs", "PMD.CyclomaticComplexity", "PMD.CognitiveComplexity",
-            "checkstyle:CyclomaticComplexity"})
+    @SuppressWarnings({"PMD.UseVarargs", "PMD.CognitiveComplexity", "checkstyle:CyclomaticComplexity"})
     public static boolean isAssignableBounds(final Class[] one, final Class[] two) {
         if (one.length == 0 || two.length == 0) {
             throw new IllegalArgumentException(String.format("Incomplete bounds information: %s %s",

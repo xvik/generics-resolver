@@ -49,6 +49,7 @@ import java.util.Map;
  */
 @SuppressWarnings({"checkstyle:IllegalIdentifierName", "PMD.GodClass"})
 public final class TypesWalker {
+    @SuppressWarnings("PMD.LooseCoupling")
     private static final IgnoreGenericsMap IGNORE_VARS = IgnoreGenericsMap.getInstance();
     @SuppressWarnings("unchecked")
     private static final List<Class<?>> STOP_TYPES = Arrays.asList(Object.class, Enum.class);

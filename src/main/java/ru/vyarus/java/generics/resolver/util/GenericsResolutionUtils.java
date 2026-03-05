@@ -18,8 +18,7 @@ import java.util.*;
  * @since 11.05.2018
  */
 // LinkedHashMap used instead of usual map to avoid accidental simple map usage (order is important!)
-@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass", "PMD.AvoidLiteralsInIfCondition",
-        "checkstyle:IllegalIdentifierName"})
+@SuppressWarnings({"PMD.LooseCoupling", "PMD.GodClass", "checkstyle:IllegalIdentifierName"})
 public final class GenericsResolutionUtils {
 
     private static final String GROOVY_OBJECT = "GroovyObject";
@@ -150,7 +149,7 @@ public final class GenericsResolutionUtils {
             final TypeVariable[] genericNames = target.getTypeParameters();
 
             // inner class can use outer class generics
-            res = fillOuterGenerics(actual, new LinkedHashMap<String, Type>(), null);
+            res = fillOuterGenerics(actual, new LinkedHashMap<>(), null);
 
             final int cnt = genericNames.length;
             for (int i = 0; i < cnt; i++) {

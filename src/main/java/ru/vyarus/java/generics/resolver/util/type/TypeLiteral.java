@@ -19,6 +19,7 @@ import java.lang.reflect.Type;
  * @since 15.12.2018
  */
 public class TypeLiteral<T> {
+    @SuppressWarnings("PMD.LooseCoupling")
     private static final PrintableGenericsMap PRINTABLE_GENERICS = new PrintableGenericsMap();
 
     private final Type type;
@@ -59,7 +60,7 @@ public class TypeLiteral<T> {
      * @return type literal for provided type
      */
     public static <T> TypeLiteral<T> from(final Type type) {
-        return new TypeLiteral<T>(type);
+        return new TypeLiteral<>(type);
     }
 
     /**
@@ -68,7 +69,7 @@ public class TypeLiteral<T> {
      * @return type literal for provided class
      */
     public static <T> TypeLiteral<T> from(final Class<T> type) {
-        return new TypeLiteral<T>(type);
+        return new TypeLiteral<>(type);
     }
 
     private Type readDeclaredType() {

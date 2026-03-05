@@ -76,7 +76,6 @@ public final class TypeToStringUtils {
      * @see #toStringTypeIgnoringVariables(Type) shortcut to print Object instead of not known generic
      * @see #toStringType(Type) shortcut for types without variables
      */
-    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String toStringType(final Type type, final Map<String, Type> generics) {
         final String res;
         if (type instanceof Class) {
@@ -155,7 +154,6 @@ public final class TypeToStringUtils {
      * @throws UnknownGenericException when found generic not declared on type (e.g. method generic)
      * @see #toStringTypes(Type[], Map) shortcut for comma - separated types (most useful)
      */
-    @SuppressWarnings("PMD.AvoidLiteralsInIfCondition")
     public static String toStringTypes(final Type[] types,
                                        final String separator,
                                        final Map<String, Type> generics) {
@@ -248,7 +246,6 @@ public final class TypeToStringUtils {
      * @param inner inner type toString (where outer type generics are absent)
      * @return inner type with outer type generics included
      */
-    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     public static String mergeOuterClassGenerics(final String outer, final String inner) {
         if (outer == null) {
             return inner;
@@ -329,7 +326,6 @@ public final class TypeToStringUtils {
         return res;
     }
 
-    @SuppressWarnings("PMD.UseStringBufferForStringAppends")
     private static String processParametrizedType(final ParameterizedType parametrized,
                                                   final Map<String, Type> generics) {
         final StringBuilder res = new StringBuilder(50);

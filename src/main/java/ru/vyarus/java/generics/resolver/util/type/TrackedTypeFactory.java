@@ -20,6 +20,7 @@ import java.util.*;
  * @author Vyacheslav Rusakov
  * @since 30.03.2019
  */
+@SuppressWarnings("PMD.LooseCoupling")
 public final class TrackedTypeFactory {
 
     private TrackedTypeFactory() {

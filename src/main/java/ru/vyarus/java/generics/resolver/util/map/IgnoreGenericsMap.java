@@ -16,6 +16,7 @@ import java.util.Map;
  * @author Vyacheslav Rusakov
  * @since 11.05.2018
  */
+@SuppressWarnings("PMD.LooseCoupling")
 public final class IgnoreGenericsMap extends LinkedHashMap<String, Type> {
 
     private static final IgnoreGenericsMap INSTANCE = new IgnoreGenericsMap();

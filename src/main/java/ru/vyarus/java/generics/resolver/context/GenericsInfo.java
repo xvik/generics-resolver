@@ -21,6 +21,7 @@ import static ru.vyarus.java.generics.resolver.util.TypeToStringUtils.toStringWi
  * @author Vyacheslav Rusakov
  * @since 16.10.2014
  */
+@SuppressWarnings("PMD.LooseCoupling")
 public class GenericsInfo {
 
     /**
@@ -62,14 +63,14 @@ public class GenericsInfo {
             throw new IllegalArgumentException(String.format("Type %s is not assignable from %s",
                     type.getName(), root.getName()));
         }
-        return new LinkedHashMap<String, Type>(types.get(type));
+        return new LinkedHashMap<>(types.get(type));
     }
 
     /**
      * @return list of all classes (and interfaces) of root class hierarchy
      */
     public Set<Class<?>> getComposingTypes() {
-        return new HashSet<Class<?>>(types.keySet());
+        return new HashSet<>(types.keySet());
     }
 
     /**
@@ -83,7 +84,7 @@ public class GenericsInfo {
      * @return all known types in hierarchy with known generics
      */
     public Map<Class<?>, LinkedHashMap<String, Type>> getTypesMap() {
-        return new HashMap<Class<?>, LinkedHashMap<String, Type>>(types);
+        return new HashMap<>(types);
     }
 
     /**

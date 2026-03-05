@@ -26,6 +26,7 @@ import java.util.Arrays;
  */
 public class WrongGenericsContextException extends GenericSourceException {
 
+    @SuppressWarnings("PMD.LooseCoupling")
     private static final PrintableGenericsMap PRINTABLE_GENERICS = new PrintableGenericsMap();
 
     private final Type type;

@@ -49,8 +49,7 @@ import java.util.*;
  * @since 17.11.2014
  */
 // huge class size is OK, because it should be the only entry point for api
-@SuppressWarnings({"PMD.ExcessiveClassLength", "PMD.PreserveStackTrace",
-        "PMD.TooManyMethods", "PMD.GodClass"})
+@SuppressWarnings({"PMD.TooManyMethods", "PMD.GodClass"})
 public abstract class AbstractGenericsContext {
 
     protected final GenericsInfo genericsInfo;
@@ -85,7 +84,7 @@ public abstract class AbstractGenericsContext {
      * @return current class generics types
      */
     public List<Type> genericTypes() {
-        return new ArrayList<Type>(typeGenerics.values());
+        return new ArrayList<>(typeGenerics.values());
     }
 
     /**
@@ -226,7 +225,7 @@ public abstract class AbstractGenericsContext {
      * @see #visibleGenericsMap() for all visible generics in current context
      */
     public Map<String, Type> genericsMap() {
-        return new LinkedHashMap<String, Type>(typeGenerics);
+        return new LinkedHashMap<>(typeGenerics);
     }
 
     /**
@@ -243,7 +242,7 @@ public abstract class AbstractGenericsContext {
      * @see GenericsContext#ownerGenericsMap()
      */
     public Map<String, Type> visibleGenericsMap() {
-        return new LinkedHashMap<String, Type>(contextGenerics());
+        return new LinkedHashMap<>(contextGenerics());
     }
 
     /**

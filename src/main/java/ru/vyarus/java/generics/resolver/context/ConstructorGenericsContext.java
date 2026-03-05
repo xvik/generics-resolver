@@ -54,7 +54,7 @@ public class ConstructorGenericsContext extends GenericsContext {
      */
     public List<Type> constructorGenericTypes() {
         return constructorGenerics.isEmpty()
-                ? Collections.<Type>emptyList() : new ArrayList<Type>(constructorGenerics.values());
+                ? Collections.emptyList() : new ArrayList<>(constructorGenerics.values());
     }
 
     /**
@@ -72,7 +72,7 @@ public class ConstructorGenericsContext extends GenericsContext {
      */
     public Map<String, Type> constructorGenericsMap() {
         return constructorGenerics.isEmpty()
-                ? Collections.<String, Type>emptyMap() : new LinkedHashMap<String, Type>(constructorGenerics);
+                ? Collections.emptyMap() : new LinkedHashMap<>(constructorGenerics);
     }
 
     /**
