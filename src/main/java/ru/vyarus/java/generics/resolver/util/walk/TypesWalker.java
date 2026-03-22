@@ -208,7 +208,7 @@ public final class TypesWalker {
      * @param genericType actual generic value
      * @return true if cycle detected, false otherwise
      */
-    @SuppressWarnings("PMD.CognitiveComplexity")
+    @SuppressWarnings({"PMD.CognitiveComplexity", "PMD.AvoidDeeplyNestedIfStmts"})
     private static boolean isGenericLoop(final Class<?> src, final String genericName, final Type genericType) {
         // to avoid redundant checks, first look if same type is declared in parameter
         if (src.isAssignableFrom(GenericsUtils.resolveClass(genericType))) {

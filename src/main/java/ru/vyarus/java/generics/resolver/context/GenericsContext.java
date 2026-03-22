@@ -204,6 +204,7 @@ public class GenericsContext extends AbstractGenericsContext {
     }
 
     @Override
+    @SuppressWarnings("PMD.AvoidDeeplyNestedIfStmts")
     public GenericsContext chooseContext(final Type type) {
         if (!(type instanceof Class)) {
             // find variable, incompatible with current context
